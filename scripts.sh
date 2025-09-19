@@ -118,26 +118,28 @@ generate_ids() {
         echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
     fi
 
-    { for ((i=1; i<=count; i++)); do
-          id=$(head -c 8 /dev/urandom | xxd -p)
-          printf '"%s",\n' "$id"
-      done } > /tmp/ids_output.txt &
-
-    pid=$!; spinner "$pid"; wait "$pid"
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}$(tr_text ERR_IDS)${NC}"; return
-    fi
-    echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"; cat /tmp/ids_output.txt; echo -e "\a"
+    echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
+    for ((i=1; i<=count; i++)); do
+        id=$(head -c 8 /dev/urandom | xxd -p)
+        printf '"%s",\n' "$id"
+    done
 }
 
 # ====== ISO → FLAG ======
 iso_to_flag() {
-    ISO_CODE="$1" python3 - <<'EOF'
-import sys, os
-code = os.environ.get("ISO_CODE", "").upper()
-flag = "".join([chr(127397 + ord(c)) for c in code])
-sys.stdout.buffer.write(flag.encode("utf-8"))
-EOF
+    local code="$1"
+    awk -v cc="$code" 'BEGIN {
+        u = toupper(cc);
+        for (i=1; i<=length(u); i++) {
+            c = substr(u,i,1);
+            printf("%s", sprintf("%c", 127397 + ord(c)))
+        }
+    }
+    function ord(str,    l) {
+        # ord() для ASCII A-Z
+        l = substr(str,1,1)
+        return index("ABCDEFGHIJKLMNOPQRSTUVWXYZ", l) + 64
+    }'
 }
 
 # ====== ПОИСК СТРАН ======
