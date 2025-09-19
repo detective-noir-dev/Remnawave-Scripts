@@ -26,6 +26,14 @@ Run globally:
 ```bash
 rw-scripts
 ```
+
+## ⚙️ Uninstallation
+
+If you no longer need **Remnawave Scripts**, you can remove it with a single command:
+```bash
+./uninstall.sh
+```
+
 📖 Usage
 Example menu:
 ===============================
