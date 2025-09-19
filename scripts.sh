@@ -250,13 +250,9 @@ check_update() {
 
 # ====== УДАЛЕНИЕ ======
 delete_self() {
-    echo -e "${YELLOW}$(tr_text CONFIRM_DEL)${NC}"
-    read -r confirm
-    if [[ "$confirm" =~ ^[YyДд]$ ]]; then
-        "$SCRIPT_DIR/uninstall.sh"
-    else
-        echo -e "${GREEN}$(tr_text CANCEL_DEL)${NC}"
-    fi
+    # Запускаем uninstall.sh и сразу выходим из программы
+    "$SCRIPT_DIR/uninstall.sh"
+    exit 0
 }
 
 # ====== МЕНЮ ======
@@ -272,12 +268,13 @@ show_menu() {
         1) generate_ids ;;
         2) country_lookup ;;
         3) check_update ;;
-        4) delete_self ;;
+        4) delete_self ;;   # <--- здесь теперь только uninstall.sh
         0) tr_text MSG_EXIT; exit 0 ;;
         *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}" ;;
     esac
 }
 
+# ====== ОСНОВНОЙ ЦИКЛ ======
 while true; do
     show_menu
 done
