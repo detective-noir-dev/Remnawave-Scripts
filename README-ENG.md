@@ -35,6 +35,7 @@ If you no longer need **Remnawave Scripts**, you can remove it with a single com
 ```
 
 📖 Usage
+
 Example menu:
 ===============================
 1) Generate shorts_id
@@ -43,6 +44,7 @@ Example menu:
 4) Uninstall rw-scripts
 9) Change language
 0) Exit
+
 🛠️ Repository structure
 - scripts.sh — main script
 - install.sh — installer
