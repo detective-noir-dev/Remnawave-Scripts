@@ -1,11 +1,11 @@
 #!/bin/bash
 
-VERSION="0.0.4"
+VERSION="0.0.5"
 INSTALL_DIR="$HOME/.local/bin"
 SCRIPT_NAME="rw-scripts"
-REPO_URL="https://raw.githubusercontent.com/detectivenoirr/Remnawave-Scripts/main"
+REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
 
-echo -e "\e[36m🚀 Установка RW Scripts версии $VERSION...\e[0m"
+echo -e "\e[36m🚀 Установка Remnwave Scripts версии $VERSION...\e[0m"
 
 mkdir -p "$INSTALL_DIR"
 
