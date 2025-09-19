@@ -1,6 +1,7 @@
 #!/bin/bash
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
 if [ -f "$SCRIPT_DIR/version.txt" ]; then
     VERSION=$(<"$SCRIPT_DIR/version.txt")
 else
