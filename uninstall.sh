@@ -5,7 +5,7 @@ SCRIPT_NAME="rw-scripts"
 CONFIG_DIR="$HOME/.config/remnawave"
 LANG_FILE="$CONFIG_DIR/lang.conf"
 
-# Цвета (для красоты)
+# Цвета
 RED='\e[31m'
 YELLOW='\e[33m'
 GREEN='\e[32m'
@@ -16,7 +16,7 @@ NC='\e[0m'
 if [ -f "$LANG_FILE" ]; then
     LANG_SET=$(cat "$LANG_FILE")
 else
-    LANG_SET="en" # fallback
+    LANG_SET="en"
 fi
 
 # Словарь переводов
@@ -29,8 +29,7 @@ tr_text() {
                 FILE_MISS) echo "Файл не найден (может быть уже удалён)." ;;
                 DONE)      echo "✅ Удаление завершено!" ;;
                 CANCEL)    echo "Отмена удаления." ;;
-            esac
-            ;;
+            esac ;;
         "en" | *)
             case "$1" in
                 CONFIRM)   echo "⚠️ Are you sure you want to uninstall $SCRIPT_NAME (y/n)?" ;;
@@ -38,14 +37,13 @@ tr_text() {
                 FILE_MISS) echo "File not found (maybe already deleted)." ;;
                 DONE)      echo "✅ Uninstall complete!" ;;
                 CANCEL)    echo "Uninstall canceled." ;;
-            esac
-            ;;
+            esac ;;
     esac
 }
 
-# ==== Основная логика удаления ====
+# ==== Основная логика ====
 echo -e "${YELLOW}$(tr_text CONFIRM)${NC}"
-read confirm
+read -r confirm
 
 if [[ "$confirm" =~ ^[YyДд]$ ]]; then
     if [ -f "$INSTALL_DIR/$SCRIPT_NAME" ]; then
@@ -61,6 +59,8 @@ if [[ "$confirm" =~ ^[YyДд]$ ]]; then
     fi
 
     echo -e "${GREEN}$(tr_text DONE)${NC}"
+    exit 0
 else
     echo -e "${GREEN}$(tr_text CANCEL)${NC}"
+    exit 0
 fi
