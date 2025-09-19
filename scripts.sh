@@ -1,5 +1,8 @@
 #!/bin/bash
-# Версия
+# Определяем путь к каталогу, где лежит скрипт
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Версия подгружается из version.txt
 VERSION=$(cat "$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
 
 # Цвета
