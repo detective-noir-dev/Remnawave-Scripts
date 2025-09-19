@@ -1,9 +1,9 @@
 #!/bin/bash
 # Определяем путь к каталогу, где лежит скрипт
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Версия подгружается из version.txt
-VERSION=$(cat "$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
+VERSION=$(<"$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
 
 # Цвета
 RED='\e[31m'
@@ -16,17 +16,19 @@ spinner() {
     local pid=$1
     local delay=0.1
     local spinstr='|/-\'
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
     local min_duration=3
     echo -ne "${YELLOW}"
-    while kill -0 $pid 2>/dev/null; do
+    while kill -0 "$pid" 2>/dev/null; do
         local temp=${spinstr#?}
         printf " [%c]  " "$spinstr"
         spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
+        sleep "$delay"
         printf "\b\b\b\b\b\b"
     done
-    local end_time=$(date +%s)
+    local end_time
+    end_time=$(date +%s)
     local elapsed=$((end_time - start_time))
     if [ $elapsed -lt $min_duration ]; then
         sleep $((min_duration - elapsed))
@@ -34,64 +36,140 @@ spinner() {
     echo -ne "${NC}"
 }
 
+# ====== НАСТРОЙКА ЯЗЫКА ======
+CONFIG_DIR="$HOME/.config/remnawave"
+LANG_FILE="$CONFIG_DIR/lang.conf"
+
+if [ -f "$LANG_FILE" ]; then
+    LANG_SET=$(<"$LANG_FILE")
+else
+    LANG_SET="en"  # fallback на английский
+fi
+
+# ====== СЛОВАРЬ ======
+tr_text() {
+    case "$LANG_SET" in
+        "ru")
+            case "$1" in
+                MENU_GEN_IDS) echo "1) Сгенерировать shorts_id" ;;
+                MENU_FLAG)    echo "2) Получить emoji-флаг страны" ;;
+                MENU_UPDATE)  echo "3) Проверить версию/обновить" ;;
+                MENU_DELETE)  echo "4) Удалить rw-scripts" ;;
+                MENU_EXIT)    echo "0) Выйти" ;;
+                PROMPT_CHOICE) echo "Выберите действие:" ;;
+                MSG_EXIT)     echo "Выход... Пока 👋" ;;
+                ERR_CHOICE)   echo "Неверный выбор, попробуй ещё раз 😅" ;;
+                IDS_HOW_MANY) echo "Сколько идентификаторов сгенерировать?" ;;
+                ERR_NUMBER)   echo "Ошибка: введите корректное число!" ;;
+                ERR_GT_ZERO)  echo "Ошибка: количество должно быть больше нуля!" ;;
+                IDS_DONE)     echo "ID сгенерированы! Вот твой список:" ;;
+                ERR_IDS)      echo "Произошла ошибка во время генерации." ;;
+                COUNTRY_PROMPT) echo "Введите название страны (на русском или английском, можно часть, 0 = выход в меню):" ;;
+                NOTHING_FOUND)  echo "Ничего не найдено по запросу" ;;
+                RESULTS)        echo "Результаты поиска:" ;;
+                PROMPT_NUM)     echo "Выберите номер (или 0 для нового поиска):" ;;
+                ERR_NUM)        echo "Введите корректный номер!" ;;
+                ERR_NOT_FOUND)  echo "Нет варианта с таким номером." ;;
+                YOU_SELECTED)   echo "Вы выбрали:" ;;
+                CHECK_CURR)     echo "Текущая версия:" ;;
+                CHECK_LATEST)   echo "Последняя версия:" ;;
+                UPDATE_AVAIL)   echo "Есть новая версия! Хотите обновиться? (y/n)" ;;
+                UPDATE_DONE)    echo "Скрипт обновлён до версии" ;;
+                UPDATE_RESTART) echo "Перезапуск..." ;;
+                UPDATE_FAIL)    echo "Не удалось проверить обновления." ;;
+                NO_UPDATES)     echo "У вас уже последняя версия." ;;
+                CONFIRM_DEL)    echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
+                CANCEL_DEL)     echo "Удаление отменено" ;;
+            esac ;;
+        "en" | *)
+            case "$1" in
+                MENU_GEN_IDS) echo "1) Generate shorts_id" ;;
+                MENU_FLAG)    echo "2) Get country emoji flag" ;;
+                MENU_UPDATE)  echo "3) Check version/update" ;;
+                MENU_DELETE)  echo "4) Uninstall rw-scripts" ;;
+                MENU_EXIT)    echo "0) Exit" ;;
+                PROMPT_CHOICE) echo "Choose an action:" ;;
+                MSG_EXIT)     echo "Exiting... Bye 👋" ;;
+                ERR_CHOICE)   echo "Invalid choice, try again 😅" ;;
+                IDS_HOW_MANY) echo "How many IDs to generate?" ;;
+                ERR_NUMBER)   echo "Error: enter a valid number!" ;;
+                ERR_GT_ZERO)  echo "Error: number must be greater than zero!" ;;
+                IDS_DONE)     echo "IDs generated! Here is your list:" ;;
+                ERR_IDS)      echo "An error occurred during generation." ;;
+                COUNTRY_PROMPT) echo "Enter country name (English or Russian, part allowed, 0 = back to menu):" ;;
+                NOTHING_FOUND)  echo "Nothing found for query" ;;
+                RESULTS)        echo "Search results:" ;;
+                PROMPT_NUM)     echo "Choose number (or 0 for new search):" ;;
+                ERR_NUM)        echo "Enter a valid number!" ;;
+                ERR_NOT_FOUND)  echo "No option with that number found." ;;
+                YOU_SELECTED)   echo "You selected:" ;;
+                CHECK_CURR)     echo "Current version:" ;;
+                CHECK_LATEST)   echo "Latest version:" ;;
+                UPDATE_AVAIL)   echo "New version available! Update? (y/n)" ;;
+                UPDATE_DONE)    echo "Script updated to version" ;;
+                UPDATE_RESTART) echo "Restarting..." ;;
+                UPDATE_FAIL)    echo "Failed to check for updates." ;;
+                NO_UPDATES)     echo "You already have the latest version." ;;
+                CONFIRM_DEL)    echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
+                CANCEL_DEL)     echo "Uninstall canceled" ;;
+            esac ;;
+    esac
+}
+
 # ====== ГЕНЕРАЦИЯ SHORTS_ID ======
 generate_ids() {
-    echo "Сколько идентификаторов сгенерировать?"
-    read count
+    echo "$(tr_text IDS_HOW_MANY)"
+    read -r count
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}Ошибка: введите корректное число!${NC}"
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"
         return
     fi
     if [ "$count" -le 0 ]; then
-        echo -e "${RED}Ошибка: количество должно быть больше нуля!${NC}"
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"
         return
     fi
 
     {
         for ((i=1; i<=count; i++)); do
             id=$(head -c 8 /dev/urandom | xxd -p)
-            echo "\"$id\","
+            printf '"%s",\n' "$id"
         done
     } > /tmp/ids_output.txt &
 
     pid=$!
-    spinner $pid
-    wait $pid
+    spinner "$pid"
+    wait "$pid"
     status=$?
 
     echo
     if [ $status -ne 0 ]; then
-        echo -e "${RED}Произошла ошибка во время генерации.${NC}"
+        echo -e "${RED}$(tr_text ERR_IDS)${NC}"
         return
     fi
 
-    echo -e "${GREEN}ID сгенерированы! Вот твой список:${NC}\n"
+    echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
     cat /tmp/ids_output.txt
     echo -e "\a"
 }
 
 # ====== ISO→ФЛАГ ======
 iso_to_flag() {
+    local country_code
     country_code=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     for ((i=0; i<${#country_code}; i++)); do
         char=${country_code:i:1}
         code=$(( $(printf '%d' "'$char") - 65 + 0x1F1E6 ))
-        printf "\\U$(printf '%X' $code)"
+        printf "\\U%X" "$code"
     done
 }
 
 # ====== ПОИСК СТРАН ======
 country_lookup() {
     while true; do
-        echo "Введите название страны (на русском или английском, можно часть, 0 = выход в меню):"
-        read input
-
-        if [[ "$input" == "0" ]]; then
-            return
-        fi
-
+        echo "$(tr_text COUNTRY_PROMPT)"
+        read -r input
+        [ "$input" = "0" ] && return
         key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
-        SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
         matches=$(awk -F',' -v key="$key" -v file="$SCRIPT_DIR/countries.csv" '
         BEGIN {
@@ -108,96 +186,95 @@ country_lookup() {
         }')
 
         if [ -z "$matches" ]; then
-            echo -e "${RED}Ничего не найдено по запросу '${input}'.${NC}"
+            echo -e "${RED}$(tr_text NOTHING_FOUND) '$input'.${NC}"
             continue
         fi
 
-        total=$(echo "$matches" | wc -l)
-        echo -e "${GREEN}Результаты поиска:${NC}"
+        echo -e "${GREEN}$(tr_text RESULTS)${NC}"
         i=1
         echo "$matches" | while IFS=',' read -r iso en; do
             flag=$(iso_to_flag "$iso")
-            echo " $i) $flag $en"
+            printf " %s) %s %s\n" "$i" "$flag" "$en"
             i=$((i+1))
         done > /tmp/matches_list.txt
 
         cat /tmp/matches_list.txt
+        echo "$(tr_text PROMPT_NUM)"
+        read -r choice
 
-        echo "Выберите номер (или 0 для нового поиска):"
-        read choice
-
-        if [[ "$choice" == "0" ]]; then
-            continue
-        fi
-
+        [ "$choice" = "0" ] && continue
         if ! [[ "$choice" =~ ^[0-9]+$ ]]; then
-            echo -e "${RED}Введите корректный номер!${NC}"
+            echo -e "${RED}$(tr_text ERR_NUM)${NC}"
             continue
         fi
 
-        selected=$(sed -n "${choice}p" /tmp/matches_list.txt | awk '{print $2,$3,$4}')
+        selected=$(sed -n "${choice}p" /tmp/matches_list.txt | cut -d' ' -f2-)
         if [ -z "$selected" ]; then
-            echo -e "${RED}Нет варианта с таким номером.${NC}"
+            echo -e "${RED}$(tr_text ERR_NOT_FOUND)${NC}"
             continue
         fi
 
-        echo -e "${YELLOW}Вы выбрали:${NC} $selected"
+        echo -e "${YELLOW}$(tr_text YOU_SELECTED)${NC} $selected"
         return
     done
 }
 
 # ====== ПРОВЕРКА ОБНОВЛЕНИЙ ======
 check_update() {
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
+    local latest
     latest=$(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt)
 
     if [ -z "$latest" ]; then
-        echo -e "${RED}Не удалось проверить обновления.${NC}"
+        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
         return
     fi
 
-    echo "Текущая версия: $VERSION"
-    echo "Последняя версия: $latest"
+    echo "$(tr_text CHECK_CURR) $VERSION"
+    echo "$(tr_text CHECK_LATEST) $latest"
 
     if [ "$VERSION" != "$latest" ]; then
-        echo -e "${YELLOW}Есть новая версия! Хотите обновиться? (y/n)${NC}"
-        read ans
+        echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
+        read -r ans
         if [[ "$ans" =~ ^[YyДд]$ ]]; then
             curl -s -o "$SCRIPT_DIR/scripts.sh" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/scripts.sh
             curl -s -o "$SCRIPT_DIR/version.txt" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt
             chmod +x "$SCRIPT_DIR/scripts.sh"
-            echo -e "${GREEN}Скрипт обновлён до версии $latest${NC}"
-            echo -e "${YELLOW}Перезапуск...${NC}"
+            echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
+            echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
             exec "$SCRIPT_DIR/scripts.sh"
         fi
     else
-        echo -e "${GREEN}У вас уже последняя версия.${NC}"
+        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
     fi
 }
 
 # ====== УДАЛЕНИЕ ======
 delete_self() {
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    "$SCRIPT_DIR/uninstall.sh"
+    echo -e "${YELLOW}$(tr_text CONFIRM_DEL)${NC}"
+    read -r confirm
+    if [[ "$confirm" =~ ^[YyДд]$ ]]; then
+        "$SCRIPT_DIR/uninstall.sh"
+    else
+        echo -e "${GREEN}$(tr_text CANCEL_DEL)${NC}"
+    fi
 }
 
 # ====== МЕНЮ ======
 show_menu() {
-    echo "Выберите действие:"
-    echo "1) Сгенерировать shorts_id"
-    echo "2) Получить emoji-флаг страны"
-    echo "3) Проверить версию/обновить"
-    echo "4) Удалить rw-scripts"
-    echo "0) Выйти"
-    read choice
+    tr_text PROMPT_CHOICE
+    tr_text MENU_GEN_IDS
+    tr_text MENU_FLAG
+    tr_text MENU_UPDATE
+    tr_text MENU_DELETE
+    tr_text MENU_EXIT
+    read -r choice
     case $choice in
         1) generate_ids ;;
         2) country_lookup ;;
         3) check_update ;;
         4) delete_self ;;
-        0) echo "Выход... Пока 👋"; exit 0 ;;
-        *) echo -e "${RED}Неверный выбор, попробуй ещё раз 😅${NC}" ;;
+        0) tr_text MSG_EXIT; exit 0 ;;
+        *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}" ;;
     esac
 }
 
