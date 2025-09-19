@@ -176,23 +176,71 @@ country_lookup() {
 
 # ====== ОБНОВЛЕНИЕ ======
 check_update() {
-    local latest; latest=$(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt)
-    [ -z "$latest" ] && { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; return; }
-    VERSION=$(<"$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
-    echo "$(tr_text CHECK_CURR) $VERSION"; echo "$(tr_text CHECK_LATEST) $latest"
-    if [ "$VERSION" != "$latest" ]; then
-        echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"; read -r ans
-        if [[ "$ans" =~ ^[YyДд]$ ]]; then
-            curl -s -o "$SCRIPT_DIR/scripts.sh" "$REPO_URL/scripts.sh"
-            curl -s -o "$SCRIPT_DIR/version.txt" "$REPO_URL/version.txt"
-            chmod +x "$SCRIPT_DIR/scripts.sh"
-            echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
-            echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
-            exec "$SCRIPT_DIR/scripts.sh"
-        fi
-    else
-        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
+    local latest tmp_script tmp_version
+
+    # Получаем последнюю версию
+    latest=$(curl -fsSL "$REPO_URL/version.txt" | tr -d '\r\n')
+    if [ -z "$latest" ]; then
+        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
+        return 1
     fi
+
+    # Читаем текущую версию
+    if [ -s "$SCRIPT_DIR/version.txt" ]; then
+        VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
+    else
+        VERSION="dev"
+    fi
+
+    echo "$(tr_text CHECK_CURR) $VERSION"
+    echo "$(tr_text CHECK_LATEST) $latest"
+
+    # Если версии совпадают
+    if [ "$VERSION" = "$latest" ]; then
+        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
+        return 0
+    fi
+
+    # Предложить обновление
+    echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
+    read -r ans
+    if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
+        echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+        return 0
+    fi
+
+    # --- Скачиваем новый скрипт во временный файл
+    tmp_script="$SCRIPT_DIR/scripts.sh.tmp"
+    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh"; then
+        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
+        rm -f "$tmp_script"
+        return 1
+    fi
+
+    # --- Скачиваем новый version.txt во временный файл
+    tmp_version="$SCRIPT_DIR/version.txt.tmp"
+    if ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
+        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
+        rm -f "$tmp_script" "$tmp_version"
+        return 1
+    fi
+
+    # Проверяем что version.txt не пустой
+    if [ ! -s "$tmp_version" ]; then
+        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
+        rm -f "$tmp_script" "$tmp_version"
+        return 1
+    fi
+
+    # Устанавливаем обновления
+    mv "$tmp_script" "$SCRIPT_DIR/scripts.sh"
+    chmod +x "$SCRIPT_DIR/scripts.sh"
+    mv "$tmp_version" "$SCRIPT_DIR/version.txt"
+
+    echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
+    echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
+
+    exec "$SCRIPT_DIR/scripts.sh"
 }
 
 # ====== УДАЛЕНИЕ ======
