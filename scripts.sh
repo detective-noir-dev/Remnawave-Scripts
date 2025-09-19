@@ -178,20 +178,8 @@ check_update() {
 
 # ====== УДАЛЕНИЕ ======
 delete_self() {
-    INSTALL_PATH="$HOME/.local/bin/rw-scripts"
-    VERSION_FILE="$HOME/.local/bin/version.txt"
-
-    echo -e "${YELLOW}Вы уверены, что хотите удалить rw-scripts? (y/n)${NC}"
-    read confirm
-
-    if [[ "$confirm" =~ ^[YyДд]$ ]]; then
-        [ -f "$INSTALL_PATH" ] && rm -f "$INSTALL_PATH"
-        [ -f "$VERSION_FILE" ] && rm -f "$VERSION_FILE"
-        echo -e "${RED}rw-scripts удалён!${NC}"
-        exit 0
-    else
-        echo -e "${GREEN}Удаление отменено${NC}"
-    fi
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    "$SCRIPT_DIR/uninstall.sh"
 }
 
 # ====== МЕНЮ ======
