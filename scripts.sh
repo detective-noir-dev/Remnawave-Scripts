@@ -169,21 +169,18 @@ country_lookup() {
         echo "$(tr_text COUNTRY_PROMPT)"
         read -r input
         [ "$input" = "0" ] && return
-        key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
 
-        matches=$(awk -F',' -v key="$key" -v file="$SCRIPT_DIR/countries.csv" '
-        BEGIN {
-            i=0;
-            while ((getline < file) > 0) {
-                ru=tolower($1); en=tolower($2); iso=$3;
-                gsub(/\r$/,"",ru); gsub(/\r$/,"",en);
-                if (ru ~ key || en ~ key) {
-                    i++;
-                    result[i]=iso "," en;
-                }
+        matches=$(awk -F',' -v key="$input" '
+        BEGIN { key = tolower(key); i=0 }
+        {
+            ru=tolower($1); en=tolower($2); iso=$3;
+            gsub(/\r$/,"",ru);
+            gsub(/\r$/,"",en);
+            if (ru ~ key || en ~ key) {
+                i++;
+                print iso "," en;
             }
-            for (j=1; j<=i; j++) print result[j];
-        }')
+        }' "$SCRIPT_DIR/countries.csv")
 
         if [ -z "$matches" ]; then
             echo -e "${RED}$(tr_text NOTHING_FOUND) '$input'.${NC}"
