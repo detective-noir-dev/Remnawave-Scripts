@@ -132,9 +132,11 @@ generate_ids() {
 
 # ====== ISO → FLAG ======
 iso_to_flag() {
-    python3 - <<EOF
-code="$1".upper()
-print("".join([chr(127397 + ord(c)) for c in code]))
+    ISO_CODE="$1" python3 - <<'EOF'
+import sys, os
+code = os.environ.get("ISO_CODE", "").upper()
+flag = "".join([chr(127397 + ord(c)) for c in code])
+sys.stdout.buffer.write(flag.encode("utf-8"))
 EOF
 }
 
