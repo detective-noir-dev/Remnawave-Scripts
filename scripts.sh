@@ -168,7 +168,7 @@ country_lookup() {
 check_update() {
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-    latest=$(curl -s https://raw.githubusercontent.com/detectivenoirr/Remnawave-Scripts/main/version.txt)
+    latest=$(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt)
 
     if [ -z "$latest" ]; then
         echo -e "${RED}Не удалось проверить обновления.${NC}"
@@ -182,7 +182,7 @@ check_update() {
         echo -e "${YELLOW}Есть новая версия! Хотите обновиться? (y/n)${NC}"
         read ans
         if [[ "$ans" =~ ^[Yy]$ ]]; then
-            curl -o "$SCRIPT_DIR/scripts.sh" https://raw.githubusercontent.com/detectivenoirr/Remnawave-Scripts/main/scripts.sh
+            curl -o "$SCRIPT_DIR/scripts.sh" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/scripts.sh
             chmod +x "$SCRIPT_DIR/scripts.sh"
             echo -e "${GREEN}Скрипт обновлён до версии $latest${NC}"
         fi
