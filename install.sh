@@ -7,7 +7,7 @@ CONFIG_DIR="$HOME/.config/remnawave"
 LANG_FILE="$CONFIG_DIR/lang.conf"
 
 # === ПОДТЯГИВАЕМ АКТУАЛЬНУЮ ВЕРСИЮ С ГИТХАБА ===
-VERSION=$(curl -s "$REPO_URL/version.txt")
+VERSION=$(curl -fsSL "$REPO_URL/version.txt" 2>/dev/null)
 if [ -z "$VERSION" ]; then
     VERSION="dev"  # fallback если нет сети
 fi
@@ -32,35 +32,36 @@ esac
 
 echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m\n"
 
-# создаём папку для конфигурации
-mkdir -p "$CONFIG_DIR"
-
-case "$lang_choice" in
-    1) echo "en" > "$LANG_FILE"; LANG_NAME="English" ;;
-    2) echo "ru" > "$LANG_FILE"; LANG_NAME="Русский" ;;
-    *) echo "en" > "$LANG_FILE"; LANG_NAME="English (default)" ;;
-esac
-
-echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m\n"
-
 # === УСТАНОВКА ===
 mkdir -p "$INSTALL_DIR"
 
 # качаем основной скрипт
-curl -s -o "$INSTALL_DIR/$SCRIPT_NAME" "$REPO_URL/scripts.sh"
+if ! curl -fsSL -o "$INSTALL_DIR/$SCRIPT_NAME" "$REPO_URL/scripts.sh"; then
+    echo -e "\e[31m❌ Failed to download scripts.sh\e[0m"
+    exit 1
+fi
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
 
-# качаем uninstall.sh тоже!
-curl -s -o "$INSTALL_DIR/uninstall.sh" "$REPO_URL/uninstall.sh"
+# качаем uninstall.sh
+if ! curl -fsSL -o "$INSTALL_DIR/uninstall.sh" "$REPO_URL/uninstall.sh"; then
+    echo -e "\e[31m❌ Failed to download uninstall.sh\e[0m"
+    exit 1
+fi
 chmod +x "$INSTALL_DIR/uninstall.sh"
 
-# качаем версию
-curl -s -o "$INSTALL_DIR/version.txt" "$REPO_URL/version.txt"
+# качаем version.txt
+if ! curl -fsSL -o "$INSTALL_DIR/version.txt" "$REPO_URL/version.txt"; then
+    echo -e "\e[31m❌ Failed to download version.txt\e[0m"
+    exit 1
+fi
 
-# качаем файл со странами
-curl -s -o "$INSTALL_DIR/countries.csv" "$REPO_URL/countries.csv"
+# качаем countries.csv
+if ! curl -fsSL -o "$INSTALL_DIR/countries.csv" "$REPO_URL/countries.csv"; then
+    echo -e "\e[31m❌ Failed to download countries.csv\e[0m"
+    exit 1
+fi
 
-# проверим PATH
+# проверяем PATH
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     if ! grep -Fxq "export PATH=\$PATH:$INSTALL_DIR" "$HOME/.bashrc"; then
         echo "export PATH=\$PATH:$INSTALL_DIR" >> "$HOME/.bashrc"
@@ -68,7 +69,7 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     fi
 fi
 
-# финальное сообщение в зависимости от языка
+# финальное сообщение
 LANG_SET=$(cat "$LANG_FILE")
 echo
 if [[ "$LANG_SET" == "ru" ]]; then
