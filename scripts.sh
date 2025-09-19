@@ -1,6 +1,6 @@
 #!/bin/bash
 # Версия
-VERSION="0.0.6"
+VERSION=$(cat "$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
 
 # Цвета
 RED='\e[31m'
@@ -161,9 +161,11 @@ check_update() {
         echo -e "${YELLOW}Есть новая версия! Хотите обновиться? (y/n)${NC}"
         read ans
         if [[ "$ans" =~ ^[Yy]$ ]]; then
-            curl -o "$SCRIPT_DIR/scripts.sh" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/scripts.sh
+            curl -s -o "$SCRIPT_DIR/scripts.sh" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/scripts.sh
             chmod +x "$SCRIPT_DIR/scripts.sh"
             echo -e "${GREEN}Скрипт обновлён до версии $latest${NC}"
+            echo -e "${YELLOW}Перезапуск...${NC}"
+            exec "$SCRIPT_DIR/scripts.sh"
         fi
     else
         echo -e "${GREEN}У вас уже последняя версия.${NC}"
