@@ -125,54 +125,49 @@ generate_ids() {
     done
 }
 
-# ====== ISO → FLAG ======
+# ====== ISO→ФЛАГ ======
 iso_to_flag() {
-    local code="$1"
-    awk -v cc="$code" 'BEGIN {
-        u = toupper(cc);
-        for (i=1; i<=length(u); i++) {
-            c = substr(u,i,1);
-            printf("%s", sprintf("%c", 127397 + ord(c)))
-        }
-    }
-    function ord(str,    l) {
-        # ord() для ASCII A-Z
-        l = substr(str,1,1)
-        return index("ABCDEFGHIJKLMNOPQRSTUVWXYZ", l) + 64
-    }'
+    country_code=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    for ((i=0; i<${#country_code}; i++)); do
+        char=${country_code:i:1}
+        code=$(( $(printf '%d' "'$char") - 65 + 0x1F1E6 ))
+        printf "\\U$(printf '%X' $code)"
+    done
 }
 
-# ====== ПОИСК СТРАН ======
+# ====== НОВЫЙ ПОИСК СТРАН ======
 country_lookup() {
-    while true; do
-        echo "$(tr_text COUNTRY_PROMPT)"
-        read -r input; [ "$input" = "0" ] && return
-        matches=$(awk -F',' -v key="$input" '
-        BEGIN { key=tolower(key); i=0 }
-        {
-            ru=tolower($1); en=tolower($2); iso=$3;
-            gsub(/\r$/,"",ru); gsub(/\r$/,"",en);
-            if (ru ~ key || en ~ key) {
-                print iso "," en;
-            }
-        }' "$SCRIPT_DIR/countries.csv")
-        if [ -z "$matches" ]; then
-            echo -e "${RED}$(tr_text NOTHING_FOUND) '$input'.${NC}"; continue
+    echo "Введите название страны (на русском или английском, можно часть):"
+    read input
+    key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
+
+    matches=$(awk -F',' -v key="$key" '
+    {
+        ru=tolower($1); en=tolower($2); iso=$3;
+        if (ru ~ key || en ~ key) {
+            print iso "," $2;
+        }
+    }' countries.csv)
+
+    if [ -z "$matches" ]; then
+        echo -e "${RED}Ничего не найдено по запросу '${input}'.${NC}"
+        return
+    fi
+
+    total=$(echo "$matches" | wc -l)
+    if [ "$total" -gt 10 ]; then
+        echo -e "${YELLOW}Найдено ${total} совпадений. Показать все? (y/n)${NC}"
+        read ans
+        if [[ ! "$ans" =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Отмена вывода.${NC}"
+            return
         fi
-        echo -e "${GREEN}$(tr_text RESULTS)${NC}"
-        i=1
-        echo "$matches" | while IFS=',' read -r iso en; do
-            flag=$(iso_to_flag "$iso")
-            printf " %s) %s %s\n" "$i" "$flag" "$en"
-            i=$((i+1))
-        done > /tmp/matches_list.txt
-        cat /tmp/matches_list.txt
-        echo "$(tr_text PROMPT_NUM)"; read -r choice
-        [ "$choice" = "0" ] && continue
-        if ! [[ "$choice" =~ ^[0-9]+$ ]]; then echo -e "${RED}$(tr_text ERR_NUM)${NC}"; continue; fi
-        selected=$(sed -n "${choice}p" /tmp/matches_list.txt | cut -d' ' -f2-)
-        [ -z "$selected" ] && { echo -e "${RED}$(tr_text ERR_NOT_FOUND)${NC}"; continue; }
-        echo -e "${YELLOW}$(tr_text YOU_SELECTED)${NC} $selected"; return
+    fi
+
+    echo -e "${GREEN}Результаты поиска:${NC}"
+    echo "$matches" | while IFS=',' read -r iso en; do
+        flag=$(iso_to_flag "$iso")
+        echo " $flag $en"
     done
 }
 
