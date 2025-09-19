@@ -1,6 +1,6 @@
 #!/bin/bash
 # Версия
-VERSION="0.0.5"
+VERSION="0.0.6"
 
 # Цвета
 RED='\e[31m'
@@ -170,12 +170,31 @@ check_update() {
     fi
 }
 
+# ====== УДАЛЕНИЕ ======
+delete_self() {
+    INSTALL_PATH="$HOME/.local/bin/rw-scripts"
+    VERSION_FILE="$HOME/.local/bin/version.txt"
+
+    echo -e "${YELLOW}Вы уверены, что хотите удалить rw-scripts? (y/n)${NC}"
+    read confirm
+
+    if [[ "$confirm" =~ ^[YyДд]$ ]]; then
+        [ -f "$INSTALL_PATH" ] && rm -f "$INSTALL_PATH"
+        [ -f "$VERSION_FILE" ] && rm -f "$VERSION_FILE"
+        echo -e "${RED}rw-scripts удалён!${NC}"
+        exit 0
+    else
+        echo -e "${GREEN}Удаление отменено${NC}"
+    fi
+}
+
 # ====== МЕНЮ ======
 show_menu() {
     echo "Выберите действие:"
     echo "1) Сгенерировать shorts_id"
     echo "2) Узнать флаг страны"
     echo "3) Проверить версию/обновить"
+    echo "4) Удалить rw-scripts"
     echo "0) Выйти"
     read choice
     case $choice in
