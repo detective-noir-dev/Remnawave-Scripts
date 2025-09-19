@@ -198,7 +198,7 @@ delete_self() {
 show_menu() {
     echo "Выберите действие:"
     echo "1) Сгенерировать shorts_id"
-    echo "2) Узнать флаг страны"
+    echo "2) Получить emoji-флаг страны"
     echo "3) Проверить версию/обновить"
     echo "4) Удалить rw-scripts"
     echo "0) Выйти"
