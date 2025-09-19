@@ -57,6 +57,9 @@ chmod +x "$INSTALL_DIR/uninstall.sh"
 # качаем версию
 curl -s -o "$INSTALL_DIR/version.txt" "$REPO_URL/version.txt"
 
+# качаем файл со странами
+curl -s -o "$INSTALL_DIR/countries.csv" "$REPO_URL/countries.csv"
+
 # проверим PATH
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     if ! grep -Fxq "export PATH=\$PATH:$INSTALL_DIR" "$HOME/.bashrc"; then
