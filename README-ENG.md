@@ -34,15 +34,13 @@ If you no longer need **Remnawave Scripts**, you can remove it with a single com
 ./uninstall.sh
 ```
 
-📖 Usage
-
+## 📖 Usage
 Example menu:
 ===============================
 1) Generate shorts_id
 2) Find country flag
 3) Check version/update
 4) Uninstall rw-scripts
-9) Change language
 0) Exit
 
 🛠️ Repository structure
