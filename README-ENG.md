@@ -44,8 +44,8 @@ Example menu:
 9) Change language
 0) Exit
 🛠️ Repository structure
-scripts.sh — main script
-install.sh — installer
-countries.csv — dataset of countries (RU/EN + ISO)
-version.txt — current version
-README.md — project description
+- scripts.sh — main script
+- install.sh — installer
+- countries.csv — dataset of countries (RU/EN + ISO)
+- version.txt — current version
+- README-ENG.md — project description
