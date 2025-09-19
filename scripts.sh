@@ -2,8 +2,10 @@
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
-if [ -f "$SCRIPT_DIR/version.txt" ]; then
-    VERSION=$(<"$SCRIPT_DIR/version.txt")
+
+# Всегда пробуем читать версию и убираем лишние символы
+if [ -s "$SCRIPT_DIR/version.txt" ]; then
+    VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
 else
     VERSION="dev"
 fi
