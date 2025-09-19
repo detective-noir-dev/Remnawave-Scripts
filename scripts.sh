@@ -201,6 +201,7 @@ show_menu() {
         1) generate_ids ;;
         2) country_lookup ;;
         3) check_update ;;
+        4) delete_self ;;
         0) echo "Выход... Пока 👋"; exit 0 ;;
         *) echo -e "${RED}Неверный выбор, попробуй ещё раз 😅${NC}" ;;
     esac
