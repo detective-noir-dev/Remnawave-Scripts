@@ -1,24 +1,19 @@
 #!/bin/bash
-# Определяем путь к каталогу, где лежит скрипт
+# ====== НАСТРОЙКИ И ПОДГОТОВКА ======
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Версия подгружается из version.txt
-VERSION=$(<"$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
+if [ -f "$SCRIPT_DIR/version.txt" ]; then
+    VERSION=$(<"$SCRIPT_DIR/version.txt")
+else
+    VERSION="dev"
+fi
 
 # Цвета
-RED='\e[31m'
-YELLOW='\e[33m'
-GREEN='\e[32m'
-NC='\e[0m'
+RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
 
-# ====== ФУНКЦИЯ СПИННЕРА ======
+# ====== СПИННЕР ======
 spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    local start_time
+    local pid=$1 delay=0.1 spinstr='|/-\' start_time min_duration=3
     start_time=$(date +%s)
-    local min_duration=3
     echo -ne "${YELLOW}"
     while kill -0 "$pid" 2>/dev/null; do
         local temp=${spinstr#?}
@@ -27,24 +22,20 @@ spinner() {
         sleep "$delay"
         printf "\b\b\b\b\b\b"
     done
-    local end_time
+    local end_time elapsed
     end_time=$(date +%s)
-    local elapsed=$((end_time - start_time))
+    elapsed=$((end_time - start_time))
     if [ $elapsed -lt $min_duration ]; then
         sleep $((min_duration - elapsed))
     fi
     echo -ne "${NC}"
 }
 
-# ====== НАСТРОЙКА ЯЗЫКА ======
+# ====== ЯЗЫК ======
 CONFIG_DIR="$HOME/.config/remnawave"
 LANG_FILE="$CONFIG_DIR/lang.conf"
-
-if [ -f "$LANG_FILE" ]; then
-    LANG_SET=$(<"$LANG_FILE")
-else
-    LANG_SET="en"  # fallback на английский
-fi
+LANG_SET="en"
+[ -f "$LANG_FILE" ] && LANG_SET=$(<"$LANG_FILE")
 
 # ====== СЛОВАРЬ ======
 tr_text() {
@@ -116,77 +107,54 @@ tr_text() {
     esac
 }
 
-# ====== ГЕНЕРАЦИЯ SHORTS_ID ======
+# ====== ГЕНЕРАЦИЯ ID ======
 generate_ids() {
     echo "$(tr_text IDS_HOW_MANY)"
     read -r count
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"
-        return
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
     fi
     if [ "$count" -le 0 ]; then
-        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"
-        return
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
     fi
 
-    {
-        for ((i=1; i<=count; i++)); do
-            id=$(head -c 8 /dev/urandom | xxd -p)
-            printf '"%s",\n' "$id"
-        done
-    } > /tmp/ids_output.txt &
+    { for ((i=1; i<=count; i++)); do
+          id=$(head -c 8 /dev/urandom | xxd -p)
+          printf '"%s",\n' "$id"
+      done } > /tmp/ids_output.txt &
 
-    pid=$!
-    spinner "$pid"
-    wait "$pid"
-    status=$?
-
-    echo
-    if [ $status -ne 0 ]; then
-        echo -e "${RED}$(tr_text ERR_IDS)${NC}"
-        return
+    pid=$!; spinner "$pid"; wait "$pid"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}$(tr_text ERR_IDS)${NC}"; return
     fi
-
-    echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
-    cat /tmp/ids_output.txt
-    echo -e "\a"
+    echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"; cat /tmp/ids_output.txt; echo -e "\a"
 }
 
-# ====== ISO→ФЛАГ ======
+# ====== ISO → FLAG ======
 iso_to_flag() {
-    local country_code
-    country_code=$(echo "$1" | tr '[:lower:]' '[:upper:]')
-    for ((i=0; i<${#country_code}; i++)); do
-        char=${country_code:i:1}
-        code=$(( $(printf '%d' "'$char") - 65 + 0x1F1E6 ))
-        printf "\\U%X" "$code"
-    done
+    python3 - <<EOF
+code="$1".upper()
+print("".join([chr(127397 + ord(c)) for c in code]))
+EOF
 }
 
 # ====== ПОИСК СТРАН ======
 country_lookup() {
     while true; do
         echo "$(tr_text COUNTRY_PROMPT)"
-        read -r input
-        [ "$input" = "0" ] && return
-
+        read -r input; [ "$input" = "0" ] && return
         matches=$(awk -F',' -v key="$input" '
-        BEGIN { key = tolower(key); i=0 }
+        BEGIN { key=tolower(key); i=0 }
         {
             ru=tolower($1); en=tolower($2); iso=$3;
-            gsub(/\r$/,"",ru);
-            gsub(/\r$/,"",en);
+            gsub(/\r$/,"",ru); gsub(/\r$/,"",en);
             if (ru ~ key || en ~ key) {
-                i++;
                 print iso "," en;
             }
         }' "$SCRIPT_DIR/countries.csv")
-
         if [ -z "$matches" ]; then
-            echo -e "${RED}$(tr_text NOTHING_FOUND) '$input'.${NC}"
-            continue
+            echo -e "${RED}$(tr_text NOTHING_FOUND) '$input'.${NC}"; continue
         fi
-
         echo -e "${GREEN}$(tr_text RESULTS)${NC}"
         i=1
         echo "$matches" | while IFS=',' read -r iso en; do
@@ -194,47 +162,27 @@ country_lookup() {
             printf " %s) %s %s\n" "$i" "$flag" "$en"
             i=$((i+1))
         done > /tmp/matches_list.txt
-
         cat /tmp/matches_list.txt
-        echo "$(tr_text PROMPT_NUM)"
-        read -r choice
-
+        echo "$(tr_text PROMPT_NUM)"; read -r choice
         [ "$choice" = "0" ] && continue
-        if ! [[ "$choice" =~ ^[0-9]+$ ]]; then
-            echo -e "${RED}$(tr_text ERR_NUM)${NC}"
-            continue
-        fi
-
+        if ! [[ "$choice" =~ ^[0-9]+$ ]]; then echo -e "${RED}$(tr_text ERR_NUM)${NC}"; continue; fi
         selected=$(sed -n "${choice}p" /tmp/matches_list.txt | cut -d' ' -f2-)
-        if [ -z "$selected" ]; then
-            echo -e "${RED}$(tr_text ERR_NOT_FOUND)${NC}"
-            continue
-        fi
-
-        echo -e "${YELLOW}$(tr_text YOU_SELECTED)${NC} $selected"
-        return
+        [ -z "$selected" ] && { echo -e "${RED}$(tr_text ERR_NOT_FOUND)${NC}"; continue; }
+        echo -e "${YELLOW}$(tr_text YOU_SELECTED)${NC} $selected"; return
     done
 }
 
-# ====== ПРОВЕРКА ОБНОВЛЕНИЙ ======
+# ====== ОБНОВЛЕНИЕ ======
 check_update() {
-    local latest
-    latest=$(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt)
-
-    if [ -z "$latest" ]; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        return
-    fi
-
-    echo "$(tr_text CHECK_CURR) $VERSION"
-    echo "$(tr_text CHECK_LATEST) $latest"
-
+    local latest; latest=$(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt)
+    [ -z "$latest" ] && { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; return; }
+    VERSION=$(<"$SCRIPT_DIR/version.txt" 2>/dev/null || echo "dev")
+    echo "$(tr_text CHECK_CURR) $VERSION"; echo "$(tr_text CHECK_LATEST) $latest"
     if [ "$VERSION" != "$latest" ]; then
-        echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
-        read -r ans
+        echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"; read -r ans
         if [[ "$ans" =~ ^[YyДд]$ ]]; then
-            curl -s -o "$SCRIPT_DIR/scripts.sh" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/scripts.sh
-            curl -s -o "$SCRIPT_DIR/version.txt" https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt
+            curl -s -o "$SCRIPT_DIR/scripts.sh" "$REPO_URL/scripts.sh"
+            curl -s -o "$SCRIPT_DIR/version.txt" "$REPO_URL/version.txt"
             chmod +x "$SCRIPT_DIR/scripts.sh"
             echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
             echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
@@ -246,11 +194,7 @@ check_update() {
 }
 
 # ====== УДАЛЕНИЕ ======
-delete_self() {
-    # Запускаем uninstall.sh и сразу выходим из программы
-    "$SCRIPT_DIR/uninstall.sh"
-    exit 0
-}
+delete_self() { "$SCRIPT_DIR/uninstall.sh"; exit 0; }
 
 # ====== МЕНЮ ======
 show_menu() {
@@ -265,13 +209,11 @@ show_menu() {
         1) generate_ids ;;
         2) country_lookup ;;
         3) check_update ;;
-        4) delete_self ;;   # <--- здесь теперь только uninstall.sh
+        4) delete_self ;;
         0) tr_text MSG_EXIT; exit 0 ;;
         *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}" ;;
     esac
 }
 
-# ====== ОСНОВНОЙ ЦИКЛ ======
-while true; do
-    show_menu
-done
+# ====== ЦИКЛ ======
+while true; do show_menu; done
