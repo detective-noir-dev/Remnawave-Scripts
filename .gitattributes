@@ -1,3 +1,7 @@
+# Автоматически нормализовать окончания строк
+* text=auto
+
+# Всегда LF для shell-скриптов и CSV
 *.sh text eol=lf
 *.csv text eol=lf
 version.txt text eol=lf
