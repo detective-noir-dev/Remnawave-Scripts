@@ -19,7 +19,7 @@ Option to uninstall from system
 Install with one command:
 
 ```bash
-curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh | bash
+bash <(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh)
 ```
 Run globally:
 

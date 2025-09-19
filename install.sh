@@ -9,7 +9,7 @@ LANG_FILE="$CONFIG_DIR/lang.conf"
 # === ПОДТЯГИВАЕМ АКТУАЛЬНУЮ ВЕРСИЮ С ГИТХАБА ===
 VERSION=$(curl -s "$REPO_URL/version.txt")
 if [ -z "$VERSION" ]; then
-    VERSION="dev"  # fallback если не удалось загрузить
+    VERSION="dev"  # fallback если нет сети
 fi
 
 echo -e "\e[36m🚀 Starting Remnawave Scripts installer v$VERSION...\e[0m"
@@ -18,7 +18,19 @@ echo -e "\e[36m🚀 Starting Remnawave Scripts installer v$VERSION...\e[0m"
 echo -e "\nChoose installation language / Выберите язык установки:"
 echo "1) English"
 echo "2) Русский"
-read -r -p "Enter number (1/2): " lang_choice
+printf "Enter number (1/2): "
+read -r lang_choice
+
+# создаём папку для конфигурации
+mkdir -p "$CONFIG_DIR"
+
+case "$lang_choice" in
+    1) echo "en" > "$LANG_FILE"; LANG_NAME="English" ;;
+    2) echo "ru" > "$LANG_FILE"; LANG_NAME="Русский" ;;
+    *) echo "en" > "$LANG_FILE"; LANG_NAME="English (default)" ;;
+esac
+
+echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m\n"
 
 # создаём папку для конфигурации
 mkdir -p "$CONFIG_DIR"
@@ -34,9 +46,13 @@ echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m\n"
 # === УСТАНОВКА ===
 mkdir -p "$INSTALL_DIR"
 
-# качаем скрипт
+# качаем основной скрипт
 curl -s -o "$INSTALL_DIR/$SCRIPT_NAME" "$REPO_URL/scripts.sh"
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
+
+# качаем uninstall.sh тоже!
+curl -s -o "$INSTALL_DIR/uninstall.sh" "$REPO_URL/uninstall.sh"
+chmod +x "$INSTALL_DIR/uninstall.sh"
 
 # качаем версию
 curl -s -o "$INSTALL_DIR/version.txt" "$REPO_URL/version.txt"

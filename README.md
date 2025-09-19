@@ -26,7 +26,7 @@
 Установить последнюю версию можно одной командой в терминале:
 
 ```bash
-curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh | bash
+bash <(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh)
 ```
 После установки скрипт доступен глобально через:
 ```bash
