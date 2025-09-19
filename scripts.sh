@@ -1,25 +1,4 @@
 #!/bin/bash
-
-# Каталог для установки
-INSTALL_DIR="$HOME/.local/bin"
-SCRIPT_NAME="rw-scripts"
-
-# Создаем папку ~/.local/bin если её нет
-mkdir -p "$INSTALL_DIR"
-
-# Копируем скрипт в PATH
-cp scripts.sh "$INSTALL_DIR/$SCRIPT_NAME"
-chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
-
-# Проверим, есть ли ~/.local/bin в PATH
-if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-    echo "export PATH=\$PATH:$INSTALL_DIR" >> "$HOME/.bashrc"
-    echo -e "\e[33m[!] Папка $INSTALL_DIR добавлена в PATH (перезапусти терминал).\e[0m"
-fi
-
-echo -e "\e[32mУстановка завершена!\e[0m"
-echo "Теперь можно запускать с помощью команды: $SCRIPT_NAME"
-
 # Версия
 VERSION="0.0.5"
 
