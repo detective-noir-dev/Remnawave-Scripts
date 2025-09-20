@@ -194,73 +194,56 @@ country_lookup() {
     done
 }
 
-# ====== ОБНОВЛЕНИЕ ======
+# ====== ОБНОВЛЕНИЕ (через git) ======
 check_update() {
-    local latest tmp_script tmp_version
+    # Показываем текущую локальную версию
+    echo "$(tr_text CHECK_CURR) $VERSION"
 
-    # Получаем последнюю версию
-    latest=$(curl -fsSL "$REPO_URL/version.txt" | tr -d '\r\n')
-    if [ -z "$latest" ]; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
+    # Проверяем, что это git-клон
+    if [ ! -d "$SCRIPT_DIR/.git" ]; then
+        echo -e "${RED}❌ This installation is not a git clone. Update via installer instead.${NC}"
         return 1
     fi
 
-    # Читаем текущую версию
-    if [ -s "$SCRIPT_DIR/version.txt" ]; then
-        VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
-    else
-        VERSION="dev"
-    fi
+    # --- Получаем последнюю версию из origin ---
+    echo -e "${YELLOW}🔄 Checking for updates via git...${NC}"
+    git -C "$SCRIPT_DIR" fetch --quiet
 
-    echo "$(tr_text CHECK_CURR) $VERSION"
-    echo "$(tr_text CHECK_LATEST) $latest"
+    local local_ver remote_ver
+    local_ver=$(<"$SCRIPT_DIR/version.txt")
+    remote_ver=$(git -C "$SCRIPT_DIR" show origin/main:version.txt 2>/dev/null | tr -d '\r\n')
 
-    # Если версии совпадают
-    if [ "$VERSION" = "$latest" ]; then
+    echo "$(tr_text CHECK_LATEST) $remote_ver"
+
+    # --- Если версии совпадают ---
+    if [ "$local_ver" = "$remote_ver" ]; then
         echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
         return 0
     fi
 
-    # Предложить обновление
+    # --- Предлагаем обновление ---
     echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
     read -r ans
     if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
-        echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+        echo -e "${YELLOW}$(tr_text UPDATE_CANCELLED)${NC}"
         return 0
     fi
 
-    # --- Скачиваем новый скрипт во временный файл
-    tmp_script="$SCRIPT_DIR/scripts.sh.tmp"
-    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh"; then
+    # --- Делаем обновление (git pull) ---
+    if git -C "$SCRIPT_DIR" pull --ff-only; then
+        chmod +x "$SCRIPT_DIR/scripts.sh"
+        VERSION=$(<"$SCRIPT_DIR/version.txt")
+
+        # --- Сообщаем об успешной установке ---
+        echo -e "${GREEN}$(tr_text UPDATE_DONE) $VERSION${NC}"
+        echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
+
+        exec "$SCRIPT_DIR/scripts.sh"
+    else
+        # --- Сообщаем о неудаче обновления ---
         echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        rm -f "$tmp_script"
         return 1
     fi
-
-    # --- Скачиваем новый version.txt во временный файл
-    tmp_version="$SCRIPT_DIR/version.txt.tmp"
-    if ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        rm -f "$tmp_script" "$tmp_version"
-        return 1
-    fi
-
-    # Проверяем что version.txt не пустой
-    if [ ! -s "$tmp_version" ]; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        rm -f "$tmp_script" "$tmp_version"
-        return 1
-    fi
-
-    # Устанавливаем обновления
-    mv "$tmp_script" "$SCRIPT_DIR/scripts.sh"
-    chmod +x "$SCRIPT_DIR/scripts.sh"
-    mv "$tmp_version" "$SCRIPT_DIR/version.txt"
-
-    echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
-    echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
-
-    exec "$SCRIPT_DIR/scripts.sh"
 }
 
 # ====== УДАЛЕНИЕ ======
