@@ -1,7 +1,7 @@
 #!/bin/bash
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
 SCRIPT_PATH="$(readlink -f "$0")"
-SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_URL="https://github.com/detective-noir-dev/Remnawave-Scripts.git"
 
 # Версия
