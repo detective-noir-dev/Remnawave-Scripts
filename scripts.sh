@@ -1,23 +1,16 @@
 #!/bin/bash
-#
-# Remnawave Scripts v1.0.0
-#
-
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
-REPO_URL="https://github.com/detective-noir-dev/Remnawave-Scripts.git"
+REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
 
-# Цвета
-RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
-
-# Версия (из version.txt в git-клоне)
+# Всегда пробуем читать версию и убираем лишние символы
 if [ -s "$SCRIPT_DIR/version.txt" ]; then
     VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
 else
     VERSION="dev"
 fi
 
-# ====== БАННЕР ======
+# ====== БАННЕР ПРИ СТАРТЕ ======
 show_banner() {
     echo -e "${GREEN}"
     echo "====================================="
@@ -26,20 +19,19 @@ show_banner() {
     echo -e "${NC}"
 }
 
-# ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ (git) ======
+# ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ ======
 auto_check_update() {
-    if [ ! -d "$SCRIPT_DIR/.git" ]; then
-        return
-    fi
-    git -C "$SCRIPT_DIR" fetch --quiet
-    local local_ver remote_ver
-    local_ver=$(<"$SCRIPT_DIR/version.txt")
-    remote_ver=$(git -C "$SCRIPT_DIR" show origin/main:version.txt 2>/dev/null | tr -d '\r\n')
-    if [ -n "$remote_ver" ] && [ "$remote_ver" != "$local_ver" ]; then
-        echo -e "${YELLOW}⚠️  Доступна новая версия: $remote_ver (у вас $local_ver)"
-        echo -e "   Запустите пункт [3], чтобы обновить.${NC}\n"
+    local latest
+    latest=$(curl -s "$REPO_URL/version.txt" | tr -d '\r\n')
+    if [ -n "$latest" ] && [ "$latest" != "$VERSION" ]; then
+        echo -e "${YELLOW}⚠️  A new version is available: $latest (you are on $VERSION)"
+        echo -e "   Run option [3] in the menu to update.${NC}"
+        echo
     fi
 }
+
+# Цвета
+RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
 
 # ====== СПИННЕР ======
 spinner() {
@@ -84,9 +76,9 @@ tr_text() {
                 IDS_HOW_MANY) echo "Сколько идентификаторов сгенерировать?" ;;
                 ERR_NUMBER)   echo "Ошибка: введите корректное число!" ;;
                 ERR_GT_ZERO)  echo "Ошибка: количество должно быть больше нуля!" ;;
-                IDS_DONE)     echo "ID сгенерированы! Вот ваш список:" ;;
+                IDS_DONE)     echo "ID сгенерированы! Вот твой список:" ;;
                 ERR_IDS)      echo "Произошла ошибка во время генерации." ;;
-                COUNTRY_PROMPT) echo "Введите название страны (на русском или английском):" ;;
+                COUNTRY_PROMPT) echo "Введите название страны (на русском или английском, можно часть, 0 = выход в меню):" ;;
                 NOTHING_FOUND)  echo "Ничего не найдено по запросу" ;;
                 RESULTS)        echo "Результаты поиска:" ;;
                 PROMPT_NUM)     echo "Выберите номер (или 0 для нового поиска):" ;;
@@ -95,11 +87,10 @@ tr_text() {
                 YOU_SELECTED)   echo "Вы выбрали:" ;;
                 CHECK_CURR)     echo "Текущая версия:" ;;
                 CHECK_LATEST)   echo "Последняя версия:" ;;
-                UPDATE_AVAIL)   echo "Есть новая версия! Хотите обновить? (y/n)" ;;
+                UPDATE_AVAIL)   echo "Есть новая версия! Хотите обновиться? (y/n)" ;;
                 UPDATE_DONE)    echo "Скрипт обновлён до версии" ;;
                 UPDATE_RESTART) echo "Перезапуск..." ;;
-                UPDATE_FAIL)    echo "Не удалось обновить." ;;
-                UPDATE_CANCELLED) echo "Обновление отменено" ;;
+                UPDATE_FAIL)    echo "Не удалось проверить обновления." ;;
                 NO_UPDATES)     echo "У вас уже последняя версия." ;;
                 CONFIRM_DEL)    echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
                 CANCEL_DEL)     echo "Удаление отменено" ;;
@@ -119,23 +110,22 @@ tr_text() {
                 ERR_GT_ZERO)  echo "Error: number must be greater than zero!" ;;
                 IDS_DONE)     echo "IDs generated! Here is your list:" ;;
                 ERR_IDS)      echo "An error occurred during generation." ;;
-                COUNTRY_PROMPT) echo "Enter country name (English or Russian):" ;;
+                COUNTRY_PROMPT) echo "Enter country name (English or Russian, part allowed, 0 = back to menu):" ;;
                 NOTHING_FOUND)  echo "Nothing found for query" ;;
                 RESULTS)        echo "Search results:" ;;
-                PROMPT_NUM)     echo "Choose a number (or 0 for new search):" ;;
+                PROMPT_NUM)     echo "Choose number (or 0 for new search):" ;;
                 ERR_NUM)        echo "Enter a valid number!" ;;
-                ERR_NOT_FOUND)  echo "No option with that number." ;;
+                ERR_NOT_FOUND)  echo "No option with that number found." ;;
                 YOU_SELECTED)   echo "You selected:" ;;
                 CHECK_CURR)     echo "Current version:" ;;
                 CHECK_LATEST)   echo "Latest version:" ;;
                 UPDATE_AVAIL)   echo "New version available! Update? (y/n)" ;;
                 UPDATE_DONE)    echo "Script updated to version" ;;
                 UPDATE_RESTART) echo "Restarting..." ;;
-                UPDATE_FAIL)    echo "Update failed." ;;
-                UPDATE_CANCELLED) echo "Update cancelled" ;;
+                UPDATE_FAIL)    echo "Failed to check for updates." ;;
                 NO_UPDATES)     echo "You already have the latest version." ;;
                 CONFIRM_DEL)    echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
-                CANCEL_DEL)     echo "Uninstall cancelled" ;;
+                CANCEL_DEL)     echo "Uninstall canceled" ;;
             esac ;;
     esac
 }
@@ -145,12 +135,10 @@ generate_ids() {
     echo "$(tr_text IDS_HOW_MANY)"
     read -r count
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"
-        return
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
     fi
     if [ "$count" -le 0 ]; then
-        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"
-        return
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
     fi
 
     echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
@@ -165,15 +153,15 @@ iso_to_flag() {
     country_code=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     for ((i=0; i<${#country_code}; i++)); do
         char=${country_code:i:1}
-        code=$(( $(printf "%d" "'$char") - 65 + 0x1F1E6 ))
-        printf "\\U$(printf '%X' "$code")"
+        code=$(( $(printf '%d' "'$char") - 65 + 0x1F1E6 ))
+        printf "\\U$(printf '%X' $code)"
     done
 }
 
-# ====== ПОИСК СТРАН ======
+# ====== НОВЫЙ ПОИСК СТРАН ======
 country_lookup() {
-    echo "$(tr_text COUNTRY_PROMPT)"
-    read -r input
+    echo "Введите название страны (на русском или английском, можно часть):"
+    read input
     key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
 
     matches=$(awk -F',' -v key="$key" '
@@ -182,29 +170,42 @@ country_lookup() {
         if (ru ~ key || en ~ key) {
             print iso "," $2;
         }
-    }' "$SCRIPT_DIR/countries.csv")
+    }' countries.csv)
 
     if [ -z "$matches" ]; then
-        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"
+        echo -e "${RED}Ничего не найдено по запросу '${input}'.${NC}"
         return
     fi
 
-    echo -e "${GREEN}$(tr_text RESULTS)${NC}"
+    total=$(echo "$matches" | wc -l)
+    if [ "$total" -gt 10 ]; then
+        echo -e "${YELLOW}Найдено ${total} совпадений. Показать все? (y/n)${NC}"
+        read ans
+        if [[ ! "$ans" =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Отмена вывода.${NC}"
+            return
+        fi
+    fi
+
+    echo -e "${GREEN}Результаты поиска:${NC}"
     echo "$matches" | while IFS=',' read -r iso en; do
         flag=$(iso_to_flag "$iso")
         echo " $flag $en"
     done
 }
 
-# ====== ОБНОВЛЕНИЕ (git) ======
+# ====== ОБНОВЛЕНИЕ (через git) ======
 check_update() {
+    # Показываем текущую локальную версию
     echo "$(tr_text CHECK_CURR) $VERSION"
 
+    # Проверяем, что это git-клон
     if [ ! -d "$SCRIPT_DIR/.git" ]; then
         echo -e "${RED}❌ This installation is not a git clone. Update via installer instead.${NC}"
         return 1
     fi
 
+    # --- Получаем последнюю версию из origin ---
     echo -e "${YELLOW}🔄 Checking for updates via git...${NC}"
     git -C "$SCRIPT_DIR" fetch --quiet
 
@@ -214,11 +215,13 @@ check_update() {
 
     echo "$(tr_text CHECK_LATEST) $remote_ver"
 
+    # --- Если версии совпадают ---
     if [ "$local_ver" = "$remote_ver" ]; then
         echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
         return 0
     fi
 
+    # --- Предлагаем обновление ---
     echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
     read -r ans
     if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
@@ -226,13 +229,18 @@ check_update() {
         return 0
     fi
 
+    # --- Делаем обновление (git pull) ---
     if git -C "$SCRIPT_DIR" pull --ff-only; then
         chmod +x "$SCRIPT_DIR/scripts.sh"
         VERSION=$(<"$SCRIPT_DIR/version.txt")
+
+        # --- Сообщаем об успешной установке ---
         echo -e "${GREEN}$(tr_text UPDATE_DONE) $VERSION${NC}"
         echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
+
         exec "$SCRIPT_DIR/scripts.sh"
     else
+        # --- Сообщаем о неудаче обновления ---
         echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
         return 1
     fi
@@ -243,7 +251,6 @@ delete_self() { "$SCRIPT_DIR/uninstall.sh"; exit 0; }
 
 # ====== МЕНЮ ======
 show_menu() {
-    echo
     tr_text PROMPT_CHOICE
     tr_text MENU_GEN_IDS
     tr_text MENU_FLAG
@@ -261,9 +268,10 @@ show_menu() {
     esac
 }
 
-# ====== ЗАПУСК ======
+# ====== ЦИКЛ ======
 show_banner
 auto_check_update
+
 while true; do
     show_menu
 done
