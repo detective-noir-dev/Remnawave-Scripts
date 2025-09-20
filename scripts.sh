@@ -143,26 +143,32 @@ show_system_info() {
 
     # Проверяем наличие neofetch
     if ! command -v neofetch >/dev/null 2>&1; then
-        echo -e "${YELLOW}⚠️  Neofetch not found. Installing...${NC}"
-        
-        # Определяем пакетный менеджер
-        if command -v apt-get >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y neofetch
-        elif command -v apt >/dev/null 2>&1; then
-            sudo apt update && sudo apt install -y neofetch
-        elif command -v dnf >/dev/null 2>&1; then
-            sudo dnf install -y neofetch
-        elif command -v yum >/dev/null 2>&1; then
-            sudo yum install -y neofetch
-        elif command -v pacman >/dev/null 2>&1; then
-            sudo pacman -Sy --noconfirm neofetch
-        elif command -v zypper >/dev/null 2>&1; then
-            sudo zypper install -y neofetch
-        elif command -v brew >/dev/null 2>&1; then
-            brew install neofetch
+        echo -e "${YELLOW}⚠️  Neofetch is not installed.${NC}"
+        read -rp "👉 Install neofetch now? (y/n): " ans
+
+        if [[ "$ans" =~ ^[YyДд]$ ]]; then
+            echo -e "${BLUE}🔧 Installing neofetch...${NC}"
+            if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update && sudo apt-get install -y neofetch
+            elif command -v apt >/dev/null 2>&1; then
+                sudo apt update && sudo apt install -y neofetch
+            elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y neofetch
+            elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y neofetch
+            elif command -v pacman >/dev/null 2>&1; then
+                sudo pacman -Sy --noconfirm neofetch
+            elif command -v zypper >/dev/null 2>&1; then
+                sudo zypper install -y neofetch
+            elif command -v brew >/dev/null 2>&1; then
+                brew install neofetch
+            else
+                echo -e "${RED}❌ Could not detect a package manager. Please install neofetch manually.${NC}"
+                return 1
+            fi
         else
-            echo -e "${RED}❌ Unable to install neofetch: Package manager not detected${NC}"
-            return 1
+            echo -e "${RED}❌ Neofetch not installed. Skipping system info.${NC}"
+            return 0
         fi
     fi
 
