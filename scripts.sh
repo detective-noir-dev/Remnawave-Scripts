@@ -10,6 +10,26 @@ else
     VERSION="dev"
 fi
 
+# ====== БАННЕР ПРИ СТАРТЕ ======
+show_banner() {
+    echo -e "${GREEN}"
+    echo "====================================="
+    echo "  🚀 Remnawave Scripts (v$VERSION)"
+    echo "====================================="
+    echo -e "${NC}"
+}
+
+# ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ ======
+auto_check_update() {
+    local latest
+    latest=$(curl -s "$REPO_URL/version.txt" | tr -d '\r\n')
+    if [ -n "$latest" ] && [ "$latest" != "$VERSION" ]; then
+        echo -e "${YELLOW}⚠️  A new version is available: $latest (you are on $VERSION)"
+        echo -e "   Run option [3] in the menu to update.${NC}"
+        echo
+    fi
+}
+
 # Цвета
 RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
 
@@ -266,4 +286,9 @@ show_menu() {
 }
 
 # ====== ЦИКЛ ======
-while true; do show_menu; done
+show_banner
+auto_check_update
+
+while true; do
+    show_menu
+done
