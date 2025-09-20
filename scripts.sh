@@ -13,14 +13,19 @@ else
 fi
 
 # Цвета
-RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
+RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; BLUE='\e[34m'; NC='\e[0m'
 
 # ====== БАННЕР ======
 show_banner() {
     echo -e "${GREEN}"
-    echo "====================================="
-    echo "  🚀 Remnawave Scripts (v$VERSION)"
-    echo "====================================="
+    if command -v figlet >/dev/null 2>&1; then
+        figlet "Remnawave"
+        echo -e "             v$VERSION"
+    else
+        echo "====================================="
+        echo "  🚀 Remnawave Scripts (v$VERSION)"
+        echo "====================================="
+    fi
     echo -e "${NC}"
 }
 
@@ -37,7 +42,7 @@ auto_check_update() {
 
 # ====== СПИННЕР ======
 spinner() {
-    local pid=$1 delay=0.1 spinstr='|/-\' start_time min_duration=3
+    local pid=$1 delay=0.1 spinstr='|/-\' start_time min_duration=2
     start_time=$(date +%s)
     echo -ne "${YELLOW}"
     while kill -0 "$pid" 2>/dev/null; do
@@ -69,8 +74,9 @@ tr_text() {
                 MENU_FLAG)    echo "2) Получить emoji-флаг страны" ;;
                 MENU_UPDATE)  echo "3) Проверить версию/обновить" ;;
                 MENU_DELETE)  echo "4) Удалить rw-scripts" ;;
+                MENU_SYSINFO) echo "7) Показать системную информацию" ;;
                 MENU_EXIT)    echo "0) Выйти" ;;
-                PROMPT_CHOICE) echo "Выберите действие:" ;;
+                PROMPT_CHOICE) echo -e "${BLUE}Выберите действие:${NC}" ;;
                 MSG_EXIT)     echo "Выход... Пока 👋" ;;
                 ERR_CHOICE)   echo "Неверный выбор, попробуй ещё раз 😅" ;;
                 IDS_HOW_MANY) echo "Сколько идентификаторов сгенерировать?" ;;
@@ -101,8 +107,9 @@ tr_text() {
                 MENU_FLAG)    echo "2) Get country emoji flag" ;;
                 MENU_UPDATE)  echo "3) Check version/update" ;;
                 MENU_DELETE)  echo "4) Uninstall rw-scripts" ;;
+                MENU_SYSINFO) echo "7) Show system info" ;;
                 MENU_EXIT)    echo "0) Exit" ;;
-                PROMPT_CHOICE) echo "Choose an action:" ;;
+                PROMPT_CHOICE) echo -e "${BLUE}Choose an action:${NC}" ;;
                 MSG_EXIT)     echo "Exiting... Bye 👋" ;;
                 ERR_CHOICE)   echo "Invalid choice, try again 😅" ;;
                 IDS_HOW_MANY) echo "How many IDs to generate?" ;;
@@ -130,18 +137,67 @@ tr_text() {
     esac
 }
 
+# ====== ФУНКЦИЯ: СИСТЕМНАЯ ИНФА ======
+show_system_info() {
+    echo -e "${GREEN}======== 📊 System Information ========${NC}"
+    echo -e "${YELLOW}OS:       ${NC}$(uname -srm)"
+    echo -e "${YELLOW}Shell:    ${NC}$SHELL"
+    echo -e "${YELLOW}Date:     ${NC}$(date)"
+    echo -e "${YELLOW}Uptime:   ${NC}$(uptime -p)"
+
+    # CPU info
+    if command -v lscpu >/dev/null 2>&1; then
+        cpu_model=$(lscpu | grep "Model name:" | sed 's/Model name:\s*//')
+        cpu_cores=$(lscpu | grep "^CPU(s):" | awk '{print $2}')
+    elif [ -f /proc/cpuinfo ]; then
+        cpu_model=$(grep -m1 "model name" /proc/cpuinfo | cut -d ':' -f2 | sed 's/^ *//')
+        cpu_cores=$(grep -c ^processor /proc/cpuinfo)
+    else
+        cpu_model="Unknown"
+        cpu_cores="?"
+    fi
+    echo -e "${YELLOW}CPU:      ${NC}$cpu_model ($cpu_cores cores)"
+
+    # RAM
+    echo -e "${YELLOW}Free RAM: ${NC}$(free -h | awk '/Mem/ {print $4 " free / " $2 " total"}')"
+
+    # Disk
+    echo -e "${YELLOW}Disk:     ${NC}$(df -h --output=pcent / | tail -1) used of /"
+
+    # IP addresses
+    local_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    [ -z "$local_ip" ] && local_ip="N/A"
+    echo -e "${YELLOW}Local IP: ${NC}$local_ip"
+
+    if command -v curl >/dev/null 2>&1; then
+        external_ip=$(curl -s ifconfig.me || curl -s ipinfo.io/ip)
+        [ -z "$external_ip" ] && external_ip="N/A"
+    else
+        external_ip="N/A (curl not installed)"
+    fi
+    echo -e "${YELLOW}Public IP:${NC} $external_ip"
+
+    echo -e "${GREEN}=======================================${NC}"
+}
+
 # ====== ГЕНЕРАЦИЯ ID ======
 generate_ids() {
-    echo "$(tr_text IDS_HOW_MANY)"
+    echo -ne "${BLUE}$(tr_text IDS_HOW_MANY)${NC} "
     read -r count
-    if ! [[ "$count" =~ ^[0-9]+$ ]]; then echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return; fi
-    if [ "$count" -le 0 ]; then echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return; fi
+    if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
+    fi
+    if [ "$count" -le 0 ]; then
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
+    fi
 
     echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
-    for ((i=1; i<=count; i++)); do
+    (for ((i=1; i<=count; i++)); do
         id=$(head -c 8 /dev/urandom | xxd -p)
         printf '"%s",\n' "$id"
-    done
+        sleep 0.05
+    done) &
+    spinner $!
 }
 
 # ====== ISO→ФЛАГ ======
@@ -231,18 +287,22 @@ delete_self() { "$DATA_DIR/uninstall.sh"; exit 0; }
 
 # ====== МЕНЮ ======
 show_menu() {
-    tr_text PROMPT_CHOICE
-    tr_text MENU_GEN_IDS
-    tr_text MENU_FLAG
-    tr_text MENU_UPDATE
-    tr_text MENU_DELETE
-    tr_text MENU_EXIT
+    echo
+    echo "$(tr_text PROMPT_CHOICE)"
+    echo -e "${YELLOW}$(tr_text MENU_GEN_IDS)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_FLAG)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_UPDATE)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_DELETE)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_SYSINFO)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_EXIT)${NC}"
+    echo -n "> "
     read -r choice
     case $choice in
         1) generate_ids ;;
         2) country_lookup ;;
         3) check_update ;;
         4) delete_self ;;
+        7) show_system_info ;;
         0) tr_text MSG_EXIT; exit 0 ;;
         *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}" ;;
     esac
