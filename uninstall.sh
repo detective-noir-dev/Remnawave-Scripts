@@ -1,66 +1,46 @@
 #!/bin/bash
+# ==== UNINSTALL REMNAWAVE SCRIPTS ====
 
-INSTALL_DIR="$HOME/.local/bin"
-SCRIPT_NAME="rw-scripts"
+BIN_DIR="$HOME/.local/bin"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/remnawave"
 CONFIG_DIR="$HOME/.config/remnawave"
-LANG_FILE="$CONFIG_DIR/lang.conf"
+BIN_FILE="$BIN_DIR/rw-scripts"
 
-# Цвета
-RED='\e[31m'
-YELLOW='\e[33m'
-GREEN='\e[32m'
-CYAN='\e[36m'
-NC='\e[0m'
+echo "====================================="
+echo "  🗑️  Remnawave Scripts Uninstaller"
+echo "====================================="
 
-# Загружаем язык
-if [ -f "$LANG_FILE" ]; then
-    LANG_SET=$(cat "$LANG_FILE")
-else
-    LANG_SET="en"
-fi
-
-# Словарь переводов
-tr_text() {
-    case "$LANG_SET" in
-        "ru")
-            case "$1" in
-                CONFIRM)   echo "⚠️ Вы уверены, что хотите удалить $SCRIPT_NAME (y/n)?" ;;
-                FILE_DEL)  echo "Удалён" ;;
-                FILE_MISS) echo "Файл не найден (может быть уже удалён)." ;;
-                DONE)      echo "✅ Удаление завершено!" ;;
-                CANCEL)    echo "Отмена удаления." ;;
-            esac ;;
-        "en" | *)
-            case "$1" in
-                CONFIRM)   echo "⚠️ Are you sure you want to uninstall $SCRIPT_NAME (y/n)?" ;;
-                FILE_DEL)  echo "Removed" ;;
-                FILE_MISS) echo "File not found (maybe already deleted)." ;;
-                DONE)      echo "✅ Uninstall complete!" ;;
-                CANCEL)    echo "Uninstall canceled." ;;
-            esac ;;
-    esac
-}
-
-# ==== Основная логика ====
-echo -e "${YELLOW}$(tr_text CONFIRM)${NC}"
-read -r confirm
-
-if [[ "$confirm" =~ ^[YyДд]$ ]]; then
-    if [ -f "$INSTALL_DIR/$SCRIPT_NAME" ]; then
-        rm -f "$INSTALL_DIR/$SCRIPT_NAME"
-        echo -e "${RED}$(tr_text FILE_DEL): $INSTALL_DIR/$SCRIPT_NAME${NC}"
-    else
-        echo -e "${CYAN}$INSTALL_DIR/$SCRIPT_NAME — $(tr_text FILE_MISS)${NC}"
-    fi
-
-    if [ -f "$INSTALL_DIR/version.txt" ]; then
-        rm -f "$INSTALL_DIR/version.txt"
-        echo -e "${RED}$(tr_text FILE_DEL): $INSTALL_DIR/version.txt${NC}"
-    fi
-
-    echo -e "${GREEN}$(tr_text DONE)${NC}"
-    exit 0
-else
-    echo -e "${GREEN}$(tr_text CANCEL)${NC}"
+# ✅ Подтверждение
+read -rp "Удалить rw-scripts и все его файлы? (y/n): " confirm
+if [[ ! "$confirm" =~ ^[YyДд]$ ]]; then
+    echo "❌ Отмена удаления."
     exit 0
 fi
+
+# ✅ Удаление бинаря
+if [ -f "$BIN_FILE" ]; then
+    rm -f "$BIN_FILE"
+    echo "✔ Удалён бинарь: $BIN_FILE"
+else
+    echo "ℹ Бинарь $BIN_FILE не найден (пропущен)"
+fi
+
+# ✅ Удаление DATA
+if [ -d "$DATA_DIR" ]; then
+    rm -rf "$DATA_DIR"
+    echo "✔ Удалены данные: $DATA_DIR"
+else
+    echo "ℹ Папка данных $DATA_DIR не найдена (пропущена)"
+fi
+
+# ✅ Удаление CONFIG
+if [ -d "$CONFIG_DIR" ]; then
+    rm -rf "$CONFIG_DIR"
+    echo "✔ Удалены конфиги: $CONFIG_DIR"
+else
+    echo "ℹ Папка конфигов $CONFIG_DIR не найдена (пропущена)"
+fi
+
+echo "====================================="
+echo "✅ Полное удаление завершено!"
+echo "====================================="

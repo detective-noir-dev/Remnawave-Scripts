@@ -1,16 +1,21 @@
 #!/bin/bash
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/remnawave"
+CONFIG_DIR="$HOME/.config/remnawave"
+SCRIPT_PATH="$HOME/.local/bin/rw-scripts"
 REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
 
-# Всегда пробуем читать версию и убираем лишние символы
-if [ -s "$SCRIPT_DIR/version.txt" ]; then
-    VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
+# читаем версию
+if [ -s "$DATA_DIR/version.txt" ]; then
+    VERSION=$(tr -d '\r\n' < "$DATA_DIR/version.txt")
 else
     VERSION="dev"
 fi
 
-# ====== БАННЕР ПРИ СТАРТЕ ======
+# Цвета
+RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
+
+# ====== БАННЕР ======
 show_banner() {
     echo -e "${GREEN}"
     echo "====================================="
@@ -30,9 +35,6 @@ auto_check_update() {
     fi
 }
 
-# Цвета
-RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
-
 # ====== СПИННЕР ======
 spinner() {
     local pid=$1 delay=0.1 spinstr='|/-\' start_time min_duration=3
@@ -45,9 +47,8 @@ spinner() {
         sleep "$delay"
         printf "\b\b\b\b\b\b"
     done
-    local end_time elapsed
-    end_time=$(date +%s)
-    elapsed=$((end_time - start_time))
+    local end_time=$(date +%s)
+    local elapsed=$((end_time - start_time))
     if [ $elapsed -lt $min_duration ]; then
         sleep $((min_duration - elapsed))
     fi
@@ -55,7 +56,6 @@ spinner() {
 }
 
 # ====== ЯЗЫК ======
-CONFIG_DIR="$HOME/.config/remnawave"
 LANG_FILE="$CONFIG_DIR/lang.conf"
 LANG_SET="en"
 [ -f "$LANG_FILE" ] && LANG_SET=$(<"$LANG_FILE")
@@ -134,12 +134,8 @@ tr_text() {
 generate_ids() {
     echo "$(tr_text IDS_HOW_MANY)"
     read -r count
-    if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
-    fi
-    if [ "$count" -le 0 ]; then
-        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
-    fi
+    if ! [[ "$count" =~ ^[0-9]+$ ]]; then echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return; fi
+    if [ "$count" -le 0 ]; then echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return; fi
 
     echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
     for ((i=1; i<=count; i++)); do
@@ -158,11 +154,17 @@ iso_to_flag() {
     done
 }
 
-# ====== НОВЫЙ ПОИСК СТРАН ======
+# ====== ПОИСК СТРАН ======
 country_lookup() {
-    echo "Введите название страны (на русском или английском, можно часть):"
+    echo "$(tr_text COUNTRY_PROMPT)"
     read input
     key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
+
+    COUNTRIES_FILE="$DATA_DIR/countries.csv"
+    if [ ! -f "$COUNTRIES_FILE" ]; then
+        echo -e "${RED}countries.csv not found in $DATA_DIR${NC}"
+        return
+    fi
 
     matches=$(awk -F',' -v key="$key" '
     {
@@ -170,10 +172,10 @@ country_lookup() {
         if (ru ~ key || en ~ key) {
             print iso "," $2;
         }
-    }' countries.csv)
+    }' "$COUNTRIES_FILE")
 
     if [ -z "$matches" ]; then
-        echo -e "${RED}Ничего не найдено по запросу '${input}'.${NC}"
+        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"
         return
     fi
 
@@ -181,13 +183,10 @@ country_lookup() {
     if [ "$total" -gt 10 ]; then
         echo -e "${YELLOW}Найдено ${total} совпадений. Показать все? (y/n)${NC}"
         read ans
-        if [[ ! "$ans" =~ ^[Yy]$ ]]; then
-            echo -e "${RED}Отмена вывода.${NC}"
-            return
-        fi
+        [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${RED}Отмена.${NC}"; return; }
     fi
 
-    echo -e "${GREEN}Результаты поиска:${NC}"
+    echo -e "${GREEN}$(tr_text RESULTS)${NC}"
     echo "$matches" | while IFS=',' read -r iso en; do
         flag=$(iso_to_flag "$iso")
         echo " $flag $en"
@@ -198,73 +197,37 @@ country_lookup() {
 check_update() {
     local latest tmp_script tmp_version
 
-    # Получаем последнюю версию
     latest=$(curl -fsSL "$REPO_URL/version.txt" | tr -d '\r\n')
-    if [ -z "$latest" ]; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        return 1
-    fi
-
-    # Читаем текущую версию
-    if [ -s "$SCRIPT_DIR/version.txt" ]; then
-        VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
-    else
-        VERSION="dev"
-    fi
+    [ -z "$latest" ] && { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; return 1; }
 
     echo "$(tr_text CHECK_CURR) $VERSION"
     echo "$(tr_text CHECK_LATEST) $latest"
 
-    # Если версии совпадают
     if [ "$VERSION" = "$latest" ]; then
         echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
         return 0
     fi
 
-    # Предложить обновление
     echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
     read -r ans
-    if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
-        echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
-        return 0
-    fi
+    [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 0; }
 
-    # --- Скачиваем новый скрипт во временный файл
-    tmp_script="$SCRIPT_DIR/scripts.sh.tmp"
-    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh"; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        rm -f "$tmp_script"
-        return 1
-    fi
+    tmp_script="$SCRIPT_PATH.tmp"
+    tmp_version="$DATA_DIR/version.txt.tmp"
 
-    # --- Скачиваем новый version.txt во временный файл
-    tmp_version="$SCRIPT_DIR/version.txt.tmp"
-    if ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        rm -f "$tmp_script" "$tmp_version"
-        return 1
-    fi
+    curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh" || { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; rm -f "$tmp_script"; return 1; }
+    curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt" || { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; rm -f "$tmp_*"; return 1; }
 
-    # Проверяем что version.txt не пустой
-    if [ ! -s "$tmp_version" ]; then
-        echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"
-        rm -f "$tmp_script" "$tmp_version"
-        return 1
-    fi
-
-    # Устанавливаем обновления
-    mv "$tmp_script" "$SCRIPT_DIR/scripts.sh"
-    chmod +x "$SCRIPT_DIR/scripts.sh"
-    mv "$tmp_version" "$SCRIPT_DIR/version.txt"
+    mv "$tmp_script" "$SCRIPT_PATH"; chmod +x "$SCRIPT_PATH"
+    mv "$tmp_version" "$DATA_DIR/version.txt"
 
     echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
     echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
-
-    exec "$SCRIPT_DIR/scripts.sh"
+    exec "$SCRIPT_PATH"
 }
 
 # ====== УДАЛЕНИЕ ======
-delete_self() { "$SCRIPT_DIR/uninstall.sh"; exit 0; }
+delete_self() { "$DATA_DIR/uninstall.sh"; exit 0; }
 
 # ====== МЕНЮ ======
 show_menu() {

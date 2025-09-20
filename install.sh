@@ -5,6 +5,7 @@ SCRIPT_NAME="rw-scripts"
 REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
 CONFIG_DIR="$HOME/.config/remnawave"
 LANG_FILE="$CONFIG_DIR/lang.conf"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/remnawave"
 
 # === ПОДТЯГИВАЕМ АКТУАЛЬНУЮ ВЕРСИЮ С ГИТХАБА ===
 VERSION=$(curl -fsSL "$REPO_URL/version.txt" 2>/dev/null)
@@ -22,7 +23,7 @@ printf "Enter number (1/2): "
 read -r lang_choice
 
 # создаём папку для конфигурации
-mkdir -p "$CONFIG_DIR"
+mkdir -p "$CONFIG_DIR" "$INSTALL_DIR" "$DATA_DIR"
 
 case "$lang_choice" in
     1) echo "en" > "$LANG_FILE"; LANG_NAME="English" ;;
@@ -33,30 +34,29 @@ esac
 echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m\n"
 
 # === УСТАНОВКА ===
-mkdir -p "$INSTALL_DIR"
 
-# качаем основной скрипт
+# качаем основной скрипт (сам бинарь)
 if ! curl -fsSL -o "$INSTALL_DIR/$SCRIPT_NAME" "$REPO_URL/scripts.sh"; then
     echo -e "\e[31m❌ Failed to download scripts.sh\e[0m"
     exit 1
 fi
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
 
-# качаем uninstall.sh
-if ! curl -fsSL -o "$INSTALL_DIR/uninstall.sh" "$REPO_URL/uninstall.sh"; then
+# качаем uninstall.sh (в data)
+if ! curl -fsSL -o "$DATA_DIR/uninstall.sh" "$REPO_URL/uninstall.sh"; then
     echo -e "\e[31m❌ Failed to download uninstall.sh\e[0m"
     exit 1
 fi
-chmod +x "$INSTALL_DIR/uninstall.sh"
+chmod +x "$DATA_DIR/uninstall.sh"
 
-# качаем version.txt
-if ! curl -fsSL -o "$INSTALL_DIR/version.txt" "$REPO_URL/version.txt"; then
+# качаем version.txt (в data)
+if ! curl -fsSL -o "$DATA_DIR/version.txt" "$REPO_URL/version.txt"; then
     echo -e "\e[31m❌ Failed to download version.txt\e[0m"
     exit 1
 fi
 
-# качаем countries.csv
-if ! curl -fsSL -o "$INSTALL_DIR/countries.csv" "$REPO_URL/countries.csv"; then
+# качаем countries.csv (в data)
+if ! curl -fsSL -o "$DATA_DIR/countries.csv" "$REPO_URL/countries.csv"; then
     echo -e "\e[31m❌ Failed to download countries.csv\e[0m"
     exit 1
 fi
@@ -75,9 +75,15 @@ echo
 if [[ "$LANG_SET" == "ru" ]]; then
     echo -e "\e[32m✅ Установка завершена!\e[0m"
     echo "Установлена версия: $VERSION"
+    echo "Бинарь: $INSTALL_DIR/$SCRIPT_NAME"
+    echo "Данные: $DATA_DIR"
+    echo "Конфиг: $CONFIG_DIR"
     echo "Теперь можно запускать с помощью команды: $SCRIPT_NAME"
 else
     echo -e "\e[32m✅ Installation completed!\e[0m"
     echo "Installed version: $VERSION"
+    echo "Binary: $INSTALL_DIR/$SCRIPT_NAME"
+    echo "Data dir: $DATA_DIR"
+    echo "Config dir: $CONFIG_DIR"
     echo "You can now run it with: $SCRIPT_NAME"
 fi
