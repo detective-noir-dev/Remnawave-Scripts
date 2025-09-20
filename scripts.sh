@@ -164,11 +164,7 @@ show_system_info() {
     # Disk
     echo -e "${YELLOW}Disk:     ${NC}$(df -h --output=pcent / | tail -1) used of /"
 
-    # IP addresses
-    local_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
-    [ -z "$local_ip" ] && local_ip="N/A"
-    echo -e "${YELLOW}Local IP: ${NC}$local_ip"
-
+    # Only Public IP
     if command -v curl >/dev/null 2>&1; then
         external_ip=$(curl -s ifconfig.me || curl -s ipinfo.io/ip)
         [ -z "$external_ip" ] && external_ip="N/A"
