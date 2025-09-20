@@ -184,20 +184,25 @@ show_system_info() {
 generate_ids() {
     echo -ne "${BLUE}$(tr_text IDS_HOW_MANY)${NC} "
     read -r count
+
+    # проверка на число
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"
+        return
     fi
+
+    # проверка на > 0
     if [ "$count" -le 0 ]; then
-        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"
+        return
     fi
 
     echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
-    (for ((i=1; i<=count; i++)); do
+    # простая генерация — сразу, построчно
+    for ((i=1; i<=count; i++)); do
         id=$(head -c 8 /dev/urandom | xxd -p)
-        printf '"%s",\n' "$id"
-        sleep 0.05
-    done) &
-    spinner $!
+        echo "\"$id\","
+    done
 }
 
 # ====== ISO→ФЛАГ ======
