@@ -1,6 +1,6 @@
 Remnawave-Scripts (English)
 
-![version](https://img.shields.io/badge/version-0.0.8-blue)
+![version](https://img.shields.io/badge/version-0.0.9-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 
 Remnawave-Scripts is a cross‑platform Bash script with an interactive menu, multilingual support (RU/EN), random ID generation and country lookup with emoji flags.
