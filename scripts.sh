@@ -140,40 +140,40 @@ tr_text() {
 # ====== ФУНКЦИЯ: СИСТЕМНАЯ ИНФА ======
 show_system_info() {
     echo -e "${GREEN}======== 📊 System Information ========${NC}"
-    echo -e "${YELLOW}OS:       ${NC}$(uname -srm)"
-    echo -e "${YELLOW}Shell:    ${NC}$SHELL"
-    echo -e "${YELLOW}Date:     ${NC}$(date)"
-    echo -e "${YELLOW}Uptime:   ${NC}$(uptime -p)"
 
-    # CPU info
-    if command -v lscpu >/dev/null 2>&1; then
-        cpu_model=$(lscpu | grep "Model name:" | sed 's/Model name:\s*//')
-        cpu_cores=$(lscpu | grep "^CPU(s):" | awk '{print $2}')
-    elif [ -f /proc/cpuinfo ]; then
-        cpu_model=$(grep -m1 "model name" /proc/cpuinfo | cut -d ':' -f2 | sed 's/^ *//')
-        cpu_cores=$(grep -c ^processor /proc/cpuinfo)
-    else
-        cpu_model="Unknown"
-        cpu_cores="?"
+    # Проверяем наличие neofetch
+    if ! command -v neofetch >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  Neofetch not found. Installing...${NC}"
+        
+        # Определяем пакетный менеджер
+        if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y neofetch
+        elif command -v apt >/dev/null 2>&1; then
+            sudo apt update && sudo apt install -y neofetch
+        elif command -v dnf >/dev/null 2>&1; then
+            sudo dnf install -y neofetch
+        elif command -v yum >/dev/null 2>&1; then
+            sudo yum install -y neofetch
+        elif command -v pacman >/dev/null 2>&1; then
+            sudo pacman -Sy --noconfirm neofetch
+        elif command -v zypper >/dev/null 2>&1; then
+            sudo zypper install -y neofetch
+        elif command -v brew >/dev/null 2>&1; then
+            brew install neofetch
+        else
+            echo -e "${RED}❌ Unable to install neofetch: Package manager not detected${NC}"
+            return 1
+        fi
     fi
-    echo -e "${YELLOW}CPU:      ${NC}$cpu_model ($cpu_cores cores)"
 
-    # RAM
-    echo -e "${YELLOW}Free RAM: ${NC}$(free -h | awk '/Mem/ {print $4 " free / " $2 " total"}')"
-
-    # Disk
-    echo -e "${YELLOW}Disk:     ${NC}$(df -h --output=pcent / | tail -1) used of /"
-
-    # Only Public IP
-    if command -v curl >/dev/null 2>&1; then
-        external_ip=$(curl -s ifconfig.me || curl -s ipinfo.io/ip)
-        [ -z "$external_ip" ] && external_ip="N/A"
+    # Запускаем neofetch
+    if command -v neofetch >/dev/null 2>&1; then
+        neofetch
     else
-        external_ip="N/A (curl not installed)"
+        echo -e "${RED}❌ Neofetch installation failed.${NC}"
     fi
-    echo -e "${YELLOW}Public IP:${NC} $external_ip"
 
-    echo -e "${GREEN}=======================================${NC}"
+    echo -e "${GREEN}========================================${NC}"
 }
 
 # ====== ГЕНЕРАЦИЯ ID ======
