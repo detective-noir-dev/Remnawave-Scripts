@@ -4,21 +4,31 @@
 #
 
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
-if [ -L "$0" ]; then
-    # раскрываем симлинк
-    SCRIPT_PATH="$(readlink "$0")"
-    SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
-else
-    SCRIPT_PATH="$0"
-    SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
+
+# Определяем путь до запускаемого файла
+SCRIPT_PATH="$0"
+
+# Если это симлинк — раскрываем
+if [ -L "$SCRIPT_PATH" ]; then
+    TARGET="$(readlink "$SCRIPT_PATH")"
+
+    # Если readlink вернул относительный путь → делаем абсолютный
+    case "$TARGET" in
+        /*) SCRIPT_PATH="$TARGET" ;;                               # уже абсолютный
+        *) SCRIPT_PATH="$(dirname "$SCRIPT_PATH")/$TARGET" ;;      # относительный → добавляем префикс
+    esac
 fi
 
+# Нормализуем путь и находим директорию, где реально лежит скрипт
+SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
+
+# Адрес git-репозитория
 REPO_URL="https://github.com/detective-noir-dev/Remnawave-Scripts.git"
 
-# Цвета
+# Цвета (для цветного вывода)
 RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
 
-# Версия
+# ====== Чтение версии из репозитория ======
 if [ -s "$SCRIPT_DIR/version.txt" ]; then
     VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
 else
