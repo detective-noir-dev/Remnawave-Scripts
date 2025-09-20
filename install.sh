@@ -7,16 +7,17 @@ REPO_URL="https://github.com/detective-noir-dev/Remnawave-Scripts.git"
 CONFIG_DIR="$HOME/.config/remnawave"
 LANG_FILE="$CONFIG_DIR/lang.conf"
 
-# === Проверка git ===
+# === Проверка наличия git ===
 if ! command -v git >/dev/null 2>&1; then
-    echo -e "\e[31m❌ Git is not installed. Please install git first.\e[0m"
+    echo -e "\e[31m❌ Git не установлен. Установите git и повторите попытку.\e[0m"
     exit 1
 fi
 
 # === Проверка зависимостей ===
-echo -e "\e[36m🔍 Checking required packages...\e[0m"
+echo -e "\e[36m🔍 Проверка зависимостей...\e[0m"
 NEEDED_CMDS=("curl" "xxd" "openssl")
 MISSING_CMDS=()
+
 for cmd in "${NEEDED_CMDS[@]}"; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         MISSING_CMDS+=("$cmd")
@@ -24,9 +25,8 @@ for cmd in "${NEEDED_CMDS[@]}"; do
 done
 
 if [ ${#MISSING_CMDS[@]} -gt 0 ]; then
-    echo -e "\e[33m⚠️ Missing: ${MISSING_CMDS[*]} \e[0m"
-    echo -e "\e[36m➡️ Trying to install...\e[0m"
-
+    echo -e "\e[33m⚠️ Отсутствуют пакеты: ${MISSING_CMDS[*]}\e[0m"
+    echo -e "\e[36m➡️ Устанавливаем...\e[0m"
     if command -v apt >/dev/null 2>&1; then
         sudo apt update
         sudo apt install -y curl vim-common openssl git
@@ -37,17 +37,18 @@ if [ ${#MISSING_CMDS[@]} -gt 0 ]; then
     elif command -v apk >/dev/null 2>&1; then
         sudo apk add --no-cache curl vim openssl git
     else
-        echo -e "\e[31m❌ Could not detect package manager. Please install manually: curl vim-common openssl git\e[0m"
+        echo -e "\e[31m❌ Не удалось определить пакетный менеджер. Установите вручную: curl vim-common openssl git\e[0m"
         exit 1
     fi
 else
-    echo -e "\e[32m✅ All required packages installed.\e[0m"
+    echo -e "\e[32m✅ Все зависимости установлены.\e[0m"
 fi
 
-# === Получаем актуальную версию ===
+# === Получаем версию ===
 VERSION=$(curl -fsSL "https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/version.txt" 2>/dev/null | tr -d '\r\n')
 [ -z "$VERSION" ] && VERSION="dev"
-echo -e "\e[36m🚀 Installing Remnawave Scripts v$VERSION...\e[0m"
+
+echo -e "\e[36m🚀 Установка Remnawave Scripts v$VERSION...\e[0m"
 
 # === Выбор языка ===
 echo -e "\nChoose installation language / Выберите язык установки:"
@@ -62,10 +63,12 @@ case "$lang_choice" in
     2) echo "ru" > "$LANG_FILE"; LANG_NAME="Русский" ;;
     *) echo "en" > "$LANG_FILE"; LANG_NAME="English (default)" ;;
 esac
-echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m\n"
+echo -e "\e[32mЯзык установлен: $LANG_NAME\e[0m\n"
 
-# === Скачиваем весь репозиторий через git ===
+# === Удаляем старую установку, если есть ===
 rm -rf "$APP_DIR"
+
+# === Скачиваем весь репозиторий через git clone ===
 git clone --depth=1 "$REPO_URL" "$APP_DIR"
 
 # === Создаём запускатель ===
@@ -76,7 +79,7 @@ chmod +x "$APP_DIR/scripts.sh"
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     if ! grep -Fxq "export PATH=\$PATH:$INSTALL_DIR" "$HOME/.bashrc"; then
         echo "export PATH=\$PATH:$INSTALL_DIR" >> "$HOME/.bashrc"
-        echo -e "\e[33m[!] Added $INSTALL_DIR to PATH (restart terminal)\e[0m"
+        echo -e "\e[33m[!] Папка $INSTALL_DIR добавлена в PATH (перезапустите терминал)\e[0m"
     fi
 fi
 

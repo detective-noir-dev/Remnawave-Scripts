@@ -1,8 +1,22 @@
 #!/bin/bash
+#
+# Remnawave Scripts
+#
+
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
-SCRIPT_PATH="$(readlink -f "$0")"
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
+if [ -L "$0" ]; then
+    # раскрываем симлинк
+    SCRIPT_PATH="$(readlink "$0")"
+    SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
+else
+    SCRIPT_PATH="$0"
+    SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
+fi
+
 REPO_URL="https://github.com/detective-noir-dev/Remnawave-Scripts.git"
+
+# Цвета
+RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
 
 # Версия
 if [ -s "$SCRIPT_DIR/version.txt" ]; then
@@ -11,7 +25,7 @@ else
     VERSION="dev"
 fi
 
-# ====== БАННЕР ПРИ СТАРТЕ ======
+# ====== БАННЕР ======
 show_banner() {
     echo -e "${GREEN}"
     echo "====================================="
@@ -20,19 +34,19 @@ show_banner() {
     echo -e "${NC}"
 }
 
-# ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ ======
+# ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ (git) ======
 auto_check_update() {
-    local latest
-    latest=$(curl -s "$REPO_URL/version.txt" | tr -d '\r\n')
-    if [ -n "$latest" ] && [ "$latest" != "$VERSION" ]; then
-        echo -e "${YELLOW}⚠️  A new version is available: $latest (you are on $VERSION)"
-        echo -e "   Run option [3] in the menu to update.${NC}"
-        echo
+    if [ ! -d "$SCRIPT_DIR/.git" ]; then
+        return
+    fi
+    git -C "$SCRIPT_DIR" fetch --quiet
+    local_ver=$(<"$SCRIPT_DIR/version.txt")
+    remote_ver=$(git -C "$SCRIPT_DIR" show origin/main:version.txt 2>/dev/null | tr -d '\r\n')
+    if [ -n "$remote_ver" ] && [ "$remote_ver" != "$local_ver" ]; then
+        echo -e "${YELLOW}⚠️  A new version is available: $remote_ver (you are on $local_ver)"
+        echo -e "   Run option [3] in the menu to update.${NC}\n"
     fi
 }
-
-# Цвета
-RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; NC='\e[0m'
 
 # ====== СПИННЕР ======
 spinner() {
@@ -92,6 +106,7 @@ tr_text() {
                 UPDATE_DONE)    echo "Скрипт обновлён до версии" ;;
                 UPDATE_RESTART) echo "Перезапуск..." ;;
                 UPDATE_FAIL)    echo "Не удалось проверить обновления." ;;
+                UPDATE_CANCELLED) echo "Обновление отменено" ;;
                 NO_UPDATES)     echo "У вас уже последняя версия." ;;
                 CONFIRM_DEL)    echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
                 CANCEL_DEL)     echo "Удаление отменено" ;;
@@ -124,9 +139,10 @@ tr_text() {
                 UPDATE_DONE)    echo "Script updated to version" ;;
                 UPDATE_RESTART) echo "Restarting..." ;;
                 UPDATE_FAIL)    echo "Failed to check for updates." ;;
+                UPDATE_CANCELLED) echo "Update cancelled" ;;
                 NO_UPDATES)     echo "You already have the latest version." ;;
                 CONFIRM_DEL)    echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
-                CANCEL_DEL)     echo "Uninstall canceled" ;;
+                CANCEL_DEL)     echo "Uninstall cancelled" ;;
             esac ;;
     esac
 }
@@ -136,10 +152,12 @@ generate_ids() {
     echo "$(tr_text IDS_HOW_MANY)"
     read -r count
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"
+        return
     fi
     if [ "$count" -le 0 ]; then
-        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"
+        return
     fi
 
     echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
@@ -159,10 +177,10 @@ iso_to_flag() {
     done
 }
 
-# ====== НОВЫЙ ПОИСК СТРАН ======
+# ====== ПОИСК СТРАН ======
 country_lookup() {
-    echo "Введите название страны (на русском или английском, можно часть):"
-    read input
+    echo "$(tr_text COUNTRY_PROMPT)"
+    read -r input
     key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
 
     matches=$(awk -F',' -v key="$key" '
@@ -171,31 +189,21 @@ country_lookup() {
         if (ru ~ key || en ~ key) {
             print iso "," $2;
         }
-    }' countries.csv)
+    }' "$SCRIPT_DIR/countries.csv")
 
     if [ -z "$matches" ]; then
-        echo -e "${RED}Ничего не найдено по запросу '${input}'.${NC}"
+        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"
         return
     fi
 
-    total=$(echo "$matches" | wc -l)
-    if [ "$total" -gt 10 ]; then
-        echo -e "${YELLOW}Найдено ${total} совпадений. Показать все? (y/n)${NC}"
-        read ans
-        if [[ ! "$ans" =~ ^[Yy]$ ]]; then
-            echo -e "${RED}Отмена вывода.${NC}"
-            return
-        fi
-    fi
-
-    echo -e "${GREEN}Результаты поиска:${NC}"
+    echo -e "${GREEN}$(tr_text RESULTS)${NC}"
     echo "$matches" | while IFS=',' read -r iso en; do
         flag=$(iso_to_flag "$iso")
         echo " $flag $en"
     done
 }
 
-# ====== ОБНОВЛЕНИЕ (через git) ======
+# ====== ОБНОВЛЕНИЕ (git) ======
 check_update() {
     # Показываем текущую локальную версию
     echo "$(tr_text CHECK_CURR) $VERSION"
@@ -252,6 +260,7 @@ delete_self() { "$SCRIPT_DIR/uninstall.sh"; exit 0; }
 
 # ====== МЕНЮ ======
 show_menu() {
+    echo
     tr_text PROMPT_CHOICE
     tr_text MENU_GEN_IDS
     tr_text MENU_FLAG
@@ -269,7 +278,7 @@ show_menu() {
     esac
 }
 
-# ====== ЦИКЛ ======
+# ====== ЗАПУСК ======
 show_banner
 auto_check_update
 
