@@ -1,9 +1,10 @@
 #!/bin/bash
 # ====== НАСТРОЙКИ И ПОДГОТОВКА ======
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )"
-REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
+SCRIPT_PATH="$(readlink -f "$0")"
+SCRIPT_DIR="$( cd -- "$( dirname -- "$SCRIPT_PATH" )" && pwd )"
+REPO_URL="https://github.com/detective-noir-dev/Remnawave-Scripts.git"
 
-# Всегда пробуем читать версию и убираем лишние символы
+# Версия
 if [ -s "$SCRIPT_DIR/version.txt" ]; then
     VERSION=$(tr -d '\r\n' < "$SCRIPT_DIR/version.txt")
 else
