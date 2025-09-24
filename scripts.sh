@@ -40,24 +40,17 @@ auto_check_update() {
     fi
 }
 
-# ====== СПИННЕР ======
-spinner() {
-    local pid=$1 delay=0.1 spinstr='|/-\' start_time min_duration=2
-    start_time=$(date +%s)
-    echo -ne "${YELLOW}"
-    while kill -0 "$pid" 2>/dev/null; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        spinstr=$temp${spinstr%"$temp"}
-        sleep "$delay"
-        printf "\b\b\b\b\b\b"
+# ====== БРАЙЛ-КРУТИЛКА ======
+loading_bar() {
+    local delay=0.15
+    local spin=(⠋ ⠙ ⠸ ⠴ ⠦ ⠧ ⠇ ⠏)
+    tput civis  # скрыть курсор
+    while :; do
+        for frame in "${spin[@]}"; do
+            printf "\r[%s] Пожалуйста, подождите " "$frame"
+            sleep $delay
+        done
     done
-    local end_time=$(date +%s)
-    local elapsed=$((end_time - start_time))
-    if [ $elapsed -lt $min_duration ]; then
-        sleep $((min_duration - elapsed))
-    fi
-    echo -ne "${NC}"
 }
 
 # ====== ЯЗЫК ======
@@ -141,38 +134,39 @@ tr_text() {
 show_system_info() {
     echo -e "${GREEN}======== 📊 System Information ========${NC}"
 
-    # Проверяем наличие neofetch
     if ! command -v neofetch >/dev/null 2>&1; then
         echo -e "${YELLOW}⚠️  Neofetch is not installed.${NC}"
         read -rp "👉 Install neofetch now? (y/n): " ans
-
         if [[ "$ans" =~ ^[YyДд]$ ]]; then
             echo -e "${BLUE}🔧 Installing neofetch...${NC}"
+            loading_bar & pid=$!
             if command -v apt-get >/dev/null 2>&1; then
-                sudo apt-get update && sudo apt-get install -y neofetch
+                sudo apt-get update &>/dev/null && sudo apt-get install -y neofetch &>/dev/null
             elif command -v apt >/dev/null 2>&1; then
-                sudo apt update && sudo apt install -y neofetch
+                sudo apt update &>/dev/null && sudo apt install -y neofetch &>/dev/null
             elif command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y neofetch
+                sudo dnf install -y neofetch &>/dev/null
             elif command -v yum >/dev/null 2>&1; then
-                sudo yum install -y neofetch
+                sudo yum install -y neofetch &>/dev/null
             elif command -v pacman >/dev/null 2>&1; then
-                sudo pacman -Sy --noconfirm neofetch
+                sudo pacman -Sy --noconfirm neofetch &>/dev/null
             elif command -v zypper >/dev/null 2>&1; then
-                sudo zypper install -y neofetch
+                sudo zypper install -y neofetch &>/dev/null
             elif command -v brew >/dev/null 2>&1; then
-                brew install neofetch
+                brew install neofetch &>/dev/null
             else
-                echo -e "${RED}❌ Could not detect a package manager. Please install neofetch manually.${NC}"
+                kill $pid >/dev/null 2>&1; tput cnorm
+                echo -e "\r${RED}❌ Could not detect a package manager. Please install neofetch manually.${NC}          "
                 return 1
             fi
+            kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
+            echo -e "\r✅ Neofetch installed!                                                              "
         else
             echo -e "${RED}❌ Neofetch not installed. Skipping system info.${NC}"
             return 0
         fi
     fi
 
-    # Запускаем neofetch
     if command -v neofetch >/dev/null 2>&1; then
         neofetch
     else
@@ -186,21 +180,13 @@ show_system_info() {
 generate_ids() {
     echo -ne "${BLUE}$(tr_text IDS_HOW_MANY)${NC} "
     read -r count
-
-    # проверка на число
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"
-        return
+        echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; return
     fi
-
-    # проверка на > 0
     if [ "$count" -le 0 ]; then
-        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"
-        return
+        echo -e "${RED}$(tr_text ERR_GT_ZERO)${NC}"; return
     fi
-
     echo -e "${GREEN}$(tr_text IDS_DONE)${NC}\n"
-    # простая генерация — сразу, построчно
     for ((i=1; i<=count; i++)); do
         id=$(head -c 8 /dev/urandom | xxd -p)
         echo "\"$id\","
@@ -222,33 +208,23 @@ country_lookup() {
     echo "$(tr_text COUNTRY_PROMPT)"
     read input
     key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
-
     COUNTRIES_FILE="$DATA_DIR/countries.csv"
     if [ ! -f "$COUNTRIES_FILE" ]; then
-        echo -e "${RED}countries.csv not found in $DATA_DIR${NC}"
-        return
+        echo -e "${RED}countries.csv not found in $DATA_DIR${NC}"; return
     fi
-
     matches=$(awk -F',' -v key="$key" '
-    {
-        ru=tolower($1); en=tolower($2); iso=$3;
-        if (ru ~ key || en ~ key) {
-            print iso "," $2;
-        }
+    { ru=tolower($1); en=tolower($2); iso=$3;
+      if (ru ~ key || en ~ key) { print iso "," $2; }
     }' "$COUNTRIES_FILE")
-
     if [ -z "$matches" ]; then
-        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"
-        return
+        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"; return
     fi
-
     total=$(echo "$matches" | wc -l)
     if [ "$total" -gt 10 ]; then
         echo -e "${YELLOW}Найдено ${total} совпадений. Показать все? (y/n)${NC}"
         read ans
         [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${RED}Отмена.${NC}"; return; }
     fi
-
     echo -e "${GREEN}$(tr_text RESULTS)${NC}"
     echo "$matches" | while IFS=',' read -r iso en; do
         flag=$(iso_to_flag "$iso")
@@ -259,31 +235,34 @@ country_lookup() {
 # ====== ОБНОВЛЕНИЕ ======
 check_update() {
     local latest tmp_script tmp_version
-
     latest=$(curl -fsSL "$REPO_URL/version.txt" | tr -d '\r\n')
     [ -z "$latest" ] && { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; return 1; }
-
     echo "$(tr_text CHECK_CURR) $VERSION"
     echo "$(tr_text CHECK_LATEST) $latest"
-
     if [ "$VERSION" = "$latest" ]; then
-        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
-        return 0
+        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"; return 0
     fi
-
     echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
     read -r ans
     [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 0; }
-
     tmp_script="$SCRIPT_PATH.tmp"
     tmp_version="$DATA_DIR/version.txt.tmp"
 
-    curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh" || { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; rm -f "$tmp_script"; return 1; }
-    curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt" || { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; rm -f "$tmp_*"; return 1; }
+    echo -e "${BLUE}⏳ Downloading update...${NC}"
+    loading_bar & pid=$!
+    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh"; then
+        kill $pid >/dev/null 2>&1; tput cnorm
+        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "; rm -f "$tmp_script"; return 1
+    fi
+    if ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
+        kill $pid >/dev/null 2>&1; tput cnorm
+        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "; rm -f "$tmp_script" "$tmp_version"; return 1
+    fi
+    kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
+    echo -e "\r✅ Update downloaded!                                   "
 
     mv "$tmp_script" "$SCRIPT_PATH"; chmod +x "$SCRIPT_PATH"
     mv "$tmp_version" "$DATA_DIR/version.txt"
-
     echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
     echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
     exec "$SCRIPT_PATH"
@@ -318,7 +297,6 @@ show_menu() {
 # ====== ЦИКЛ ======
 show_banner
 auto_check_update
-
 while true; do
     show_menu
 done
