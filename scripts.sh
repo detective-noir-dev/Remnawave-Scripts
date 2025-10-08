@@ -177,7 +177,41 @@ show_system_info() {
 }
 
 # ====== ГЕНЕРАЦИЯ ID ======
+# Проверяем наличие xxd, устанавливаем при необходимости
+ensure_xxd() {
+    if command -v xxd >/dev/null 2>&1; then
+        return 0
+    fi
+    echo -e "${YELLOW}⚙️  Утилита 'xxd' не найдена. Пытаюсь установить...${NC}"
+
+    if command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get update -qq && (sudo apt-get install -y vim-xxd || sudo apt-get install -y xxd)
+    elif command -v apt >/dev/null 2>&1; then
+        sudo apt update -qq && (sudo apt install -y vim-xxd || sudo apt install -y xxd)
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y vim-xxd
+    elif command -v yum >/dev/null 2>&1; then
+        sudo yum install -y vim-xxd
+    elif command -v pacman >/dev/null 2>&1; then
+        sudo pacman -Sy --noconfirm vim-xxd
+    elif command -v zypper >/dev/null 2>&1; then
+        sudo zypper install -y vim-xxd
+    elif command -v brew >/dev/null 2>&1; then
+        brew install xxd
+    else
+        echo -e "${RED}❌ Не удалось определить пакетный менеджер. Установите 'vim-xxd' вручную.${NC}"
+        return 1
+    fi
+
+    if command -v xxd >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ xxd успешно установлен!${NC}"
+    else
+        echo -e "${RED}❌ Не удалось установить xxd.${NC}"
+        return 1
+    fi
+}
 generate_ids() {
+    ensure_xxd || return
     echo -ne "${BLUE}$(tr_text IDS_HOW_MANY)${NC} "
     read -r count
     if ! [[ "$count" =~ ^[0-9]+$ ]]; then
