@@ -40,7 +40,7 @@ auto_check_update() {
     fi
 }
 
-# ====== БРАЙЛ-КРУТИЛКА ======
+# ====== БРЭЙЛ-КРУТИЛКА ======
 loading_bar() {
     local delay=0.15
     local spin=(⠋ ⠙ ⠸ ⠴ ⠦ ⠧ ⠇ ⠏)
@@ -67,6 +67,8 @@ tr_text() {
                 MENU_FLAG)    echo "2) Получить emoji-флаг страны" ;;
                 MENU_UPDATE)  echo "3) Проверить версию/обновить" ;;
                 MENU_DELETE)  echo "4) Удалить rw-scripts" ;;
+                MENU_MEMORY)  echo "5) Показать свободную память" ;;
+                MENU_HTOP)    echo "6) Запустить htop (монитор процессов)" ;;
                 MENU_SYSINFO) echo "7) Показать системную информацию" ;;
                 MENU_EXIT)    echo "0) Выйти" ;;
                 PROMPT_CHOICE) echo -e "${BLUE}Выберите действие:${NC}" ;;
@@ -100,6 +102,8 @@ tr_text() {
                 MENU_FLAG)    echo "2) Get country emoji flag" ;;
                 MENU_UPDATE)  echo "3) Check version/update" ;;
                 MENU_DELETE)  echo "4) Uninstall rw-scripts" ;;
+                MENU_MEMORY)  echo "5) Show free memory" ;;
+                MENU_HTOP)    echo "6) Launch htop (process monitor)" ;;
                 MENU_SYSINFO) echo "7) Show system info" ;;
                 MENU_EXIT)    echo "0) Exit" ;;
                 PROMPT_CHOICE) echo -e "${BLUE}Choose an action:${NC}" ;;
@@ -174,6 +178,76 @@ show_system_info() {
     fi
 
     echo -e "${GREEN}========================================${NC}"
+}
+
+# ====== НОВАЯ ФУНКЦИЯ: ПОКАЗАТЬ СВОБОДНУЮ ПАМЯТЬ ======
+show_memory() {
+    echo -e "${GREEN}======== 💾 Memory Information ========${NC}"
+    
+    if command -v free >/dev/null 2>&1; then
+        free -h
+    else
+        # Fallback для систем без free (например, macOS)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            echo -e "${BLUE}Memory stats (macOS):${NC}"
+            vm_stat | perl -ne '/page size of (\d+)/ and $size=$1; /Pages\s+([^:]+)[^\d]+(\d+)/ and printf("%-16s % 16.2f MB\n", "$1:", $2 * $size / 1048576);'
+        else
+            echo -e "${YELLOW}⚠️  'free' command not found. Trying alternative...${NC}"
+            if [ -f /proc/meminfo ]; then
+                awk '/MemTotal|MemFree|MemAvailable|Buffers|Cached/ {printf "%-20s: %10s kB\n", $1, $2}' /proc/meminfo
+            else
+                echo -e "${RED}❌ Cannot determine memory information on this system.${NC}"
+            fi
+        fi
+    fi
+    
+    echo -e "${GREEN}========================================${NC}"
+}
+
+# ====== НОВАЯ ФУНКЦИЯ: ЗАПУСК HTOP ======
+launch_htop() {
+    if ! command -v htop >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  htop is not installed.${NC}"
+        read -rp "👉 Install htop now? (y/n): " ans
+        if [[ "$ans" =~ ^[YyДд]$ ]]; then
+            echo -e "${BLUE}🔧 Installing htop...${NC}"
+            loading_bar & pid=$!
+            
+            if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update &>/dev/null && sudo apt-get install -y htop &>/dev/null
+            elif command -v apt >/dev/null 2>&1; then
+                sudo apt update &>/dev/null && sudo apt install -y htop &>/dev/null
+            elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y htop &>/dev/null
+            elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y htop &>/dev/null
+            elif command -v pacman >/dev/null 2>&1; then
+                sudo pacman -Sy --noconfirm htop &>/dev/null
+            elif command -v zypper >/dev/null 2>&1; then
+                sudo zypper install -y htop &>/dev/null
+            elif command -v brew >/dev/null 2>&1; then
+                brew install htop &>/dev/null
+            else
+                kill $pid >/dev/null 2>&1; tput cnorm
+                echo -e "\r${RED}❌ Could not detect a package manager. Please install htop manually.${NC}          "
+                return 1
+            fi
+            
+            kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
+            echo -e "\r✅ htop installed!                                                              "
+        else
+            echo -e "${RED}❌ htop not installed. Returning to menu.${NC}"
+            return 0
+        fi
+    fi
+
+    if command -v htop >/dev/null 2>&1; then
+        echo -e "${GREEN}🚀 Launching htop... (Press 'q' or F10 to exit)${NC}"
+        sleep 1
+        htop
+    else
+        echo -e "${RED}❌ htop installation failed.${NC}"
+    fi
 }
 
 # ====== ГЕНЕРАЦИЯ ID ======
@@ -313,6 +387,8 @@ show_menu() {
     echo -e "${YELLOW}$(tr_text MENU_FLAG)${NC}"
     echo -e "${YELLOW}$(tr_text MENU_UPDATE)${NC}"
     echo -e "${YELLOW}$(tr_text MENU_DELETE)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_MEMORY)${NC}"
+    echo -e "${YELLOW}$(tr_text MENU_HTOP)${NC}"
     echo -e "${YELLOW}$(tr_text MENU_SYSINFO)${NC}"
     echo -e "${YELLOW}$(tr_text MENU_EXIT)${NC}"
     echo -n "> "
@@ -322,6 +398,8 @@ show_menu() {
         2) country_lookup ;;
         3) check_update ;;
         4) delete_self ;;
+        5) show_memory ;;
+        6) launch_htop ;;
         7) show_system_info ;;
         0) tr_text MSG_EXIT; exit 0 ;;
         *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}" ;;
