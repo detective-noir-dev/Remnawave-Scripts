@@ -1,6 +1,6 @@
 # Remnawave-Scripts (Русская версия)
 
-![версия](https://img.shields.io/badge/версия-1.1.0-blue)
+![версия](https://img.shields.io/badge/версия-1.1.1-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 
 Remnawave-Scripts — это кроссплатформенный Bash-скрипт с интерактивным меню, поддержкой двух языков (RU/EN), генерацией случайных ID и поиском стран с эмодзи-флагами.
