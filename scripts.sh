@@ -15,9 +15,11 @@ fi
 
 # Цвета
 RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; BLUE='\e[34m'; CYAN='\e[36m'; MAGENTA='\e[35m'; NC='\e[0m'
+BOLD='\e[1m'; DIM='\e[2m'
 
 # ====== БАННЕР ======
 show_banner() {
+    clear
     echo -e "${GREEN}"
     if command -v figlet >/dev/null 2>&1; then
         figlet "Remnawave"
@@ -36,7 +38,7 @@ auto_check_update() {
     latest=$(curl -s "$REPO_URL/version.txt" | tr -d '\r\n')
     if [ -n "$latest" ] && [ "$latest" != "$VERSION" ]; then
         echo -e "${YELLOW}⚠️  A new version is available: $latest (you are on $VERSION)"
-        echo -e "   Run option [3] in the menu to update.${NC}"
+        echo -e "   Go to [4] Maintenance → [1] Update to install.${NC}"
         echo
     fi
 }
@@ -64,77 +66,130 @@ tr_text() {
     case "$LANG_SET" in
         "ru")
             case "$1" in
-                MENU_GEN_IDS) echo "1) Сгенерировать shorts_id" ;;
-                MENU_FLAG)    echo "2) Получить emoji-флаг страны" ;;
-                MENU_UPDATE)  echo "3) Проверить версию/обновить" ;;
-                MENU_DELETE)  echo "4) Удалить rw-scripts" ;;
-                MENU_MEMORY)  echo "5) Показать свободную память" ;;
-                MENU_HTOP)    echo "6) Запустить htop (монитор процессов)" ;;
-                MENU_SYSINFO) echo "7) Показать системную информацию" ;;
-                MENU_PORTS)   echo "8) Управление портами 🔒" ;;
-                MENU_EXIT)    echo "0) Выйти" ;;
-                PROMPT_CHOICE) echo -e "${BLUE}Выберите действие:${NC}" ;;
-                MSG_EXIT)     echo "Выход... Пока 👋" ;;
-                ERR_CHOICE)   echo "Неверный выбор, попробуй ещё раз 😅" ;;
-                IDS_HOW_MANY) echo "Сколько идентификаторов сгенерировать?" ;;
-                ERR_NUMBER)   echo "Ошибка: введите корректное число!" ;;
-                ERR_GT_ZERO)  echo "Ошибка: количество должно быть больше нуля!" ;;
-                IDS_DONE)     echo "ID сгенерированы! Вот твой список:" ;;
-                ERR_IDS)      echo "Произошла ошибка во время генерации." ;;
-                COUNTRY_PROMPT) echo "Введите название страны (на русском или английском, можно часть, 0 = выход в меню):" ;;
-                NOTHING_FOUND)  echo "Ничего не найдено по запросу" ;;
-                RESULTS)        echo "Результаты поиска:" ;;
-                PROMPT_NUM)     echo "Выберите номер (или 0 для нового поиска):" ;;
-                ERR_NUM)        echo "Введите корректный номер!" ;;
-                ERR_NOT_FOUND)  echo "Нет варианта с таким номером." ;;
-                YOU_SELECTED)   echo "Вы выбрали:" ;;
-                CHECK_CURR)     echo "Текущая версия:" ;;
-                CHECK_LATEST)   echo "Последняя версия:" ;;
-                UPDATE_AVAIL)   echo "Есть новая версия! Хотите обновиться? (y/n)" ;;
-                UPDATE_DONE)    echo "Скрипт обновлён до версии" ;;
-                UPDATE_RESTART) echo "Перезапуск..." ;;
-                UPDATE_FAIL)    echo "Не удалось проверить обновления." ;;
-                NO_UPDATES)     echo "У вас уже последняя версия." ;;
-                CONFIRM_DEL)    echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
-                CANCEL_DEL)     echo "Удаление отменено" ;;
+                # === ГЛАВНОЕ МЕНЮ - ГРУППЫ ===
+                MAIN_TITLE)       echo "🏠 Главное меню" ;;
+                GROUP_ID_FLAGS)   echo "🆔 Short ID & Флаги стран" ;;
+                GROUP_MONITOR)    echo "📊 Монитор ресурсов" ;;
+                GROUP_PORTS)      echo "🔐 Сеть и порты" ;;
+                GROUP_SETTINGS)   echo "⚙️  Обслуживание" ;;
+                
+                # === ПОДМЕНЮ: Short ID & Flags ===
+                SUB_GEN_IDS)      echo "🎲 Сгенерировать shorts_id" ;;
+                SUB_FLAG)         echo "🏳️  Получить emoji-флаг страны" ;;
+                
+                # === ПОДМЕНЮ: Resource Monitor ===
+                SUB_MEMORY)       echo "💾 Показать свободную память" ;;
+                SUB_HTOP)         echo "📈 Запустить htop" ;;
+                SUB_SYSINFO)      echo "🖥️  Системная информация" ;;
+                
+                # === ПОДМЕНЮ: Network & Ports ===
+                SUB_PORTS)        echo "🔒 Управление портами" ;;
+                
+                # === ПОДМЕНЮ: Maintenance ===
+                SUB_UPDATE)       echo "🔄 Проверить обновления" ;;
+                SUB_DELETE)       echo "🗑️  Удалить rw-scripts" ;;
+                
+                # === НАВИГАЦИЯ ===
+                MENU_BACK)        echo "⬅️  Назад" ;;
+                MENU_EXIT)        echo "🚪 Выйти" ;;
+                PROMPT_CHOICE)    echo "Выберите пункт:" ;;
+                PROMPT_GROUP)     echo "Выберите группу:" ;;
+                
+                # === СООБЩЕНИЯ ===
+                MSG_EXIT)         echo "Выход... Пока 👋" ;;
+                MSG_BACK)         echo "Возврат в главное меню..." ;;
+                ERR_CHOICE)       echo "Неверный выбор, попробуй ещё раз 😅" ;;
+                IDS_HOW_MANY)     echo "Сколько идентификаторов сгенерировать?" ;;
+                ERR_NUMBER)       echo "Ошибка: введите корректное число!" ;;
+                ERR_GT_ZERO)      echo "Ошибка: количество должно быть больше нуля!" ;;
+                IDS_DONE)         echo "ID сгенерированы! Вот твой список:" ;;
+                ERR_IDS)          echo "Произошла ошибка во время генерации." ;;
+                COUNTRY_PROMPT)   echo "Введите название страны (на русском или английском, можно часть, 0 = выход):" ;;
+                NOTHING_FOUND)    echo "Ничего не найдено по запросу" ;;
+                RESULTS)          echo "Результаты поиска:" ;;
+                PROMPT_NUM)       echo "Выберите номер (или 0 для нового поиска):" ;;
+                ERR_NUM)          echo "Введите корректный номер!" ;;
+                ERR_NOT_FOUND)    echo "Нет варианта с таким номером." ;;
+                YOU_SELECTED)     echo "Вы выбрали:" ;;
+                CHECK_CURR)       echo "Текущая версия:" ;;
+                CHECK_LATEST)     echo "Последняя версия:" ;;
+                UPDATE_AVAIL)     echo "Есть новая версия! Хотите обновиться? (y/n)" ;;
+                UPDATE_DONE)      echo "Скрипт обновлён до версии" ;;
+                UPDATE_RESTART)   echo "Перезапуск..." ;;
+                UPDATE_FAIL)      echo "Не удалось проверить обновления." ;;
+                NO_UPDATES)       echo "У вас уже последняя версия." ;;
+                CONFIRM_DEL)      echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
+                CANCEL_DEL)       echo "Отменено" ;;
+                PRESS_ENTER)      echo "Нажмите Enter для продолжения..." ;;
             esac ;;
         "en" | *)
             case "$1" in
-                MENU_GEN_IDS) echo "1) Generate shorts_id" ;;
-                MENU_FLAG)    echo "2) Get country emoji flag" ;;
-                MENU_UPDATE)  echo "3) Check version/update" ;;
-                MENU_DELETE)  echo "4) Uninstall rw-scripts" ;;
-                MENU_MEMORY)  echo "5) Show free memory" ;;
-                MENU_HTOP)    echo "6) Launch htop (process monitor)" ;;
-                MENU_SYSINFO) echo "7) Show system info" ;;
-                MENU_PORTS)   echo "8) Port management 🔒" ;;
-                MENU_EXIT)    echo "0) Exit" ;;
-                PROMPT_CHOICE) echo -e "${BLUE}Choose an action:${NC}" ;;
-                MSG_EXIT)     echo "Exiting... Bye 👋" ;;
-                ERR_CHOICE)   echo "Invalid choice, try again 😅" ;;
-                IDS_HOW_MANY) echo "How many IDs to generate?" ;;
-                ERR_NUMBER)   echo "Error: enter a valid number!" ;;
-                ERR_GT_ZERO)  echo "Error: number must be greater than zero!" ;;
-                IDS_DONE)     echo "IDs generated! Here is your list:" ;;
-                ERR_IDS)      echo "An error occurred during generation." ;;
-                COUNTRY_PROMPT) echo "Enter country name (English or Russian, part allowed, 0 = back to menu):" ;;
-                NOTHING_FOUND)  echo "Nothing found for query" ;;
-                RESULTS)        echo "Search results:" ;;
-                PROMPT_NUM)     echo "Choose number (or 0 for new search):" ;;
-                ERR_NUM)        echo "Enter a valid number!" ;;
-                ERR_NOT_FOUND)  echo "No option with that number found." ;;
-                YOU_SELECTED)   echo "You selected:" ;;
-                CHECK_CURR)     echo "Current version:" ;;
-                CHECK_LATEST)   echo "Latest version:" ;;
-                UPDATE_AVAIL)   echo "New version available! Update? (y/n)" ;;
-                UPDATE_DONE)    echo "Script updated to version" ;;
-                UPDATE_RESTART) echo "Restarting..." ;;
-                UPDATE_FAIL)    echo "Failed to check for updates." ;;
-                NO_UPDATES)     echo "You already have the latest version." ;;
-                CONFIRM_DEL)    echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
-                CANCEL_DEL)     echo "Uninstall canceled" ;;
+                # === MAIN MENU - GROUPS ===
+                MAIN_TITLE)       echo "🏠 Main Menu" ;;
+                GROUP_ID_FLAGS)   echo "🆔 Short ID & Country Flags" ;;
+                GROUP_MONITOR)    echo "📊 Resource Monitor" ;;
+                GROUP_PORTS)      echo "🔐 Network & Ports" ;;
+                GROUP_SETTINGS)   echo "⚙️  Maintenance" ;;
+                
+                # === SUBMENU: Short ID & Flags ===
+                SUB_GEN_IDS)      echo "🎲 Generate shorts_id" ;;
+                SUB_FLAG)         echo "🏳️  Get country emoji flag" ;;
+                
+                # === SUBMENU: Resource Monitor ===
+                SUB_MEMORY)       echo "💾 Show free memory" ;;
+                SUB_HTOP)         echo "📈 Launch htop" ;;
+                SUB_SYSINFO)      echo "🖥️  System information" ;;
+                
+                # === SUBMENU: Network & Ports ===
+                SUB_PORTS)        echo "🔒 Port management" ;;
+                
+                # === SUBMENU: Maintenance ===
+                SUB_UPDATE)       echo "🔄 Check for updates" ;;
+                SUB_DELETE)       echo "🗑️  Uninstall rw-scripts" ;;
+                
+                # === NAVIGATION ===
+                MENU_BACK)        echo "⬅️  Back" ;;
+                MENU_EXIT)        echo "🚪 Exit" ;;
+                PROMPT_CHOICE)    echo "Choose an option:" ;;
+                PROMPT_GROUP)     echo "Choose a group:" ;;
+                
+                # === MESSAGES ===
+                MSG_EXIT)         echo "Exiting... Bye 👋" ;;
+                MSG_BACK)         echo "Returning to main menu..." ;;
+                ERR_CHOICE)       echo "Invalid choice, try again 😅" ;;
+                IDS_HOW_MANY)     echo "How many IDs to generate?" ;;
+                ERR_NUMBER)       echo "Error: enter a valid number!" ;;
+                ERR_GT_ZERO)      echo "Error: number must be greater than zero!" ;;
+                IDS_DONE)         echo "IDs generated! Here is your list:" ;;
+                ERR_IDS)          echo "An error occurred during generation." ;;
+                COUNTRY_PROMPT)   echo "Enter country name (English or Russian, part allowed, 0 = exit):" ;;
+                NOTHING_FOUND)    echo "Nothing found for query" ;;
+                RESULTS)          echo "Search results:" ;;
+                PROMPT_NUM)       echo "Choose number (or 0 for new search):" ;;
+                ERR_NUM)          echo "Enter a valid number!" ;;
+                ERR_NOT_FOUND)    echo "No option with that number found." ;;
+                YOU_SELECTED)     echo "You selected:" ;;
+                CHECK_CURR)       echo "Current version:" ;;
+                CHECK_LATEST)     echo "Latest version:" ;;
+                UPDATE_AVAIL)     echo "New version available! Update? (y/n)" ;;
+                UPDATE_DONE)      echo "Script updated to version" ;;
+                UPDATE_RESTART)   echo "Restarting..." ;;
+                UPDATE_FAIL)      echo "Failed to check for updates." ;;
+                NO_UPDATES)       echo "You already have the latest version." ;;
+                CONFIRM_DEL)      echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
+                CANCEL_DEL)       echo "Canceled" ;;
+                PRESS_ENTER)      echo "Press Enter to continue..." ;;
             esac ;;
     esac
+}
+
+# ====== ЗАГОЛОВОК ПОДМЕНЮ ======
+print_submenu_header() {
+    local title="$1"
+    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║${NC} ${BOLD}${MAGENTA}$title${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+    echo
 }
 
 # ====== ФУНКЦИЯ: СИСТЕМНАЯ ИНФА ======
@@ -254,7 +309,6 @@ launch_htop() {
 
 # ====== УПРАВЛЕНИЕ ПОРТАМИ ======
 
-# Определяем firewall в системе
 detect_firewall() {
     if command -v ufw >/dev/null 2>&1; then
         echo "ufw"
@@ -267,20 +321,18 @@ detect_firewall() {
     fi
 }
 
-# Инициализация файла портов
 init_ports_file() {
     if [ ! -f "$PORTS_FILE" ]; then
         echo "[]" > "$PORTS_FILE"
     fi
 }
 
-# Проверка установки jq
 ensure_jq() {
     if command -v jq >/dev/null 2>&1; then
         return 0
     fi
     
-    echo -e "${YELLOW}⚙️  'jq' не установлен. Устанавливаю для работы с портами...${NC}"
+    echo -e "${YELLOW}⚙️  'jq' не установлен. Устанавливаю...${NC}"
     loading_bar & pid=$!
     
     if command -v apt-get >/dev/null 2>&1; then
@@ -299,14 +351,14 @@ ensure_jq() {
         brew install jq &>/dev/null
     else
         kill $pid >/dev/null 2>&1; tput cnorm
-        echo -e "\r${RED}❌ Не удалось определить пакетный менеджер. Установите 'jq' вручную.${NC}"
+        echo -e "\r${RED}❌ Не удалось определить пакетный менеджер.${NC}"
         return 1
     fi
     
     kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
     
     if command -v jq >/dev/null 2>&1; then
-        echo -e "\r✅ jq успешно установлен!                                                    "
+        echo -e "\r✅ jq успешно установлен!                    "
         return 0
     else
         echo -e "\r${RED}❌ Не удалось установить jq.${NC}"
@@ -314,11 +366,8 @@ ensure_jq() {
     fi
 }
 
-# Добавить порт в JSON
 add_port_to_json() {
-    local port=$1
-    local protocol=$2
-    local description=$3
+    local port=$1 protocol=$2 description=$3
     local timestamp=$(date +%s)
     
     init_ports_file
@@ -329,11 +378,8 @@ add_port_to_json() {
     mv "$temp_file" "$PORTS_FILE"
 }
 
-# Удалить порт из JSON
 remove_port_from_json() {
-    local port=$1
-    local protocol=$2
-    
+    local port=$1 protocol=$2
     ensure_jq || return 1
     
     local temp_file=$(mktemp)
@@ -341,12 +387,8 @@ remove_port_from_json() {
     mv "$temp_file" "$PORTS_FILE"
 }
 
-# Редактировать описание порта
 edit_port_description() {
-    local port=$1
-    local protocol=$2
-    local new_description=$3
-    
+    local port=$1 protocol=$2 new_description=$3
     ensure_jq || return 1
     
     local temp_file=$(mktemp)
@@ -354,15 +396,12 @@ edit_port_description() {
     mv "$temp_file" "$PORTS_FILE"
 }
 
-# Открыть порт
 open_port() {
     local firewall=$(detect_firewall)
     
     if [ "$firewall" = "none" ]; then
-        echo -e "${RED}❌ Firewall не обнаружен. Установите ufw, firewalld или iptables.${NC}"
-        echo -e "${YELLOW}💡 Для Ubuntu/Debian: sudo apt install ufw${NC}"
-        echo -e "${YELLOW}💡 Для RHEL/CentOS: sudo yum install firewalld${NC}"
-        read -rp "Нажмите Enter для возврата в меню..."
+        echo -e "${RED}❌ Firewall не обнаружен.${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
@@ -373,8 +412,8 @@ open_port() {
     read -rp "Введите номер порта (1-65535): " port
     
     if ! [[ "$port" =~ ^[0-9]+$ ]] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
-        echo -e "${RED}❌ Неверный номер порта (допустимо: 1-65535)${NC}"
-        read -rp "Нажмите Enter для возврата..."
+        echo -e "${RED}❌ Неверный номер порта${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
@@ -382,25 +421,21 @@ open_port() {
     echo "Выберите протокол:"
     echo -e "${YELLOW}1)${NC} TCP"
     echo -e "${YELLOW}2)${NC} UDP"
-    echo -e "${YELLOW}3)${NC} TCP и UDP (оба)"
-    echo
+    echo -e "${YELLOW}3)${NC} TCP и UDP"
     read -rp "> " proto_choice
     
     case $proto_choice in
         1) protocol="tcp" ;;
         2) protocol="udp" ;;
         3) protocol="both" ;;
-        *) echo -e "${RED}❌ Неверный выбор${NC}"; read -rp "Нажмите Enter..."; return 1 ;;
+        *) echo -e "${RED}❌ Неверный выбор${NC}"; return 1 ;;
     esac
     
-    echo
-    read -rp "Описание порта (например: 'SSH server', 'Web server'): " description
+    read -rp "Описание порта: " description
     [ -z "$description" ] && description="No description"
     
-    echo
     echo -e "${BLUE}⏳ Открываю порт $port ($protocol)...${NC}"
     
-    # Открываем порт в firewall
     case $firewall in
         ufw)
             if [ "$protocol" = "both" ]; then
@@ -417,14 +452,13 @@ open_port() {
             if [ "$protocol" = "both" ]; then
                 sudo firewall-cmd --permanent --add-port="$port"/tcp &>/dev/null
                 sudo firewall-cmd --permanent --add-port="$port"/udp &>/dev/null
-                sudo firewall-cmd --reload &>/dev/null
                 add_port_to_json "$port" "tcp" "$description"
                 add_port_to_json "$port" "udp" "$description"
             else
                 sudo firewall-cmd --permanent --add-port="$port"/"$protocol" &>/dev/null
-                sudo firewall-cmd --reload &>/dev/null
                 add_port_to_json "$port" "$protocol" "$description"
             fi
+            sudo firewall-cmd --reload &>/dev/null
             ;;
         iptables)
             if [ "$protocol" = "both" ]; then
@@ -436,71 +470,49 @@ open_port() {
                 sudo iptables -A INPUT -p "$protocol" --dport "$port" -j ACCEPT
                 add_port_to_json "$port" "$protocol" "$description"
             fi
-            # Сохраняем правила
-            if command -v netfilter-persistent >/dev/null 2>&1; then
-                sudo netfilter-persistent save &>/dev/null
-            elif command -v iptables-save >/dev/null 2>&1; then
-                sudo iptables-save > /etc/iptables/rules.v4 2>/dev/null || true
-            fi
+            command -v netfilter-persistent &>/dev/null && sudo netfilter-persistent save &>/dev/null
             ;;
     esac
     
-    echo -e "${GREEN}✅ Порт $port ($protocol) успешно открыт!${NC}"
-    echo -e "${GREEN}📝 Описание: $description${NC}"
-    echo
-    read -rp "Нажмите Enter для продолжения..."
+    echo -e "${GREEN}✅ Порт $port ($protocol) открыт!${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
-# Закрыть порт
 close_port() {
     local firewall=$(detect_firewall)
     
     if [ "$firewall" = "none" ]; then
         echo -e "${RED}❌ Firewall не обнаружен.${NC}"
-        read -rp "Нажмите Enter для возврата..."
+        read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
     list_ports
-    echo
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
-        echo -e "${YELLOW}Нет открытых портов для закрытия.${NC}"
-        read -rp "Нажмите Enter для возврата..."
+        echo -e "${YELLOW}Нет открытых портов.${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
         return 0
     fi
     
-    echo -e "${CYAN}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║     🔒 Закрыть порт / Close Port     ║${NC}"
-    echo -e "${CYAN}╚═══════════════════════════════════════╝${NC}"
     echo
-    read -rp "Введите номер порта для закрытия: " port
+    read -rp "Введите номер порта: " port
     
     if ! [[ "$port" =~ ^[0-9]+$ ]]; then
         echo -e "${RED}❌ Неверный номер порта${NC}"
-        read -rp "Нажмите Enter..."
         return 1
     fi
     
-    echo
-    echo "Выберите протокол:"
-    echo -e "${YELLOW}1)${NC} TCP"
-    echo -e "${YELLOW}2)${NC} UDP"
-    echo -e "${YELLOW}3)${NC} Оба (TCP и UDP)"
-    echo
+    echo "Протокол: 1) TCP  2) UDP  3) Оба"
     read -rp "> " proto_choice
     
     case $proto_choice in
         1) protocol="tcp" ;;
         2) protocol="udp" ;;
         3) protocol="both" ;;
-        *) echo -e "${RED}❌ Неверный выбор${NC}"; read -rp "Нажмите Enter..."; return 1 ;;
+        *) return 1 ;;
     esac
     
-    echo
-    echo -e "${BLUE}⏳ Закрываю порт $port ($protocol)...${NC}"
-    
-    # Закрываем порт в firewall
     case $firewall in
         ufw)
             if [ "$protocol" = "both" ]; then
@@ -517,99 +529,67 @@ close_port() {
             if [ "$protocol" = "both" ]; then
                 sudo firewall-cmd --permanent --remove-port="$port"/tcp &>/dev/null
                 sudo firewall-cmd --permanent --remove-port="$port"/udp &>/dev/null
-                sudo firewall-cmd --reload &>/dev/null
                 remove_port_from_json "$port" "tcp"
                 remove_port_from_json "$port" "udp"
             else
                 sudo firewall-cmd --permanent --remove-port="$port"/"$protocol" &>/dev/null
-                sudo firewall-cmd --reload &>/dev/null
                 remove_port_from_json "$port" "$protocol"
             fi
+            sudo firewall-cmd --reload &>/dev/null
             ;;
         iptables)
             if [ "$protocol" = "both" ]; then
-                sudo iptables -D INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null || true
-                sudo iptables -D INPUT -p udp --dport "$port" -j ACCEPT 2>/dev/null || true
+                sudo iptables -D INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null
+                sudo iptables -D INPUT -p udp --dport "$port" -j ACCEPT 2>/dev/null
                 remove_port_from_json "$port" "tcp"
                 remove_port_from_json "$port" "udp"
             else
-                sudo iptables -D INPUT -p "$protocol" --dport "$port" -j ACCEPT 2>/dev/null || true
+                sudo iptables -D INPUT -p "$protocol" --dport "$port" -j ACCEPT 2>/dev/null
                 remove_port_from_json "$port" "$protocol"
-            fi
-            if command -v netfilter-persistent >/dev/null 2>&1; then
-                sudo netfilter-persistent save &>/dev/null
             fi
             ;;
     esac
     
-    echo -e "${GREEN}✅ Порт $port ($protocol) успешно закрыт!${NC}"
-    echo
-    read -rp "Нажмите Enter для продолжения..."
+    echo -e "${GREEN}✅ Порт $port закрыт!${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
-# Редактировать описание порта
 edit_port() {
     list_ports
-    echo
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
-        echo -e "${YELLOW}Нет портов для редактирования.${NC}"
-        read -rp "Нажмите Enter для возврата..."
+        read -rp "$(tr_text PRESS_ENTER)"
         return 0
     fi
     
-    echo -e "${CYAN}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║  ✏️  Редактировать описание порта    ║${NC}"
-    echo -e "${CYAN}╚═══════════════════════════════════════╝${NC}"
     echo
-    read -rp "Введите номер порта: " port
-    
-    if ! [[ "$port" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}❌ Неверный номер порта${NC}"
-        read -rp "Нажмите Enter..."
-        return 1
-    fi
-    
-    echo
-    echo "Выберите протокол:"
-    echo -e "${YELLOW}1)${NC} TCP"
-    echo -e "${YELLOW}2)${NC} UDP"
-    echo
+    read -rp "Номер порта: " port
+    echo "Протокол: 1) TCP  2) UDP"
     read -rp "> " proto_choice
     
     case $proto_choice in
         1) protocol="tcp" ;;
         2) protocol="udp" ;;
-        *) echo -e "${RED}❌ Неверный выбор${NC}"; read -rp "Нажмите Enter..."; return 1 ;;
+        *) return 1 ;;
     esac
     
-    # Проверяем, существует ли такой порт
     ensure_jq || return 1
     local exists=$(jq -r ".[] | select(.port == \"$port\" and .protocol == \"$protocol\") | .description" "$PORTS_FILE")
     
     if [ -z "$exists" ]; then
-        echo -e "${RED}❌ Порт $port ($protocol) не найден в списке.${NC}"
-        read -rp "Нажмите Enter..."
+        echo -e "${RED}❌ Порт не найден.${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
     echo -e "${BLUE}Текущее описание:${NC} $exists"
-    echo
     read -rp "Новое описание: " new_description
     
-    if [ -z "$new_description" ]; then
-        echo -e "${YELLOW}Описание не изменено.${NC}"
-        read -rp "Нажмите Enter..."
-        return 0
-    fi
-    
-    edit_port_description "$port" "$protocol" "$new_description"
-    echo -e "${GREEN}✅ Описание обновлено!${NC}"
-    echo
-    read -rp "Нажмите Enter для продолжения..."
+    [ -n "$new_description" ] && edit_port_description "$port" "$protocol" "$new_description"
+    echo -e "${GREEN}✅ Обновлено!${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
-# Список открытых портов
 list_ports() {
     echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║           📋 Открытые порты / Open Ports                 ║${NC}"
@@ -618,7 +598,7 @@ list_ports() {
     init_ports_file
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
-        echo -e "${YELLOW}📭 Нет сохраненных портов / No saved ports${NC}"
+        echo -e "${YELLOW}📭 Нет сохраненных портов${NC}"
         return
     fi
     
@@ -630,100 +610,79 @@ list_ports() {
     echo -e "${BLUE}├─────────┼───────────┼──────────────────────────────────────┤${NC}"
     
     jq -r '.[] | "\(.port)|\(.protocol)|\(.description)"' "$PORTS_FILE" | while IFS='|' read -r port proto desc; do
-        # Обрезаем описание если слишком длинное
-        if [ ${#desc} -gt 36 ]; then
-            desc="${desc:0:33}..."
-        fi
+        [ ${#desc} -gt 36 ] && desc="${desc:0:33}..."
         printf "${BLUE}│${NC} ${GREEN}%-7s${NC} ${BLUE}│${NC} ${YELLOW}%-9s${NC} ${BLUE}│${NC} %-36s ${BLUE}│${NC}\n" "$port" "$proto" "$desc"
     done
     
     echo -e "${BLUE}└─────────┴───────────┴──────────────────────────────────────┘${NC}"
     
-    # Показываем общее количество
     local total=$(jq '. | length' "$PORTS_FILE")
-    echo -e "${CYAN}📊 Всего открытых портов: $total${NC}"
+    echo -e "${CYAN}📊 Всего: $total${NC}"
 }
 
-# Показать статус firewall
 show_firewall_status() {
     local firewall=$(detect_firewall)
     
     echo -e "${CYAN}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    🛡️  Статус Firewall / Status     ║${NC}"
+    echo -e "${CYAN}║    🛡️  Статус Firewall              ║${NC}"
     echo -e "${CYAN}╚═══════════════════════════════════════╝${NC}"
     echo
     
     case $firewall in
         ufw)
-            echo -e "${GREEN}Используется: UFW (Uncomplicated Firewall)${NC}"
-            echo
+            echo -e "${GREEN}Firewall: UFW${NC}"
             sudo ufw status verbose
             ;;
         firewalld)
-            echo -e "${GREEN}Используется: FirewallD${NC}"
-            echo
-            echo -e "${BLUE}Статус:${NC}"
+            echo -e "${GREEN}Firewall: FirewallD${NC}"
             sudo firewall-cmd --state
-            echo
-            echo -e "${BLUE}Активные правила:${NC}"
             sudo firewall-cmd --list-all
             ;;
         iptables)
-            echo -e "${GREEN}Используется: iptables${NC}"
-            echo
-            echo -e "${BLUE}Правила фильтрации:${NC}"
+            echo -e "${GREEN}Firewall: iptables${NC}"
             sudo iptables -L -n -v --line-numbers
             ;;
         none)
-            echo -e "${RED}❌ Firewall не обнаружен в системе${NC}"
-            echo
-            echo -e "${YELLOW}Рекомендуется установить firewall для безопасности:${NC}"
-            echo -e "${BLUE}  • Ubuntu/Debian: sudo apt install ufw${NC}"
-            echo -e "${BLUE}  • RHEL/CentOS:   sudo yum install firewalld${NC}"
+            echo -e "${RED}❌ Firewall не обнаружен${NC}"
             ;;
     esac
     
     echo
-    read -rp "Нажмите Enter для возврата в меню..."
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
-# Меню управления портами
+# Подменю управления портами
 port_management() {
     while true; do
-        clear
         show_banner
+        print_submenu_header "$(tr_text SUB_PORTS)"
+        
+        echo -e "  ${YELLOW}1)${NC} 🔓 Открыть порт"
+        echo -e "  ${YELLOW}2)${NC} 🔒 Закрыть порт"
+        echo -e "  ${YELLOW}3)${NC} ✏️  Редактировать описание"
+        echo -e "  ${YELLOW}4)${NC} 📋 Список портов"
+        echo -e "  ${YELLOW}5)${NC} 🛡️  Статус firewall"
         echo
-        echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-        echo -e "${CYAN}║      🔒 Управление портами / Ports        ║${NC}"
-        echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        echo -e "${YELLOW}1)${NC} 🔓 Открыть порт / Open port"
-        echo -e "${YELLOW}2)${NC} 🔒 Закрыть порт / Close port"
-        echo -e "${YELLOW}3)${NC} ✏️  Редактировать описание / Edit description"
-        echo -e "${YELLOW}4)${NC} 📋 Список портов / List ports"
-        echo -e "${YELLOW}5)${NC} 🛡️  Статус firewall / Firewall status"
-        echo -e "${YELLOW}0)${NC} ⬅️  Назад / Back"
-        echo
-        read -rp "$(echo -e ${BLUE}Выберите действие:${NC}) " choice
+        read -rp "> " choice
         
         case $choice in
-            1) clear; show_banner; open_port ;;
-            2) clear; show_banner; close_port ;;
-            3) clear; show_banner; edit_port ;;
-            4) clear; show_banner; list_ports; echo; read -rp "Нажмите Enter для возврата..." ;;
-            5) clear; show_banner; show_firewall_status ;;
+            1) show_banner; open_port ;;
+            2) show_banner; close_port ;;
+            3) show_banner; edit_port ;;
+            4) show_banner; list_ports; echo; read -rp "$(tr_text PRESS_ENTER)" ;;
+            5) show_banner; show_firewall_status ;;
             0) break ;;
-            *) echo -e "${RED}❌ Неверный выбор${NC}"; sleep 1 ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
     done
 }
 
 # ====== ГЕНЕРАЦИЯ ID ======
 ensure_xxd() {
-    if command -v xxd >/dev/null 2>&1; then
-        return 0
-    fi
-    echo -e "${YELLOW}⚙️  Утилита 'xxd' не найдена. Пытаюсь установить...${NC}"
+    if command -v xxd >/dev/null 2>&1; then return 0; fi
+    echo -e "${YELLOW}⚙️  Устанавливаю 'xxd'...${NC}"
 
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt-get update -qq && (sudo apt-get install -y vim-xxd || sudo apt-get install -y xxd)
@@ -740,16 +699,11 @@ ensure_xxd() {
     elif command -v brew >/dev/null 2>&1; then
         brew install xxd
     else
-        echo -e "${RED}❌ Не удалось определить пакетный менеджер. Установите 'vim-xxd' вручную.${NC}"
-        return 1
-    fi
-
-    if command -v xxd >/dev/null 2>&1; then
-        echo -e "${GREEN}✅ xxd успешно установлен!${NC}"
-    else
         echo -e "${RED}❌ Не удалось установить xxd.${NC}"
         return 1
     fi
+
+    command -v xxd >/dev/null 2>&1 && echo -e "${GREEN}✅ xxd установлен!${NC}" || return 1
 }
 
 generate_ids() {
@@ -767,6 +721,8 @@ generate_ids() {
         id=$(head -c 8 /dev/urandom | xxd -p)
         echo "\"$id\","
     done
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
 # ====== ISO→ФЛАГ ======
@@ -783,102 +739,200 @@ iso_to_flag() {
 country_lookup() {
     echo "$(tr_text COUNTRY_PROMPT)"
     read input
+    [ "$input" = "0" ] && return
     key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
     COUNTRIES_FILE="$DATA_DIR/countries.csv"
     if [ ! -f "$COUNTRIES_FILE" ]; then
-        echo -e "${RED}countries.csv not found in $DATA_DIR${NC}"; return
+        echo -e "${RED}countries.csv not found${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return
     fi
     matches=$(awk -F',' -v key="$key" '
     { ru=tolower($1); en=tolower($2); iso=$3;
       if (ru ~ key || en ~ key) { print iso "," $2; }
     }' "$COUNTRIES_FILE")
     if [ -z "$matches" ]; then
-        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"; return
+        echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return
     fi
     total=$(echo "$matches" | wc -l)
     if [ "$total" -gt 10 ]; then
-        echo -e "${YELLOW}Найдено ${total} совпадений. Показать все? (y/n)${NC}"
+        echo -e "${YELLOW}Найдено ${total}. Показать все? (y/n)${NC}"
         read ans
-        [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${RED}Отмена.${NC}"; return; }
+        [[ ! "$ans" =~ ^[YyДд]$ ]] && return
     fi
     echo -e "${GREEN}$(tr_text RESULTS)${NC}"
     echo "$matches" | while IFS=',' read -r iso en; do
         flag=$(iso_to_flag "$iso")
         echo " $flag $en"
     done
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
 # ====== ОБНОВЛЕНИЕ ======
 check_update() {
-    local latest tmp_script tmp_version
+    local latest
     latest=$(curl -fsSL "$REPO_URL/version.txt" | tr -d '\r\n')
-    [ -z "$latest" ] && { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; return 1; }
+    [ -z "$latest" ] && { echo -e "${RED}$(tr_text UPDATE_FAIL)${NC}"; read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+    
     echo "$(tr_text CHECK_CURR) $VERSION"
     echo "$(tr_text CHECK_LATEST) $latest"
+    
     if [ "$VERSION" = "$latest" ]; then
-        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"; return 0
+        echo -e "${GREEN}$(tr_text NO_UPDATES)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
     fi
+    
     echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
     read -r ans
     [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 0; }
-    tmp_script="$SCRIPT_PATH.tmp"
-    tmp_version="$DATA_DIR/version.txt.tmp"
+    
+    local tmp_script="$SCRIPT_PATH.tmp"
+    local tmp_version="$DATA_DIR/version.txt.tmp"
 
-    echo -e "${BLUE}⏳ Downloading update...${NC}"
+    echo -e "${BLUE}⏳ Downloading...${NC}"
     loading_bar & pid=$!
-    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh"; then
+    
+    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh" || \
+       ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
         kill $pid >/dev/null 2>&1; tput cnorm
-        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "; rm -f "$tmp_script"; return 1
+        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "
+        rm -f "$tmp_script" "$tmp_version"
+        return 1
     fi
-    if ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
-        kill $pid >/dev/null 2>&1; tput cnorm
-        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "; rm -f "$tmp_script" "$tmp_version"; return 1
-    fi
+    
     kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
-    echo -e "\r✅ Update downloaded!                                   "
-
+    
     mv "$tmp_script" "$SCRIPT_PATH"; chmod +x "$SCRIPT_PATH"
     mv "$tmp_version" "$DATA_DIR/version.txt"
-    echo -e "${GREEN}$(tr_text UPDATE_DONE) $latest${NC}"
+    
+    echo -e "\r${GREEN}$(tr_text UPDATE_DONE) $latest${NC}     "
     echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
     exec "$SCRIPT_PATH"
 }
 
 # ====== УДАЛЕНИЕ ======
-delete_self() { "$DATA_DIR/uninstall.sh"; exit 0; }
-
-# ====== МЕНЮ ======
-show_menu() {
-    echo
-    echo "$(tr_text PROMPT_CHOICE)"
-    echo -e "${YELLOW}$(tr_text MENU_GEN_IDS)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_FLAG)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_UPDATE)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_DELETE)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_MEMORY)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_HTOP)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_SYSINFO)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_PORTS)${NC}"
-    echo -e "${YELLOW}$(tr_text MENU_EXIT)${NC}"
-    echo -n "> "
-    read -r choice
-    case $choice in
-        1) generate_ids ;;
-        2) country_lookup ;;
-        3) check_update ;;
-        4) delete_self ;;
-        5) show_memory ;;
-        6) launch_htop ;;
-        7) show_system_info ;;
-        8) port_management ;;
-        0) tr_text MSG_EXIT; exit 0 ;;
-        *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}" ;;
-    esac
+delete_self() {
+    echo -e "${RED}$(tr_text CONFIRM_DEL)${NC}"
+    read -r ans
+    [[ "$ans" =~ ^[YyДд]$ ]] && { "$DATA_DIR/uninstall.sh"; exit 0; }
+    echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
 }
 
-# ====== ЦИКЛ ======
-show_banner
-auto_check_update
-while true; do
-    show_menu
-done
+# ══════════════════════════════════════════════════════════════════
+#                        ПОДМЕНЮ ГРУПП
+# ══════════════════════════════════════════════════════════════════
+
+# ====== ПОДМЕНЮ 1: Short ID & Flags ======
+submenu_id_flags() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text GROUP_ID_FLAGS)"
+        
+        echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_GEN_IDS)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_FLAG)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        
+        case $choice in
+            1) show_banner; generate_ids ;;
+            2) show_banner; country_lookup ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ====== ПОДМЕНЮ 2: Resource Monitor ======
+submenu_monitor() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text GROUP_MONITOR)"
+        
+        echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_MEMORY)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_HTOP)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_SYSINFO)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        
+        case $choice in
+            1) show_banner; show_memory; echo; read -rp "$(tr_text PRESS_ENTER)" ;;
+            2) show_banner; launch_htop ;;
+            3) show_banner; show_system_info; echo; read -rp "$(tr_text PRESS_ENTER)" ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ====== ПОДМЕНЮ 3: Network & Ports ======
+submenu_network() {
+    port_management
+}
+
+# ====== ПОДМЕНЮ 4: Maintenance ======
+submenu_maintenance() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text GROUP_SETTINGS)"
+        
+        echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_UPDATE)"
+        echo -e "  ${RED}2)${NC} $(tr_text SUB_DELETE)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        
+        case $choice in
+            1) show_banner; check_update ;;
+            2) show_banner; delete_self ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ══════════════════════════════════════════════════════════════════
+#                        ГЛАВНОЕ МЕНЮ
+# ══════════════════════════════════════════════════════════════════
+
+show_main_menu() {
+    while true; do
+        show_banner
+        auto_check_update
+        
+        echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+        echo -e "${CYAN}║${NC}           ${BOLD}$(tr_text MAIN_TITLE)${NC}                   ${CYAN}║${NC}"
+        echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+        echo
+        echo -e "  ${YELLOW}1)${NC} $(tr_text GROUP_ID_FLAGS)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text GROUP_MONITOR)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_PORTS)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
+        echo
+        echo -e "  ${DIM}─────────────────────────────────────────${NC}"
+        echo -e "  ${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
+        echo
+        echo -e "${BLUE}$(tr_text PROMPT_GROUP)${NC}"
+        read -rp "> " choice
+        
+        case $choice in
+            1) submenu_id_flags ;;
+            2) submenu_monitor ;;
+            3) submenu_network ;;
+            4) submenu_maintenance ;;
+            0) echo -e "${GREEN}$(tr_text MSG_EXIT)${NC}"; exit 0 ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ====== ЗАПУСК ======
+show_main_menu
