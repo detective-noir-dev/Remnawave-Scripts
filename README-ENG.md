@@ -77,6 +77,7 @@ Or directly:
 2	📊 Resource Monitor	Free memory, htop, System info (neofetch)
 3	🔐 Network & Ports	Port management submenu
 4	⚙️ Maintenance	Check updates, Uninstall
+
 ```
 
 ### Usage Examples
