@@ -87,6 +87,7 @@ tr_text() {
                 
                 # === ПОДМЕНЮ: Maintenance ===
                 SUB_UPDATE)       echo "🔄 Проверить обновления" ;;
+                SUB_APT_UPDATE)   echo "📦 Обновить системные пакеты" ;;
                 SUB_DELETE)       echo "🗑️  Удалить rw-scripts" ;;
                 
                 # === НАВИГАЦИЯ ===
@@ -121,6 +122,11 @@ tr_text() {
                 CONFIRM_DEL)      echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
                 CANCEL_DEL)       echo "Отменено" ;;
                 PRESS_ENTER)      echo "Нажмите Enter для продолжения..." ;;
+                APT_UPDATING)     echo "Обновление списка пакетов..." ;;
+                APT_UPGRADING)    echo "Установка обновлений..." ;;
+                APT_DONE)         echo "Все пакеты обновлены!" ;;
+                APT_NOT_FOUND)    echo "apt не найден. Эта функция только для Debian/Ubuntu." ;;
+                APT_CONFIRM)      echo "Обновить системные пакеты? Это может занять время. (y/n)" ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -145,6 +151,7 @@ tr_text() {
                 
                 # === SUBMENU: Maintenance ===
                 SUB_UPDATE)       echo "🔄 Check for updates" ;;
+                SUB_APT_UPDATE)   echo "📦 Update system packages" ;;
                 SUB_DELETE)       echo "🗑️  Uninstall rw-scripts" ;;
                 
                 # === NAVIGATION ===
@@ -179,6 +186,11 @@ tr_text() {
                 CONFIRM_DEL)      echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
                 CANCEL_DEL)       echo "Canceled" ;;
                 PRESS_ENTER)      echo "Press Enter to continue..." ;;
+                APT_UPDATING)     echo "Updating package lists..." ;;
+                APT_UPGRADING)    echo "Installing updates..." ;;
+                APT_DONE)         echo "All packages updated!" ;;
+                APT_NOT_FOUND)    echo "apt not found. This feature is for Debian/Ubuntu only." ;;
+                APT_CONFIRM)      echo "Update system packages? This may take a while. (y/n)" ;;
             esac ;;
     esac
 }
@@ -876,7 +888,45 @@ submenu_monitor() {
 submenu_network() {
     port_management
 }
-
+# ====== ОБНОВЛЕНИЕ СИСТЕМНЫХ ПАКЕТОВ ======
+apt_update_upgrade() {
+    # Проверяем наличие apt
+    if ! command -v apt >/dev/null 2>&1 && ! command -v apt-get >/dev/null 2>&1; then
+        echo -e "${RED}❌ $(tr_text APT_NOT_FOUND)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+    
+    echo -e "${YELLOW}$(tr_text APT_CONFIRM)${NC}"
+    read -r ans
+    
+    if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
+        echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
+    fi
+    
+    echo -e "${BLUE}📦 $(tr_text APT_UPDATING)${NC}"
+    echo
+    
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt update
+        echo
+        echo -e "${BLUE}⬆️  $(tr_text APT_UPGRADING)${NC}"
+        echo
+        sudo apt upgrade -y
+    else
+        sudo apt-get update
+        echo
+        echo -e "${BLUE}⬆️  $(tr_text APT_UPGRADING)${NC}"
+        echo
+        sudo apt-get upgrade -y
+    fi
+    
+    echo
+    echo -e "${GREEN}✅ $(tr_text APT_DONE)${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
+}
 # ====== ПОДМЕНЮ 4: Maintenance ======
 submenu_maintenance() {
     while true; do
@@ -884,7 +934,8 @@ submenu_maintenance() {
         print_submenu_header "$(tr_text GROUP_SETTINGS)"
         
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_UPDATE)"
-        echo -e "  ${RED}2)${NC} $(tr_text SUB_DELETE)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_APT_UPDATE)"
+        echo -e "  ${RED}3)${NC} $(tr_text SUB_DELETE)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -892,7 +943,8 @@ submenu_maintenance() {
         
         case $choice in
             1) show_banner; check_update ;;
-            2) show_banner; delete_self ;;
+            2) show_banner; apt_update_upgrade ;;
+            3) show_banner; delete_self ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac

@@ -1,44 +1,48 @@
-# Remnawave-Scripts (English)
+# Remnawave-Scripts (English Version)
 
-![version](https://img.shields.io/badge/version-1.2.1-blue)
+![version](https://img.shields.io/badge/version-1.2.2-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-Remnawave-Scripts is a cross-platform Bash script with an interactive menu, multilingual support (RU/EN), random ID generation, country lookup with emoji flags, and port management.
+Remnawave-Scripts is a cross-platform Bash script with an interactive menu, bilingual support (RU/EN), random ID generation, country search with emoji flags, and port management.
 
-It also includes a self-update system from GitHub and allows uninstalling the script (rw-scripts) from the menu.
+It also includes a self-update system from GitHub and allows you to uninstall the script (rw-scripts) directly from the menu.
 
 ---
 
 ## 📌 Features
 
-- **Generate random shorts_id** — create unique identifiers
-- **Country lookup** — search in Russian and English, partial matches supported
-- **Show emoji flag** and English name of the country
+- **Random shorts_id generation** — create unique identifiers
+- **Country search** — search in Russian and English, partial matches supported
+- **Display emoji flag** and English country name
 - **💾 Memory monitoring** ⭐ v1.1.0
   - Display free and used RAM
   - Cross-platform support (Linux, macOS)
 - **📈 Interactive process monitor (htop)** ⭐ v1.1.0
-  - Automatic htop installation when needed
+  - Automatic htop installation if needed
   - Real-time process, CPU, and memory monitoring
-- **🔒 Port management** ⭐ NEW in v1.2.0
-  - 🔓 Open ports through firewall (UFW/FirewallD/iptables)
+- **🔒 Port management** ⭐ v1.2.0
+  - 🔓 Open ports via firewall (UFW/FirewallD/iptables)
   - 🔒 Close ports with database removal
   - ✏️ Edit port descriptions
   - 📋 Beautiful list of all open ports
   - 🛡️ View firewall status
-  - 💾 Save port data between sessions
+  - 💾 Port data persistence between sessions
+- **📦 System package updates** ⭐ NEW in v1.2.3
+  - Execute `apt update && apt upgrade -y` from menu
+  - Confirmation before running
+  - Support for apt and apt-get
 - **System information** — display system data via neofetch
-- **Language switch**: Русский / English
+- **Language switching**: Russian / English
 - **Interactive CLI menu**
-- **GitHub-based update system**
-- **Option to uninstall** from system
+- **Update system via GitHub**
+- **Uninstall capability** from system
 
 ---
 
 ## 🚀 Installation
 
-Install with one command:
+One-command installation:
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh)
@@ -58,7 +62,7 @@ If you no longer need **Remnawave Scripts**, you can remove it:
 
 ```bash
 rw-scripts
-# Choose option 4 (Uninstall rw-scripts)
+# Select option 4 → 3 (Uninstall rw-scripts)
 ```
 
 Or directly:
@@ -71,65 +75,67 @@ Or directly:
 
 ## 📖 Usage
 
-📁 Menu Groups
-#	Group	Contents
-1	🆔 Short ID & Country Flags	Generate shorts_id, Get country emoji flag
-2	📊 Resource Monitor	Free memory, htop, System info (neofetch)
-3	🔐 Network & Ports	Port management submenu
-4	⚙️ Maintenance	Check updates, Uninstall
+### 📁 Menu Groups
 
-```
+| # | Group | Contents |
+|---|-------|----------|
+| 1 | 🆔 Short ID & Country Flags | Generate shorts_id, Get country emoji flag |
+| 2 | 📊 Resource Monitor | Free memory, htop, System information (neofetch) |
+| 3 | 🔐 Network & Ports | Port management submenu |
+| 4 | ⚙️ Maintenance | Check updates, **Update system packages** ⭐, Uninstall |
+
+---
 
 ### Usage Examples
 
-#### 💾 Memory Monitoring (option 5)
+#### 💾 Memory Monitoring
 Displays information about:
 - Total memory
 - Used memory
 - Free memory
 - Cached memory
 
-#### 📈 Process Monitor (option 6)
+#### 📈 Process Monitor
 - Interactive htop interface
 - Sort by CPU/memory
 - Process management
-- Colored data display
+- Color-coded display
 
-#### 🔒 Port Management (option 8) ⭐ NEW in v1.2.0
+#### 🔒 Port Management (group 3)
 
-**Port Management Submenu:**
+**Port management submenu:**
 
 ```
 ╔════════════════════════════════════════════╗
-║      🔒 Управление портами / Ports        ║
+║       🔒 Port Management / Ports          ║
 ╚════════════════════════════════════════════╝
 
-1) 🔓 Открыть порт / Open port
-2) 🔒 Закрыть порт / Close port
-3) ✏️  Редактировать описание / Edit description
-4) 📋 Список портов / List ports
-5) 🛡️  Статус firewall / Firewall status
-0) ⬅️  Назад / Back
+1) 🔓 Open port
+2) 🔒 Close port
+3) ✏️  Edit description
+4) 📋 List ports
+5) 🛡️  Firewall status
+0) ⬅️  Back
 ```
 
 **Capabilities:**
 
-1. **Open Port**
-   - Choose port number (1-65535)
-   - Select protocol (TCP, UDP, or both)
+1. **Open port**
+   - Select port number (1-65535)
+   - Choose protocol (TCP, UDP, or both)
    - Add description (e.g., "SSH server", "Web server")
-   - Automatic rule addition to firewall
+   - Automatic firewall rule addition
 
-2. **Close Port**
+2. **Close port**
    - View list of open ports
    - Select port to close
    - Automatic removal from firewall and database
 
-3. **Edit Description**
+3. **Edit description**
    - Change description of existing port
    - Useful for documenting port purposes
 
-4. **List Ports**
+4. **List ports**
    ```
    ┌─────────┬───────────┬──────────────────────────────────────┐
    │ Port    │ Protocol  │ Description                          │
@@ -142,29 +148,63 @@ Displays information about:
    📊 Total open ports: 4
    ```
 
-5. **Firewall Status**
-   - Shows type of firewall in use (UFW/FirewallD/iptables)
+5. **Firewall status**
+   - Shows firewall type in use (UFW/FirewallD/iptables)
    - Displays active rules
-   - Shows overall security status
+   - Shows overall protection status
 
-**Supported Firewalls:**
+**Supported firewalls:**
 - ✅ **UFW** (Ubuntu/Debian)
 - ✅ **FirewallD** (RHEL/CentOS/Fedora)
 - ✅ **iptables** (universal for Linux)
 
-**Automatic Dependencies:**
-- `jq` is automatically installed on first use for JSON handling
+---
 
-**Data Storage:**
-- All ports are saved in `~/.local/share/remnawave/ports.json`
-- Data persists across reboots
-- Each port has a creation timestamp
+#### 📦 System Package Updates (group 4 → option 2) ⭐ NEW in v1.2.3
+
+**Maintenance submenu:**
+
+```
+╔════════════════════════════════════════════╗
+║          ⚙️  Maintenance                  ║
+╚════════════════════════════════════════════╝
+
+1) 🔄 Check for updates
+2) 📦 Update system packages    ⭐ NEW
+3) 🗑️  Uninstall rw-scripts
+0) ⬅️  Back
+```
+
+**Package update function:**
+- Executes `apt update && apt upgrade -y`
+- Asks for confirmation before running
+- Automatically detects `apt` or `apt-get`
+- Shows update progress in real-time
+- Displays completion message
+
+**Usage example:**
+```
+📦 Update system packages? This may take a while. (y/n)
+> y
+
+📦 Updating package lists...
+Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease
+...
+
+⬆️  Installing updates...
+Reading package lists... Done
+...
+
+✅ All packages updated!
+```
+
+**Note:** This feature is only available for Debian/Ubuntu-based systems with the apt package manager.
 
 ---
 
 ## 🌍 Language Support
 
-- Русский (Russian)
+- Russian (Русский)
 - English
 
 Language is selected during first installation and saved in `~/.config/remnawave/lang.conf`
@@ -176,7 +216,7 @@ Language is selected during first installation and saved in `~/.config/remnawave
 - **scripts.sh** — main script
 - **install.sh** — installer (copies to ~/.local/bin/rw-scripts)
 - **uninstall.sh** — uninstaller
-- **countries.csv** — dataset of countries (RU/EN + ISO)
+- **countries.csv** — country database (RU/EN + ISO)
 - **version.txt** — current version
 - **README.md** — project description (RU)
 - **README-ENG.md** — project description (EN)
@@ -189,45 +229,12 @@ Language is selected during first installation and saved in `~/.config/remnawave
 - **Dependencies** (installed automatically when needed):
   - `bash` — main interpreter
   - `curl` — for downloading updates
-  - `xxd` — for ID generation (auto-installed)
+  - `xxd` — for ID generation (auto-install)
   - `neofetch` — for system information (optional)
   - `htop` — for process monitor (optional)
-  - `jq` — for JSON handling in port management (auto-installed)
+  - `jq` — for JSON handling in port management (auto-install)
   - `ufw` / `firewalld` / `iptables` — firewall for port management
-
----
-
-## 🔄 Version History
-
-### v1.2.0 (Current) - January 17, 2025
-- ✅ Added port management (open/close/edit)
-- ✅ Support for UFW, FirewallD, and iptables
-- ✅ Save port data in JSON with descriptions
-- ✅ Automatic jq installation
-- ✅ Beautiful tables for port display
-- ✅ Firewall status and rule checking
-- ✅ Improved user interface
-
-### v1.1.0
-- ✅ Added free memory monitoring
-- ✅ Added interactive process monitor (htop)
-- ✅ Automatic dependency installation
-- ✅ Improved cross-platform compatibility
-
-### v1.0.4
-- Basic ID generation functionality
-- Country search with flags
-- Auto-update system
-- Multilingual support (RU/EN)
-
----
-
-## 🤝 Contributing
-
-If you found a bug or want to suggest a new feature:
-1. Open an Issue on GitHub
-2. Create a Pull Request
-3. Write in Discussions section
+  - `apt` / `apt-get` — for system package updates (Debian/Ubuntu)
 
 ---
 
@@ -245,30 +252,24 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-## ⭐ Support the Project
-
-If you like the project, give it a star on GitHub! 🌟
-
----
-
 ## 🔐 Security
 
-When using port management:
+When using the script:
+
+**Port management:**
 - ⚠️ Sudo privileges required for firewall operations
-- 🛡️ All changes are applied directly to system firewall
+- 🛡️ All changes are applied directly to the system firewall
 - 💾 Port data is stored locally in your home directory
-- 🔒 Recommended to open only necessary ports
+- 🔒 It is recommended to open only necessary ports
+
+**System package updates:**
+- ⚠️ Sudo privileges required for package installation
+- 📦 Performs full system update
+- ⏱️ Process may take significant time
+- 🔄 Recommended to run regularly for system security
 
 ---
 
-## 📚 Useful Links
-
-- [UFW Documentation](https://help.ubuntu.com/community/UFW)
-- [FirewallD Documentation](https://firewalld.org/)
-- [iptables Guide](https://www.netfilter.org/documentation/)
-
----
-
-**Version:** 1.2.0  
-**Release Date:** January 17, 2025  
+**Version:** 1.2.2 
+**Release Date:** January 2025  
 **License:** MIT
