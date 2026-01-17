@@ -71,20 +71,12 @@ Or directly:
 
 ## 📖 Usage
 
-Example menu:
-
-```
-===============================
-1) Generate shorts_id
-2) Find country flag
-3) Check version/update
-4) Uninstall rw-scripts
-5) Show free memory
-6) Launch htop
-7) Show system info
-8) Port management 🔒              ⭐ NEW
-0) Exit
-===============================
+📁 Menu Groups
+#	Group	Contents
+1	🆔 Short ID & Country Flags	Generate shorts_id, Get country emoji flag
+2	📊 Resource Monitor	Free memory, htop, System info (neofetch)
+3	🔐 Network & Ports	Port management submenu
+4	⚙️ Maintenance	Check updates, Uninstall
 ```
 
 ### Usage Examples
