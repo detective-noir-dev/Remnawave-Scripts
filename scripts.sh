@@ -127,6 +127,9 @@ tr_text() {
                 APT_DONE)         echo "Все пакеты обновлены!" ;;
                 APT_NOT_FOUND)    echo "apt не найден. Эта функция только для Debian/Ubuntu." ;;
                 APT_CONFIRM)      echo "Обновить системные пакеты? Это может занять время. (y/n)" ;;
+                APT_UPDATE_OK)    echo "Список пакетов обновлён!" ;;
+                APT_UPDATE_FAIL)  echo "Ошибка при обновлении списка пакетов." ;;
+                APT_UPGRADE_FAIL) echo "Ошибка при установке обновлений." ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -191,6 +194,9 @@ tr_text() {
                 APT_DONE)         echo "All packages updated!" ;;
                 APT_NOT_FOUND)    echo "apt not found. This feature is for Debian/Ubuntu only." ;;
                 APT_CONFIRM)      echo "Update system packages? This may take a while. (y/n)" ;;
+                APT_UPDATE_OK)    echo "Package lists updated!" ;;
+                APT_UPDATE_FAIL)  echo "Failed to update package lists." ;;
+                APT_UPGRADE_FAIL) echo "Failed to install updates." ;;
             esac ;;
     esac
 }
@@ -907,24 +913,63 @@ apt_update_upgrade() {
     fi
     
     echo -e "${BLUE}📦 $(tr_text APT_UPDATING)${NC}"
-    echo
     
+    # Запускаем крутилку
+    loading_bar & 
+    local spinner_pid=$!
+    
+    # Выполняем apt update в фоне, скрывая вывод
     if command -v apt >/dev/null 2>&1; then
-        sudo apt update
-        echo
-        echo -e "${BLUE}⬆️  $(tr_text APT_UPGRADING)${NC}"
-        echo
-        sudo apt upgrade -y
+        sudo apt update &>/dev/null
+        local update_status=$?
     else
-        sudo apt-get update
-        echo
-        echo -e "${BLUE}⬆️  $(tr_text APT_UPGRADING)${NC}"
-        echo
-        sudo apt-get upgrade -y
+        sudo apt-get update &>/dev/null
+        local update_status=$?
     fi
     
+    # Останавливаем крутилку
+    kill $spinner_pid >/dev/null 2>&1
+    wait $spinner_pid 2>/dev/null
+    tput cnorm
+    
+    # Проверяем статус update
+    if [ $update_status -ne 0 ]; then
+        echo -e "\r${RED}❌ $(tr_text APT_UPDATE_FAIL)${NC}                    "
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+    
+    echo -e "\r${GREEN}✅ $(tr_text APT_UPDATE_OK)${NC}                    "
     echo
-    echo -e "${GREEN}✅ $(tr_text APT_DONE)${NC}"
+    echo -e "${BLUE}⬆️  $(tr_text APT_UPGRADING)${NC}"
+    
+    # Запускаем крутилку для upgrade
+    loading_bar & 
+    spinner_pid=$!
+    
+    # Выполняем apt upgrade в фоне
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt upgrade -y &>/dev/null
+        local upgrade_status=$?
+    else
+        sudo apt-get upgrade -y &>/dev/null
+        local upgrade_status=$?
+    fi
+    
+    # Останавливаем крутилку
+    kill $spinner_pid >/dev/null 2>&1
+    wait $spinner_pid 2>/dev/null
+    tput cnorm
+    
+    # Проверяем статус upgrade
+    if [ $upgrade_status -ne 0 ]; then
+        echo -e "\r${RED}❌ $(tr_text APT_UPGRADE_FAIL)${NC}                    "
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+    
+    echo -e "\r${GREEN}✅ $(tr_text APT_DONE)${NC}                    "
+    echo
     read -rp "$(tr_text PRESS_ENTER)"
 }
 # ====== ПОДМЕНЮ 4: Maintenance ======
