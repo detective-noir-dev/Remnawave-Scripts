@@ -22,12 +22,12 @@ show_banner() {
     clear
     echo -e "${GREEN}"
     if command -v figlet >/dev/null 2>&1; then
-        figlet "Remnawave"
-        echo -e "             v$VERSION"
+        figlet -f small "RW-Scripts"
+        echo -e "          Remnawave-Scripts v$VERSION"
     else
-        echo "====================================="
-        echo "  🚀 Remnawave Scripts (v$VERSION)"
-        echo "====================================="
+        echo "==========================================="
+        echo "  🚀 Remnawave-Scripts (v$VERSION)"
+        echo "==========================================="
     fi
     echo -e "${NC}"
 }
@@ -414,6 +414,76 @@ edit_port_description() {
     mv "$temp_file" "$PORTS_FILE"
 }
 
+# ====== ПОЛУЧЕНИЕ РЕАЛЬНЫХ ОТКРЫТЫХ ПОРТОВ ИЗ FIREWALL ======
+get_firewall_ports() {
+    local firewall=$(detect_firewall)
+    local ports_list=""
+    
+    case $firewall in
+        ufw)
+            # Парсим вывод ufw status
+            ports_list=$(sudo ufw status 2>/dev/null | grep -E "^[0-9]+/(tcp|udp)" | while read line; do
+                port=$(echo "$line" | grep -oE "^[0-9]+" | head -1)
+                proto=$(echo "$line" | grep -oE "(tcp|udp)" | head -1)
+                echo "$port|$proto"
+            done)
+            
+            # Также парсим порты в формате "443/tcp ALLOW"
+            ports_list+=$(sudo ufw status 2>/dev/null | grep -E "ALLOW" | grep -oE "[0-9]+/(tcp|udp)" | while read line; do
+                port=$(echo "$line" | cut -d'/' -f1)
+                proto=$(echo "$line" | cut -d'/' -f2)
+                echo "$port|$proto"
+            done)
+            ;;
+        firewalld)
+            # Получаем порты из firewalld
+            ports_list=$(sudo firewall-cmd --list-ports 2>/dev/null | tr ' ' '\n' | while read line; do
+                if [ -n "$line" ]; then
+                    port=$(echo "$line" | cut -d'/' -f1)
+                    proto=$(echo "$line" | cut -d'/' -f2)
+                    echo "$port|$proto"
+                fi
+            done)
+            ;;
+        iptables)
+            # Парсим iptables для открытых портов
+            ports_list=$(sudo iptables -L INPUT -n 2>/dev/null | grep -E "ACCEPT.*dpt:" | while read line; do
+                proto=$(echo "$line" | awk '{print tolower($2)}')
+                port=$(echo "$line" | grep -oE "dpt:[0-9]+" | cut -d':' -f2)
+                if [ -n "$port" ]; then
+                    echo "$port|$proto"
+                fi
+            done)
+            ;;
+    esac
+    
+    echo "$ports_list" | sort -u | grep -v "^$"
+}
+
+# ====== СИНХРОНИЗАЦИЯ ПОРТОВ С JSON ======
+sync_ports_with_firewall() {
+    ensure_jq || return 1
+    init_ports_file
+    
+    local firewall_ports=$(get_firewall_ports)
+    
+    # Проходим по каждому порту из firewall
+    echo "$firewall_ports" | while IFS='|' read -r port proto; do
+        if [ -n "$port" ] && [ -n "$proto" ]; then
+            # Проверяем, есть ли уже этот порт в JSON
+            local exists=$(jq -r ".[] | select(.port == \"$port\" and .protocol == \"$proto\") | .port" "$PORTS_FILE" 2>/dev/null)
+            
+            if [ -z "$exists" ]; then
+                # Добавляем порт в JSON с пометкой что он был открыт до скрипта
+                local timestamp=$(date +%s)
+                local temp_file=$(mktemp)
+                jq ". += [{\"port\": \"$port\", \"protocol\": \"$proto\", \"description\": \"[System] Opened before script\", \"timestamp\": $timestamp, \"source\": \"system\"}]" "$PORTS_FILE" > "$temp_file"
+                mv "$temp_file" "$PORTS_FILE"
+            fi
+        fi
+    done
+}
+
 open_port() {
     local firewall=$(detect_firewall)
     
@@ -505,6 +575,8 @@ close_port() {
         return 1
     fi
     
+    # Синхронизируем перед показом
+    sync_ports_with_firewall
     list_ports
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
@@ -573,6 +645,8 @@ close_port() {
 }
 
 edit_port() {
+    # Синхронизируем перед показом
+    sync_ports_with_firewall
     list_ports
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
@@ -615,27 +689,42 @@ list_ports() {
     
     init_ports_file
     
+    # Синхронизируем порты с firewall
+    echo -e "${DIM}🔄 Синхронизация с firewall...${NC}"
+    sync_ports_with_firewall
+    
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
-        echo -e "${YELLOW}📭 Нет сохраненных портов${NC}"
+        echo -e "${YELLOW}📭 Нет открытых портов${NC}"
         return
     fi
     
     ensure_jq || return 1
     
     echo
-    echo -e "${BLUE}┌─────────┬───────────┬──────────────────────────────────────┐${NC}"
-    echo -e "${BLUE}│${NC} ${MAGENTA}Port${NC}    ${BLUE}│${NC} ${MAGENTA}Protocol${NC}  ${BLUE}│${NC} ${MAGENTA}Description${NC}                          ${BLUE}│${NC}"
-    echo -e "${BLUE}├─────────┼───────────┼──────────────────────────────────────┤${NC}"
+    echo -e "${BLUE}┌─────────┬───────────┬──────────────────────────────────────┬──────────┐${NC}"
+    echo -e "${BLUE}│${NC} ${MAGENTA}Port${NC}    ${BLUE}│${NC} ${MAGENTA}Protocol${NC}  ${BLUE}│${NC} ${MAGENTA}Description${NC}                          ${BLUE}│${NC} ${MAGENTA}Source${NC}   ${BLUE}│${NC}"
+    echo -e "${BLUE}├─────────┼───────────┼──────────────────────────────────────┼──────────┤${NC}"
     
-    jq -r '.[] | "\(.port)|\(.protocol)|\(.description)"' "$PORTS_FILE" | while IFS='|' read -r port proto desc; do
+    jq -r '.[] | "\(.port)|\(.protocol)|\(.description)|\(.source // "script")"' "$PORTS_FILE" | while IFS='|' read -r port proto desc source; do
         [ ${#desc} -gt 36 ] && desc="${desc:0:33}..."
-        printf "${BLUE}│${NC} ${GREEN}%-7s${NC} ${BLUE}│${NC} ${YELLOW}%-9s${NC} ${BLUE}│${NC} %-36s ${BLUE}│${NC}\n" "$port" "$proto" "$desc"
+        
+        # Определяем цвет для источника
+        if [ "$source" = "system" ]; then
+            source_display="${DIM}system${NC}"
+        else
+            source_display="${GREEN}script${NC}"
+        fi
+        
+        printf "${BLUE}│${NC} ${GREEN}%-7s${NC} ${BLUE}│${NC} ${YELLOW}%-9s${NC} ${BLUE}│${NC} %-36s ${BLUE}│${NC} %-17b ${BLUE}│${NC}\n" "$port" "$proto" "$desc" "$source_display"
     done
     
-    echo -e "${BLUE}└─────────┴───────────┴──────────────────────────────────────┘${NC}"
+    echo -e "${BLUE}└─────────┴───────────┴──────────────────────────────────────┴──────────┘${NC}"
     
     local total=$(jq '. | length' "$PORTS_FILE")
-    echo -e "${CYAN}📊 Всего: $total${NC}"
+    local script_count=$(jq '[.[] | select(.source != "system")] | length' "$PORTS_FILE")
+    local system_count=$(jq '[.[] | select(.source == "system")] | length' "$PORTS_FILE")
+    
+    echo -e "${CYAN}📊 Всего: $total | Через скрипт: $script_count | Системные: $system_count${NC}"
 }
 
 show_firewall_status() {

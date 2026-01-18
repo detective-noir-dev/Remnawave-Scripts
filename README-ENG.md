@@ -1,6 +1,6 @@
 # Remnawave-Scripts (English Version)
 
-![version](https://img.shields.io/badge/version-1.2.3-blue)
+![version](https://img.shields.io/badge/version-1.2.4-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
