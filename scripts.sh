@@ -130,6 +130,7 @@ tr_text() {
                 APT_UPDATE_OK)    echo "Список пакетов обновлён!" ;;
                 APT_UPDATE_FAIL)  echo "Ошибка при обновлении списка пакетов." ;;
                 APT_UPGRADE_FAIL) echo "Ошибка при установке обновлений." ;;
+<<<<<<< HEAD
                 
                 # === ПОДМЕНЮ: Server Setup ===
                 GROUP_SERVER)         echo "🖥️  Настройка сервера" ;;
@@ -161,6 +162,8 @@ tr_text() {
                 HY2_SVC_RESTART)      echo "🔄 Перезапустить" ;;
                 HY2_SVC_STATUS)       echo "📊 Статус сервиса" ;;
                 HY2_SVC_STOP)         echo "⏹️  Остановить" ;;
+=======
+>>>>>>> f0f21aef83805d7a8ecc2f781ecf9647cdbd157a
             esac ;;
         "en" | *)
             case "$1" in
@@ -228,6 +231,7 @@ tr_text() {
                 APT_UPDATE_OK)    echo "Package lists updated!" ;;
                 APT_UPDATE_FAIL)  echo "Failed to update package lists." ;;
                 APT_UPGRADE_FAIL) echo "Failed to install updates." ;;
+<<<<<<< HEAD
                 
                 # === SUBMENU: Server Setup ===
                 GROUP_SERVER)         echo "🖥️  Server Setup" ;;
@@ -259,6 +263,8 @@ tr_text() {
                 HY2_SVC_RESTART)      echo "🔄 Restart" ;;
                 HY2_SVC_STATUS)       echo "📊 Service status" ;;
                 HY2_SVC_STOP)         echo "⏹️  Stop" ;;
+=======
+>>>>>>> f0f21aef83805d7a8ecc2f781ecf9647cdbd157a
             esac ;;
     esac
 }
@@ -992,6 +998,7 @@ delete_self() {
 }
 
 # ══════════════════════════════════════════════════════════════════
+<<<<<<< HEAD
 #                     НАСТРОЙКА СЕРВЕРА
 # ══════════════════════════════════════════════════════════════════
 
@@ -1297,6 +1304,8 @@ show_hysteria2_logs() {
 }
 
 # ══════════════════════════════════════════════════════════════════
+=======
+>>>>>>> f0f21aef83805d7a8ecc2f781ecf9647cdbd157a
 #                        ПОДМЕНЮ ГРУПП
 # ══════════════════════════════════════════════════════════════════
 
@@ -1350,6 +1359,7 @@ submenu_monitor() {
 submenu_network() {
     port_management
 }
+<<<<<<< HEAD
 
 # ====== ПОДМЕНЮ 5: Server Setup ======
 submenu_server() {
@@ -1380,6 +1390,8 @@ submenu_server() {
         esac
     done
 }
+=======
+>>>>>>> f0f21aef83805d7a8ecc2f781ecf9647cdbd157a
 # ====== ОБНОВЛЕНИЕ СИСТЕМНЫХ ПАКЕТОВ ======
 apt_update_upgrade() {
     # Проверяем наличие apt
@@ -1499,7 +1511,10 @@ show_main_menu() {
         echo -e "  ${YELLOW}2)${NC} $(tr_text GROUP_MONITOR)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_PORTS)"
         echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
+<<<<<<< HEAD
         echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SERVER)"
+=======
+>>>>>>> f0f21aef83805d7a8ecc2f781ecf9647cdbd157a
         echo
         echo -e "  ${DIM}─────────────────────────────────────────${NC}"
         echo -e "  ${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
@@ -1512,7 +1527,10 @@ show_main_menu() {
             2) submenu_monitor ;;
             3) submenu_network ;;
             4) submenu_maintenance ;;
+<<<<<<< HEAD
             5) submenu_server ;;
+=======
+>>>>>>> f0f21aef83805d7a8ecc2f781ecf9647cdbd157a
             0) echo -e "${GREEN}$(tr_text MSG_EXIT)${NC}"; exit 0 ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
