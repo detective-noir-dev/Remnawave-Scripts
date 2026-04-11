@@ -160,6 +160,15 @@ tr_text() {
                 HY2_SVC_RESTART)      echo "🔄 Перезапустить сервис" ;;
                 HY2_SVC_STATUS)       echo "📊 Статус сервиса" ;;
                 HY2_SVC_STOP)         echo "⏹️  Остановить сервис" ;;
+                SUB_HY2_VERSION)      echo "🔍 Проверить версию Hysteria2" ;;
+                SUB_HY2_UPDATE)       echo "⬆️  Обновить Hysteria2" ;;
+                HY2_VERSION_CURR)     echo "Установленная версия:" ;;
+                HY2_VERSION_LATEST)   echo "Последняя версия:" ;;
+                HY2_UP_TO_DATE)       echo "У вас уже последняя версия Hysteria2!" ;;
+                HY2_UPDATE_AVAIL)     echo "Доступно обновление! Обновить сейчас? (y/n)" ;;
+                HY2_UPDATING)         echo "Обновляю Hysteria2..." ;;
+                HY2_UPDATED)          echo "Hysteria2 успешно обновлён!" ;;
+                HY2_UPDATE_FAIL)      echo "Ошибка при обновлении Hysteria2." ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -257,6 +266,15 @@ tr_text() {
                 HY2_SVC_RESTART)      echo "🔄 Restart service" ;;
                 HY2_SVC_STATUS)       echo "📊 Service status" ;;
                 HY2_SVC_STOP)         echo "⏹️  Stop service" ;;
+                SUB_HY2_VERSION)      echo "🔍 Check Hysteria2 version" ;;
+                SUB_HY2_UPDATE)       echo "⬆️  Update Hysteria2" ;;
+                HY2_VERSION_CURR)     echo "Installed version:" ;;
+                HY2_VERSION_LATEST)   echo "Latest version:" ;;
+                HY2_UP_TO_DATE)       echo "You already have the latest Hysteria2!" ;;
+                HY2_UPDATE_AVAIL)     echo "Update available! Update now? (y/n)" ;;
+                HY2_UPDATING)         echo "Updating Hysteria2..." ;;
+                HY2_UPDATED)          echo "Hysteria2 updated successfully!" ;;
+                HY2_UPDATE_FAIL)      echo "Failed to update Hysteria2." ;;
             esac ;;
     esac
 }
@@ -1079,16 +1097,21 @@ install_hysteria2() {
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
 
+    # Если уже установлен — показываем версию и предлагаем переустановить/обновить
     if command -v hysteria >/dev/null 2>&1 || [ -f /usr/local/bin/hysteria ]; then
         local ver
-        ver=$(hysteria version 2>/dev/null | head -1)
+        ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
         echo -e "${YELLOW}⚠️  Hysteria2 уже установлен / Already installed: ${GREEN}${ver}${NC}"
+        echo -e "${DIM}Команда bash <(curl -fsSL https://get.hy2.sh/) также обновит до последней версии.${NC}"
         echo
-        read -rp "$(tr_text PRESS_ENTER)"
-        return 0
+        echo -e "${YELLOW}Запустить установщик заново? (y/n)${NC}"
+        read -r ans
+        [[ ! "$ans" =~ ^[YyДд]$ ]] && { read -rp "$(tr_text PRESS_ENTER)"; return 0; }
+        echo
     fi
 
     echo -e "${BLUE}$(tr_text HY2_INSTALLING)${NC}"
+    echo -e "${DIM}Команда: bash <(curl -fsSL https://get.hy2.sh/)${NC}"
     echo
 
     bash <(curl -fsSL https://get.hy2.sh/)
@@ -1096,7 +1119,10 @@ install_hysteria2() {
 
     echo
     if [ $status -eq 0 ]; then
+        local new_ver
+        new_ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
         echo -e "${GREEN}✅ $(tr_text HY2_INSTALLED)${NC}"
+        [ -n "$new_ver" ] && echo -e "${CYAN}Версия / Version: ${YELLOW}${new_ver}${NC}"
         echo
         echo -e "${CYAN}Следующий шаг:${NC} Настройте конфиг → пункт ${YELLOW}4) $(tr_text SUB_HY2_CONFIG)${NC}"
     else
@@ -1353,6 +1379,129 @@ submenu_network() {
 }
 
 # ====== ПОДМЕНЮ 5: Server Setup ======
+# ====== ПРОВЕРКА ВЕРСИИ HYSTERIA2 ======
+check_hysteria2_version() {
+    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║    🔍 $(tr_text SUB_HY2_VERSION)${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+    echo
+
+    # Установленная версия
+    local installed_ver=""
+    if command -v hysteria >/dev/null 2>&1; then
+        installed_ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    elif [ -f /usr/local/bin/hysteria ]; then
+        installed_ver=$(/usr/local/bin/hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    fi
+
+    if [ -z "$installed_ver" ]; then
+        echo -e "${YELLOW}$(tr_text HY2_NOT_FOUND)${NC}"
+        echo
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
+    fi
+
+    echo -e "${BLUE}$(tr_text HY2_VERSION_CURR)${NC} ${GREEN}${installed_ver}${NC}"
+
+    # Последняя версия с GitHub
+    echo -e "${DIM}Проверяю последнюю версию...${NC}"
+    local latest_ver
+    latest_ver=$(curl -fsSL "https://api.github.com/repos/apernet/hysteria/releases/latest" 2>/dev/null \
+        | grep '"tag_name"' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+
+    if [ -z "$latest_ver" ]; then
+        echo -e "${YELLOW}⚠️  Не удалось получить информацию о последней версии.${NC}"
+    else
+        echo -e "${BLUE}$(tr_text HY2_VERSION_LATEST)${NC} ${CYAN}${latest_ver}${NC}"
+        echo
+        if [ "$installed_ver" = "$latest_ver" ]; then
+            echo -e "${GREEN}✅ $(tr_text HY2_UP_TO_DATE)${NC}"
+        else
+            echo -e "${YELLOW}⚠️  $(tr_text HY2_UPDATE_AVAIL)${NC}"
+            echo -e "${DIM}   Используйте пункт '$(tr_text SUB_HY2_UPDATE)' для обновления.${NC}"
+        fi
+    fi
+
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+# ====== ОБНОВЛЕНИЕ HYSTERIA2 ======
+update_hysteria2() {
+    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║    ⬆️  $(tr_text SUB_HY2_UPDATE)${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+    echo
+
+    if ! command -v hysteria >/dev/null 2>&1 && [ ! -f /usr/local/bin/hysteria ]; then
+        echo -e "${YELLOW}$(tr_text HY2_NOT_FOUND)${NC}"
+        echo -e "${DIM}Сначала установите Hysteria2 через пункт '$(tr_text SUB_HY2_INSTALL)'${NC}"
+        echo
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
+    fi
+
+    # Показываем текущую версию
+    local installed_ver
+    installed_ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    [ -z "$installed_ver" ] && installed_ver="unknown"
+
+    # Получаем последнюю версию
+    local latest_ver
+    latest_ver=$(curl -fsSL "https://api.github.com/repos/apernet/hysteria/releases/latest" 2>/dev/null \
+        | grep '"tag_name"' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+
+    echo -e "${BLUE}$(tr_text HY2_VERSION_CURR)${NC} ${GREEN}${installed_ver}${NC}"
+
+    if [ -n "$latest_ver" ]; then
+        echo -e "${BLUE}$(tr_text HY2_VERSION_LATEST)${NC} ${CYAN}${latest_ver}${NC}"
+        echo
+
+        if [ "$installed_ver" = "$latest_ver" ]; then
+            echo -e "${GREEN}✅ $(tr_text HY2_UP_TO_DATE)${NC}"
+            echo
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 0
+        fi
+
+        echo -e "${YELLOW}$(tr_text HY2_UPDATE_AVAIL)${NC}"
+        read -r ans
+        if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
+            echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 0
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Не удалось проверить последнюю версию. Всё равно обновить? (y/n)${NC}"
+        read -r ans
+        [[ ! "$ans" =~ ^[YyДд]$ ]] && { read -rp "$(tr_text PRESS_ENTER)"; return 0; }
+    fi
+
+    echo
+    echo -e "${BLUE}$(tr_text HY2_UPDATING)${NC}"
+    echo -e "${DIM}Команда: bash <(curl -fsSL https://get.hy2.sh/)${NC}"
+    echo
+
+    # Официальный установщик — устанавливает или обновляет до последней версии
+    bash <(curl -fsSL https://get.hy2.sh/)
+    local status=$?
+
+    echo
+    if [ $status -eq 0 ]; then
+        local new_ver
+        new_ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        echo -e "${GREEN}✅ $(tr_text HY2_UPDATED)${NC}"
+        [ -n "$new_ver" ] && echo -e "${CYAN}Новая версия / New version: ${YELLOW}${new_ver}${NC}"
+        echo
+        echo -e "${DIM}Перезапустите сервис для применения: пункт 5 → 2${NC}"
+    else
+        echo -e "${RED}❌ $(tr_text HY2_UPDATE_FAIL)${NC}"
+    fi
+
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
 submenu_server() {
     while true; do
         show_banner
@@ -1364,6 +1513,8 @@ submenu_server() {
         echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_HY2_CONFIG)"
         echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_HY2_MANAGE)"
         echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_HY2_LOGS)"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_HY2_VERSION)"
+        echo -e "  ${YELLOW}8)${NC} $(tr_text SUB_HY2_UPDATE)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -1376,6 +1527,8 @@ submenu_server() {
             4) show_banner; edit_hysteria2_config ;;
             5) manage_hysteria2_service ;;
             6) show_banner; show_hysteria2_logs ;;
+            7) show_banner; check_hysteria2_version ;;
+            8) show_banner; update_hysteria2 ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
