@@ -1,0 +1,194 @@
+Россия,Russia,RU
+США,United States,US
+Великобритания,United Kingdom,GB
+Германия,Germany,DE
+Франция,France,FR
+Италия,Italy,IT
+Испания,Spain,ES
+Португалия,Portugal,PT
+Нидерланды,Netherlands,NL
+Бельгия,Belgium,BE
+Люксембург,Luxembourg,LU
+Швейцария,Switzerland,CH
+Австрия,Austria,AT
+Польша,Poland,PL
+Чехия,Czechia,CZ
+Словакия,Slovakia,SK
+Венгрия,Hungary,HU
+Румыния,Romania,RO
+Болгария,Bulgaria,BG
+Греция,Greece,GR
+Кипр,Cyprus,CY
+Сербия,Serbia,RS
+Хорватия,Croatia,HR
+Словения,Slovenia,SI
+Босния и Герцеговина,Bosnia and Herzegovina,BA
+Черногория,Montenegro,ME
+Северная Македония,North Macedonia,MK
+Албания,Albania,AL
+Косово,Kosovo,XK
+Исландия,Iceland,IS
+Норвегия,Norway,NO
+Швеция,Sweden,SE
+Финляндия,Finland,FI
+Дания,Denmark,DK
+Эстония,Estonia,EE
+Латвия,Latvia,LV
+Литва,Lithuania,LT
+Беларусь,Belarus,BY
+Украина,Ukraine,UA
+Молдова,Moldova,MD
+Ирландия,Ireland,IE
+Монако,Monaco,MC
+Лихтенштейн,Liechtenstein,LI
+Сан-Марино,San Marino,SM
+Андорра,Andorra,AD
+Мальта,Malta,MT
+Ватикан,Vatican City,VA
+Канада,Canada,CA
+США,United States,US
+Мексика,Mexico,MX
+Белиз,Belize,BZ
+Гватемала,Guatemala,GT
+Гондурас,Honduras,HN
+Сальвадор,El Salvador,SV
+Никарагуа,Nicaragua,NI
+Коста-Рика,Costa Rica,CR
+Панама,Panama,PA
+Куба,Cuba,CU
+Доминиканская Республика,Dominican Republic,DO
+Гаити,Haiti,HT
+Ямайка,Jamaica,JM
+Тринидад и Тобаго,Trinidad and Tobago,TT
+Барбадос,Barbados,BB
+Сент-Люсия,Saint Lucia,LC
+Сент-Винсент и Гренадины,Saint Vincent and the Grenadines,VC
+Гренада,Grenada,GD
+Антигуа и Барбуда,Antigua and Barbuda,AG
+Сент-Китс и Невис,Saint Kitts and Nevis,KN
+Багамы,Bahamas,BS
+Сент-Люсия,Saint Lucia,LC
+Сент-Винсент и Гренадины,Saint Vincent and the Grenadines,VC
+Гайана,Guyana,GY
+Суринам,Suriname,SR
+Бразилия,Brazil,BR
+Аргентина,Argentina,AR
+Чили,Chile,CL
+Перу,Peru,PE
+Боливия,Bolivia,BO
+Парагвай,Paraguay,PY
+Уругвай,Uruguay,UY
+Колумбия,Colombia,CO
+Венесуэла,Venezuela,VE
+Эквадор,Ecuador,EC
+Китай,China,CN
+Индия,India,IN
+Индонезия,Indonesia,ID
+Пакистан,Pakistan,PK
+Бангладеш,Bangladesh,BD
+Япония,Japan,JP
+Филиппины,Philippines,PH
+Вьетнам,Vietnam,VN
+Турция,Turkey,TR
+Иран,Iran,IR
+Таиланд,Thailand,TH
+Мьянма,Myanmar,MM
+Южная Корея,South Korea,KR
+Ирак,Iraq,IQ
+Афганистан,Afghanistan,AF
+Саудовская Аравия,Saudi Arabia,SA
+Узбекистан,Uzbekistan,UZ
+Малайзия,Malaysia,MY
+Йемен,Yemen,YE
+Непал,Nepal,NP
+Северная Корея,North Korea,KP
+Шри-Ланка,Sri Lanka,LK
+Казахстан,Kazakhstan,KZ
+Сирия,Syria,SY
+Камбоджа,Cambodia,KH
+Иордания,Jordan,JO
+Азербайджан,Azerbaijan,AZ
+Объединенные Арабские Эмираты,United Arab Emirates,AE
+Таджикистан,Tajikistan,TJ
+Израиль,Israel,IL
+Лаос,Laos,LA
+Ливан,Lebanon,LB
+Киргизия,Kyrgyzstan,KG
+Сингапур,Singapore,SG
+Оман,Oman,OM
+Грузия,Georgia,GE
+Монголия,Mongolia,MN
+Армения,Armenia,AM
+Кувейт,Kuwait,KW
+Катар,Qatar,QA
+Бахрейн,Bahrain,BH
+Восточный Тимор,Timor-Leste,TL
+Бруней,Brunei,BN
+Мальдивы,Maldives,MV
+Египет,Egypt,EG
+Нигерия,Nigeria,NG
+Эфиопия,Ethiopia,ET
+Демократическая Республика Конго,Democratic Republic of the Congo,CD
+Южно-Африканская Республика,South Africa,ZA
+Танзания,Tanzania,TZ
+Кения,Kenya,KE
+Судан,Sudan,SD
+Алжир,Algeria,DZ
+Уганда,Uganda,UG
+Марокко,Morocco,MA
+Ангола,Angola,AO
+Мозамбик,Mozambique,MZ
+Гана,Ghana,GH
+Мадагаскар,Madagascar,MG
+Камерун,Cameroon,CM
+Кот-д’Ивуар,Côte d’Ivoire,CI
+Нигер,Niger,NE
+Буркина-Фасо,Burkina Faso,BF
+Мали,Mali,ML
+Малави,Malawi,MW
+Замбия,Zambia,ZM
+Сенегал,Senegal,SN
+Чад,Chad,TD
+Сомали,Somalia,SO
+Зимбабве,Zimbabwe,ZW
+Гвинея,Guinea,GN
+Руанда,Rwanda,RW
+Бенин,Benin,BJ
+Бурунди,Burundi,BI
+Тунис,Tunisia,TN
+Южный Судан,South Sudan,SS
+Того,Togo,TG
+Сьерра-Леоне,Sierra Leone,SL
+Ливия,Libya,LY
+Конго,Republic of the Congo,CG
+Либерия,Liberia,LR
+Центральноафриканская Республика,Central African Republic,CF
+Мавритания,Mauritania,MR
+Эритрея,Eritrea,ER
+Намибия,Namibia,NA
+Гамбия,Gambia,GM
+Ботсвана,Botswana,BW
+Габон,Gabon,GA
+Лесото,Lesotho,LS
+Гвинея-Бисау,Guinea-Bissau,GW
+Экваториальная Гвинея,Equatorial Guinea,GQ
+Маврикий,Mauritius,MU
+Эсватини,Eswatini,SZ
+Джибути,Djibouti,DJ
+Коморы,Comoros,KM
+Кабо-Верде,Cabo Verde,CV
+Сейшельские Острова,Seychelles,SC
+Австралия,Australia,AU
+Новая Зеландия,New Zealand,NZ
+Папуа — Новая Гвинея,Papua New Guinea,PG
+Фиджи,Fiji,FJ
+Соломоновы Острова,Solomon Islands,SB
+Вануату,Vanuatu,VU
+Самоа,Samoa,WS
+Тонга,Tonga,TO
+Кирибати,Kiribati,KI
+Микронезия (Федеративные Штаты),Micronesia,FM
+Маршалловы Острова,Marshall Islands,MH
+Палау,Palau,PW
+Науру,Nauru,NR
+Тувалу,Tuvalu,TV
