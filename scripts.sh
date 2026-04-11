@@ -130,7 +130,6 @@ tr_text() {
                 APT_UPDATE_OK)    echo "Список пакетов обновлён!" ;;
                 APT_UPDATE_FAIL)  echo "Ошибка при обновлении списка пакетов." ;;
                 APT_UPGRADE_FAIL) echo "Ошибка при установке обновлений." ;;
-                
                 # === ПОДМЕНЮ: Server Setup ===
                 GROUP_SERVER)         echo "🖥️  Настройка сервера" ;;
                 SUB_SSH_PORT)         echo "🔑 Сменить SSH порт" ;;
@@ -142,11 +141,11 @@ tr_text() {
                 SSH_ENTER_PORT)       echo "Введите новый SSH порт (1024-65535):" ;;
                 SSH_INVALID_PORT)     echo "Ошибка: введите порт от 1024 до 65535!" ;;
                 SSH_CONFIRM)          echo "Сменить SSH порт на" ;;
-                SSH_CHANGED)          echo "SSH порт успешно изменён! Текущий порт:" ;;
+                SSH_CHANGED)          echo "SSH порт успешно изменён! Новый порт:" ;;
                 SSH_RESTART)          echo "Перезапускаю SSH сервис..." ;;
                 SSH_FAIL)             echo "Ошибка при смене порта!" ;;
                 SSH_WARN)             echo "⚠️  ВНИМАНИЕ: Не закрывайте текущую SSH сессию!" ;;
-                SSH_WARN2)            echo "Откройте новое подключение на новом порту и проверьте что всё работает." ;;
+                SSH_WARN2)            echo "Сначала откройте новое подключение на новом порту и проверьте что всё работает." ;;
                 HY2_INSTALLING)       echo "Устанавливаю Hysteria2..." ;;
                 HY2_INSTALLED)        echo "Hysteria2 успешно установлен!" ;;
                 HY2_REMOVING)         echo "Удаляю Hysteria2..." ;;
@@ -155,12 +154,12 @@ tr_text() {
                 HY2_CONFIRM_REMOVE)   echo "Вы уверены, что хотите удалить Hysteria2? (y/n)" ;;
                 HY2_DOMAIN_PROMPT)    echo "Введите ваш домен (например: example.com):" ;;
                 HY2_PORT_PROMPT)      echo "Введите порт для Hysteria2 (по умолчанию 443):" ;;
-                HY2_CONFIG_SAVED)     echo "Конфиг сохранён. Перезапустите сервис для применения." ;;
+                HY2_CONFIG_SAVED)     echo "Конфиг сохранён. Перезапустите сервис для применения изменений." ;;
                 HY2_SVC_MENU)         echo "Управление сервисом Hysteria2" ;;
-                HY2_SVC_ENABLE)       echo "▶️  Включить и запустить" ;;
-                HY2_SVC_RESTART)      echo "🔄 Перезапустить" ;;
+                HY2_SVC_ENABLE)       echo "▶️  Включить автозапуск и запустить" ;;
+                HY2_SVC_RESTART)      echo "🔄 Перезапустить сервис" ;;
                 HY2_SVC_STATUS)       echo "📊 Статус сервиса" ;;
-                HY2_SVC_STOP)         echo "⏹️  Остановить" ;;
+                HY2_SVC_STOP)         echo "⏹️  Остановить сервис" ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -228,7 +227,6 @@ tr_text() {
                 APT_UPDATE_OK)    echo "Package lists updated!" ;;
                 APT_UPDATE_FAIL)  echo "Failed to update package lists." ;;
                 APT_UPGRADE_FAIL) echo "Failed to install updates." ;;
-                
                 # === SUBMENU: Server Setup ===
                 GROUP_SERVER)         echo "🖥️  Server Setup" ;;
                 SUB_SSH_PORT)         echo "🔑 Change SSH port" ;;
@@ -240,11 +238,11 @@ tr_text() {
                 SSH_ENTER_PORT)       echo "Enter new SSH port (1024-65535):" ;;
                 SSH_INVALID_PORT)     echo "Error: enter a port from 1024 to 65535!" ;;
                 SSH_CONFIRM)          echo "Change SSH port to" ;;
-                SSH_CHANGED)          echo "SSH port changed successfully! Current port:" ;;
+                SSH_CHANGED)          echo "SSH port changed successfully! New port:" ;;
                 SSH_RESTART)          echo "Restarting SSH service..." ;;
                 SSH_FAIL)             echo "Error changing port!" ;;
                 SSH_WARN)             echo "⚠️  WARNING: Do NOT close your current SSH session!" ;;
-                SSH_WARN2)            echo "Open a new connection on the new port and verify it works first." ;;
+                SSH_WARN2)            echo "Open a new connection on the new port first and verify it works." ;;
                 HY2_INSTALLING)       echo "Installing Hysteria2..." ;;
                 HY2_INSTALLED)        echo "Hysteria2 installed successfully!" ;;
                 HY2_REMOVING)         echo "Removing Hysteria2..." ;;
@@ -255,10 +253,10 @@ tr_text() {
                 HY2_PORT_PROMPT)      echo "Enter port for Hysteria2 (default 443):" ;;
                 HY2_CONFIG_SAVED)     echo "Config saved. Restart the service to apply changes." ;;
                 HY2_SVC_MENU)         echo "Hysteria2 service management" ;;
-                HY2_SVC_ENABLE)       echo "▶️  Enable and start" ;;
-                HY2_SVC_RESTART)      echo "🔄 Restart" ;;
+                HY2_SVC_ENABLE)       echo "▶️  Enable autostart and start" ;;
+                HY2_SVC_RESTART)      echo "🔄 Restart service" ;;
                 HY2_SVC_STATUS)       echo "📊 Service status" ;;
-                HY2_SVC_STOP)         echo "⏹️  Stop" ;;
+                HY2_SVC_STOP)         echo "⏹️  Stop service" ;;
             esac ;;
     esac
 }
@@ -998,11 +996,10 @@ delete_self() {
 # ====== СМЕНА SSH ПОРТА ======
 change_ssh_port() {
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    🔑 $(tr_text SUB_SSH_PORT)              ${NC}"
+    echo -e "${CYAN}║    🔑 $(tr_text SUB_SSH_PORT)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
 
-    # Определяем текущий порт
     local sshd_config="/etc/ssh/sshd_config"
     local current_port
     current_port=$(grep -E "^Port " "$sshd_config" 2>/dev/null | awk '{print $2}' | head -1)
@@ -1010,21 +1007,20 @@ change_ssh_port() {
 
     echo -e "${BLUE}Текущий SSH порт / Current SSH port: ${YELLOW}${current_port}${NC}"
     echo
-    echo -e "${YELLOW}$(tr_text SSH_WARN)${NC}"
+    echo -e "${RED}$(tr_text SSH_WARN)${NC}"
     echo -e "${YELLOW}$(tr_text SSH_WARN2)${NC}"
     echo
 
     echo -e "${BLUE}$(tr_text SSH_ENTER_PORT)${NC}"
     read -r new_port
 
-    # Валидация порта
     if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1024 ] || [ "$new_port" -gt 65535 ]; then
         echo -e "${RED}❌ $(tr_text SSH_INVALID_PORT)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
 
-    echo -e "${YELLOW}$(tr_text SSH_CONFIRM) ${new_port}? (y/n)${NC}"
+    echo -e "${YELLOW}$(tr_text SSH_CONFIRM) ${CYAN}${new_port}${YELLOW}? (y/n)${NC}"
     read -r ans
     if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
         echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
@@ -1047,23 +1043,27 @@ change_ssh_port() {
     case $firewall in
         ufw)
             sudo ufw allow "$new_port"/tcp >/dev/null 2>&1
+            echo -e "${GREEN}✅ Порт $new_port открыт в UFW${NC}"
             ;;
         firewalld)
             sudo firewall-cmd --permanent --add-port="$new_port"/tcp >/dev/null 2>&1
             sudo firewall-cmd --reload >/dev/null 2>&1
+            echo -e "${GREEN}✅ Порт $new_port открыт в FirewallD${NC}"
             ;;
         iptables)
             sudo iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null
+            echo -e "${GREEN}✅ Порт $new_port открыт в iptables${NC}"
             ;;
     esac
 
     # Перезапускаем SSH
     echo -e "${BLUE}$(tr_text SSH_RESTART)${NC}"
     if sudo systemctl restart sshd 2>/dev/null || sudo systemctl restart ssh 2>/dev/null; then
-        echo -e "${GREEN}✅ $(tr_text SSH_CHANGED) ${new_port}${NC}"
+        echo
+        echo -e "${GREEN}✅ $(tr_text SSH_CHANGED) ${CYAN}${new_port}${NC}"
         echo
         echo -e "${CYAN}Подключайтесь командой / Connect with:${NC}"
-        echo -e "  ${YELLOW}ssh -p ${new_port} user@your_server${NC}"
+        echo -e "  ${YELLOW}ssh -p ${new_port} $(whoami)@<your_server_ip>${NC}"
     else
         echo -e "${RED}❌ $(tr_text SSH_FAIL)${NC}"
     fi
@@ -1075,15 +1075,14 @@ change_ssh_port() {
 # ====== УСТАНОВКА HYSTERIA2 ======
 install_hysteria2() {
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    ⚡ $(tr_text SUB_HY2_INSTALL)            ${NC}"
+    echo -e "${CYAN}║    ⚡ $(tr_text SUB_HY2_INSTALL)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
 
-    if command -v hysteria >/dev/null 2>&1; then
-        echo -e "${YELLOW}⚠️  Hysteria2 уже установлен / Hysteria2 is already installed.${NC}"
+    if command -v hysteria >/dev/null 2>&1 || [ -f /usr/local/bin/hysteria ]; then
         local ver
         ver=$(hysteria version 2>/dev/null | head -1)
-        echo -e "${GREEN}Версия / Version: $ver${NC}"
+        echo -e "${YELLOW}⚠️  Hysteria2 уже установлен / Already installed: ${GREEN}${ver}${NC}"
         echo
         read -rp "$(tr_text PRESS_ENTER)"
         return 0
@@ -1092,16 +1091,15 @@ install_hysteria2() {
     echo -e "${BLUE}$(tr_text HY2_INSTALLING)${NC}"
     echo
 
-    loading_bar & local spinner_pid=$!
+    bash <(curl -fsSL https://get.hy2.sh/)
+    local status=$?
 
-    if bash <(curl -fsSL https://get.hy2.sh/) 2>&1 | tail -5; then
-        kill $spinner_pid >/dev/null 2>&1; wait $spinner_pid 2>/dev/null; tput cnorm
-        echo
+    echo
+    if [ $status -eq 0 ]; then
         echo -e "${GREEN}✅ $(tr_text HY2_INSTALLED)${NC}"
         echo
-        echo -e "${CYAN}Следующий шаг / Next step:${NC} Редактируйте конфиг → пункт меню '📝 $(tr_text SUB_HY2_CONFIG)'"
+        echo -e "${CYAN}Следующий шаг:${NC} Настройте конфиг → пункт ${YELLOW}4) $(tr_text SUB_HY2_CONFIG)${NC}"
     else
-        kill $spinner_pid >/dev/null 2>&1; wait $spinner_pid 2>/dev/null; tput cnorm
         echo -e "${RED}❌ Ошибка установки / Installation failed.${NC}"
     fi
 
@@ -1112,7 +1110,7 @@ install_hysteria2() {
 # ====== УДАЛЕНИЕ HYSTERIA2 ======
 remove_hysteria2() {
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    🗑️  $(tr_text SUB_HY2_REMOVE)            ${NC}"
+    echo -e "${CYAN}║    🗑️  $(tr_text SUB_HY2_REMOVE)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
 
@@ -1131,16 +1129,16 @@ remove_hysteria2() {
     fi
 
     echo -e "${BLUE}$(tr_text HY2_REMOVING)${NC}"
+    echo
 
-    loading_bar & local spinner_pid=$!
-    bash <(curl -fsSL https://get.hy2.sh/) --remove &>/dev/null
+    bash <(curl -fsSL https://get.hy2.sh/) --remove
     local status=$?
-    kill $spinner_pid >/dev/null 2>&1; wait $spinner_pid 2>/dev/null; tput cnorm
 
+    echo
     if [ $status -eq 0 ]; then
-        echo -e "\r${GREEN}✅ $(tr_text HY2_REMOVED)${NC}                    "
+        echo -e "${GREEN}✅ $(tr_text HY2_REMOVED)${NC}"
     else
-        echo -e "\r${RED}❌ Ошибка удаления / Removal failed.${NC}          "
+        echo -e "${RED}❌ Ошибка удаления / Removal failed.${NC}"
     fi
 
     echo
@@ -1152,11 +1150,10 @@ edit_hysteria2_config() {
     local config_file="/etc/hysteria/config.yaml"
 
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    📝 $(tr_text SUB_HY2_CONFIG)             ${NC}"
+    echo -e "${CYAN}║    📝 $(tr_text SUB_HY2_CONFIG)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
 
-    # Создаём директорию и базовый конфиг если не существует
     if [ ! -f "$config_file" ]; then
         echo -e "${YELLOW}⚠️  Конфиг не найден. Создаём базовый конфиг...${NC}"
         echo
@@ -1173,14 +1170,14 @@ edit_hysteria2_config() {
 
         sudo mkdir -p /etc/hysteria
 
-        sudo tee "$config_file" > /dev/null <<EOF
+        sudo tee "$config_file" > /dev/null <<HYEOF
 listen: :${hy2_port}
 
 tls:
   cert: /etc/hysteria/server.crt
   key: /etc/hysteria/server.key
 
-# Раскомментируйте для автоматического получения TLS сертификата (ACME):
+# Для автоматического TLS (ACME) раскомментируйте:
 # acme:
 #   domains:
 #     - ${hy2_domain}
@@ -1195,17 +1192,18 @@ masquerade:
   proxy:
     url: https://news.ycombinator.com/
     rewriteHost: true
-EOF
+HYEOF
 
-        echo -e "${GREEN}✅ Базовый конфиг создан: ${config_file}${NC}"
-        echo -e "${CYAN}Домен / Domain: ${YELLOW}${hy2_domain}${NC}"
-        echo -e "${CYAN}Порт / Port:   ${YELLOW}${hy2_port}${NC}"
+        echo -e "${GREEN}✅ Базовый конфиг создан: ${CYAN}${config_file}${NC}"
+        echo -e "   ${BLUE}Домен / Domain: ${YELLOW}${hy2_domain}${NC}"
+        echo -e "   ${BLUE}Порт / Port:    ${YELLOW}${hy2_port}${NC}"
         echo
-        echo -e "${YELLOW}Откроем файл для редактирования в nano...${NC}"
         sleep 1
     fi
 
-    # Открываем в nano для ручного редактирования
+    echo -e "${YELLOW}Открываю конфиг в редакторе / Opening config...${NC}"
+    sleep 1
+
     if command -v nano >/dev/null 2>&1; then
         sudo nano "$config_file"
     elif command -v vim >/dev/null 2>&1; then
@@ -1219,8 +1217,8 @@ EOF
     fi
 
     echo
-    echo -e "${GREEN}$(tr_text HY2_CONFIG_SAVED)${NC}"
-    echo -e "${CYAN}Перезапуск сервиса / Restart service: systemctl restart hysteria-server.service${NC}"
+    echo -e "${GREEN}✅ $(tr_text HY2_CONFIG_SAVED)${NC}"
+    echo -e "${CYAN}Путь к конфигу / Config path: ${YELLOW}${config_file}${NC}"
     echo
     read -rp "$(tr_text PRESS_ENTER)"
 }
@@ -1243,7 +1241,8 @@ manage_hysteria2_service() {
         case $choice in
             1)
                 show_banner
-                echo -e "${BLUE}▶️  Включаю и запускаю hysteria-server.service...${NC}"
+                echo -e "${BLUE}▶️  Включаю автозапуск и запускаю hysteria-server.service...${NC}"
+                echo
                 sudo systemctl enable --now hysteria-server.service
                 echo
                 echo -e "${GREEN}✅ Сервис включён и запущен.${NC}"
@@ -1253,6 +1252,7 @@ manage_hysteria2_service() {
             2)
                 show_banner
                 echo -e "${BLUE}🔄 Перезапускаю hysteria-server.service...${NC}"
+                echo
                 sudo systemctl restart hysteria-server.service
                 echo
                 echo -e "${GREEN}✅ Сервис перезапущен.${NC}"
@@ -1263,13 +1263,14 @@ manage_hysteria2_service() {
                 show_banner
                 echo -e "${CYAN}📊 Статус hysteria-server.service:${NC}"
                 echo
-                sudo systemctl status hysteria-server.service --no-pager
+                sudo systemctl status hysteria-server.service --no-pager -l
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
             4)
                 show_banner
                 echo -e "${YELLOW}⏹️  Останавливаю hysteria-server.service...${NC}"
+                echo
                 sudo systemctl stop hysteria-server.service
                 echo
                 echo -e "${YELLOW}✅ Сервис остановлен.${NC}"
@@ -1285,10 +1286,10 @@ manage_hysteria2_service() {
 # ====== ПРОСМОТР ЛОГОВ HYSTERIA2 ======
 show_hysteria2_logs() {
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    📋 $(tr_text SUB_HY2_LOGS)               ${NC}"
+    echo -e "${CYAN}║    📋 $(tr_text SUB_HY2_LOGS)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
-    echo -e "${YELLOW}Нажмите Ctrl+C или Q для выхода / Press Ctrl+C or Q to exit${NC}"
+    echo -e "${YELLOW}Нажмите Ctrl+C для выхода / Press Ctrl+C to exit${NC}"
     echo
     sleep 1
     sudo journalctl --no-pager -e -u hysteria-server.service
