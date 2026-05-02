@@ -167,6 +167,12 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     export PATH="$PATH:$INSTALL_DIR"
 fi
 
+# === ПРИМЕНЯЕМ BASHRC ===
+if [ -f "$HOME/.bashrc" ]; then
+    # shellcheck disable=SC1090
+    source "$HOME/.bashrc" 2>/dev/null || true
+fi
+
 # === ЗАВЕРШЕНИЕ ===
 LANG_SET=$(cat "$LANG_FILE")
 echo
