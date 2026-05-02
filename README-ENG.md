@@ -1,6 +1,10 @@
 # Remnawave-Scripts (English Version)
 
+<<<<<<< Updated upstream
 ![version](https://img.shields.io/badge/version-1.3.0-blue)
+=======
+![version](https://img.shields.io/badge/version-1.4.0-blue)
+>>>>>>> Stashed changes
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -270,6 +274,6 @@ When using the script:
 
 ---
 
-**Version:** 1.2.2 
-**Release Date:** January 2025  
+**Version:** 1.4.0 
+**Release Date:** May 2026  
 **License:** MIT

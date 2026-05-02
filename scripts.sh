@@ -169,6 +169,14 @@ tr_text() {
                 HY2_UPDATING)         echo "Обновляю Hysteria2..." ;;
                 HY2_UPDATED)          echo "Hysteria2 успешно обновлён!" ;;
                 HY2_UPDATE_FAIL)      echo "Ошибка при обновлении Hysteria2." ;;
+<<<<<<< Updated upstream
+=======
+                SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
+                SUB_ZAPRET)           echo "🛡️  Установка zapret" ;;
+                ZAPRET_INSTALLING)    echo "Устанавливаю zapret..." ;;
+                ZAPRET_DONE)          echo "Zapret успешно установлен!" ;;
+                ZAPRET_FAIL)          echo "Ошибка при установке zapret." ;;
+>>>>>>> Stashed changes
             esac ;;
         "en" | *)
             case "$1" in
@@ -275,6 +283,14 @@ tr_text() {
                 HY2_UPDATING)         echo "Updating Hysteria2..." ;;
                 HY2_UPDATED)          echo "Hysteria2 updated successfully!" ;;
                 HY2_UPDATE_FAIL)      echo "Failed to update Hysteria2." ;;
+<<<<<<< Updated upstream
+=======
+                SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
+                SUB_ZAPRET)           echo "🛡️  Install zapret" ;;
+                ZAPRET_INSTALLING)    echo "Installing zapret..." ;;
+                ZAPRET_DONE)          echo "Zapret installed successfully!" ;;
+                ZAPRET_FAIL)          echo "Failed to install zapret." ;;
+>>>>>>> Stashed changes
             esac ;;
     esac
 }
@@ -1502,12 +1518,61 @@ update_hysteria2() {
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
+<<<<<<< Updated upstream
+=======
+submenu_hysteria2() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text SUB_HY2_SUBMENU)"
+
+        echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_HY2_INSTALL)"
+        echo -e "  ${RED}2)${NC} $(tr_text SUB_HY2_REMOVE)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_HY2_CONFIG)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_HY2_MANAGE)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_HY2_LOGS)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_HY2_VERSION)"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_HY2_UPDATE)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+
+        case $choice in
+            1) show_banner; install_hysteria2 ;;
+            2) show_banner; remove_hysteria2 ;;
+            3) show_banner; edit_hysteria2_config ;;
+            4) manage_hysteria2_service ;;
+            5) show_banner; show_hysteria2_logs ;;
+            6) show_banner; check_hysteria2_version ;;
+            7) show_banner; update_hysteria2 ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+install_zapret() {
+    echo -e "${BLUE}🛡️  $(tr_text ZAPRET_INSTALLING)${NC}"
+    echo
+    if curl -O https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r && sh z4r; then
+        echo
+        echo -e "${GREEN}✅ $(tr_text ZAPRET_DONE)${NC}"
+    else
+        echo
+        echo -e "${RED}❌ $(tr_text ZAPRET_FAIL)${NC}"
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+>>>>>>> Stashed changes
 submenu_server() {
     while true; do
         show_banner
         print_submenu_header "$(tr_text GROUP_SERVER)"
 
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_SSH_PORT)"
+<<<<<<< Updated upstream
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_HY2_INSTALL)"
         echo -e "  ${RED}3)${NC} $(tr_text SUB_HY2_REMOVE)"
         echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_HY2_CONFIG)"
@@ -1515,6 +1580,10 @@ submenu_server() {
         echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_HY2_LOGS)"
         echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_HY2_VERSION)"
         echo -e "  ${YELLOW}8)${NC} $(tr_text SUB_HY2_UPDATE)"
+=======
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_ZAPRET)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_HY2_SUBMENU)"
+>>>>>>> Stashed changes
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -1522,6 +1591,7 @@ submenu_server() {
 
         case $choice in
             1) show_banner; change_ssh_port ;;
+<<<<<<< Updated upstream
             2) show_banner; install_hysteria2 ;;
             3) show_banner; remove_hysteria2 ;;
             4) show_banner; edit_hysteria2_config ;;
@@ -1529,6 +1599,10 @@ submenu_server() {
             6) show_banner; show_hysteria2_logs ;;
             7) show_banner; check_hysteria2_version ;;
             8) show_banner; update_hysteria2 ;;
+=======
+            2) show_banner; install_zapret ;;
+            3) submenu_hysteria2 ;;
+>>>>>>> Stashed changes
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
