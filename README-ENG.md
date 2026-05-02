@@ -1,10 +1,6 @@
 # Remnawave-Scripts (English Version)
 
-<<<<<<< Updated upstream
-![version](https://img.shields.io/badge/version-1.3.0-blue)
-=======
 ![version](https://img.shields.io/badge/version-1.4.0-blue)
->>>>>>> Stashed changes
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -32,10 +28,15 @@ It also includes a self-update system from GitHub and allows you to uninstall th
   - 📋 Beautiful list of all open ports
   - 🛡️ View firewall status
   - 💾 Port data persistence between sessions
-- **📦 System package updates** ⭐ NEW in v1.2.3
+- **📦 System package updates** ⭐ v1.2.3
   - Execute `apt update && apt upgrade -y` from menu
   - Confirmation before running
   - Support for apt and apt-get
+- **🖥️ Server Setup** ⭐ v1.3.0
+  - 🔑 Change SSH port
+  - ⚡ Install, remove and manage Hysteria2
+- **🛡️ Install zapret** ⭐ NEW in v1.4.0
+  - One-click install directly from the menu
 - **System information** — display system data via neofetch
 - **Language switching**: Russian / English
 - **Interactive CLI menu**
@@ -86,7 +87,8 @@ Or directly:
 | 1 | 🆔 Short ID & Country Flags | Generate shorts_id, Get country emoji flag |
 | 2 | 📊 Resource Monitor | Free memory, htop, System information (neofetch) |
 | 3 | 🔐 Network & Ports | Port management submenu |
-| 4 | ⚙️ Maintenance | Check updates, **Update system packages** ⭐, Uninstall |
+| 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
+| 5 | 🖥️ Server Setup | SSH port, Zapret, Hysteria2 |
 
 ---
 
@@ -122,41 +124,6 @@ Displays information about:
 0) ⬅️  Back
 ```
 
-**Capabilities:**
-
-1. **Open port**
-   - Select port number (1-65535)
-   - Choose protocol (TCP, UDP, or both)
-   - Add description (e.g., "SSH server", "Web server")
-   - Automatic firewall rule addition
-
-2. **Close port**
-   - View list of open ports
-   - Select port to close
-   - Automatic removal from firewall and database
-
-3. **Edit description**
-   - Change description of existing port
-   - Useful for documenting port purposes
-
-4. **List ports**
-   ```
-   ┌─────────┬───────────┬──────────────────────────────────────┐
-   │ Port    │ Protocol  │ Description                          │
-   ├─────────┼───────────┼──────────────────────────────────────┤
-   │ 22      │ tcp       │ SSH server                           │
-   │ 80      │ tcp       │ Web server (HTTP)                    │
-   │ 443     │ tcp       │ Web server (HTTPS)                   │
-   │ 3306    │ tcp       │ MySQL Database                       │
-   └─────────┴───────────┴──────────────────────────────────────┘
-   📊 Total open ports: 4
-   ```
-
-5. **Firewall status**
-   - Shows firewall type in use (UFW/FirewallD/iptables)
-   - Displays active rules
-   - Shows overall protection status
-
 **Supported firewalls:**
 - ✅ **UFW** (Ubuntu/Debian)
 - ✅ **FirewallD** (RHEL/CentOS/Fedora)
@@ -164,7 +131,47 @@ Displays information about:
 
 ---
 
-#### 📦 System Package Updates (group 4 → option 2) ⭐ NEW in v1.2.3
+#### 🖥️ Server Setup (group 5) ⭐ v1.3.0
+
+**Server Setup submenu:**
+
+```
+╔════════════════════════════════════════════╗
+║           🖥️  Server Setup               ║
+╚════════════════════════════════════════════╝
+
+1) 🔑 Change SSH port
+2) 🛡️  Install zapret          ⭐ NEW in v1.4.0
+3) ⚡ Hysteria2
+0) ⬅️  Back
+```
+
+#### 🛡️ Install zapret (group 5 → option 2) ⭐ NEW in v1.4.0
+
+Runs the zapret installer with a single menu selection — no manual commands needed.
+
+#### ⚡ Hysteria2 (group 5 → option 3)
+
+**Hysteria2 submenu:**
+
+```
+╔════════════════════════════════════════════╗
+║              ⚡ Hysteria2                 ║
+╚════════════════════════════════════════════╝
+
+1) ⚡ Install Hysteria2
+2) 🗑️  Remove Hysteria2
+3) 📝 Edit config
+4) ⚙️  Manage service
+5) 📋 Logs
+6) 🔍 Check version
+7) ⬆️  Update Hysteria2
+0) ⬅️  Back
+```
+
+---
+
+#### 📦 System Package Updates (group 4 → option 2)
 
 **Maintenance submenu:**
 
@@ -174,32 +181,9 @@ Displays information about:
 ╚════════════════════════════════════════════╝
 
 1) 🔄 Check for updates
-2) 📦 Update system packages    ⭐ NEW
+2) 📦 Update system packages
 3) 🗑️  Uninstall rw-scripts
 0) ⬅️  Back
-```
-
-**Package update function:**
-- Executes `apt update && apt upgrade -y`
-- Asks for confirmation before running
-- Automatically detects `apt` or `apt-get`
-- Shows update progress in real-time
-- Displays completion message
-
-**Usage example:**
-```
-📦 Update system packages? This may take a while. (y/n)
-> y
-
-📦 Updating package lists...
-Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease
-...
-
-⬆️  Installing updates...
-Reading package lists... Done
-...
-
-✅ All packages updated!
 ```
 
 **Note:** This feature is only available for Debian/Ubuntu-based systems with the apt package manager.
@@ -256,9 +240,13 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-## 🔐 Security
+## ⭐ Support the project
 
-When using the script:
+If you like the project, give it a star on GitHub! 🌟
+
+---
+
+## 🔐 Security
 
 **Port management:**
 - ⚠️ Sudo privileges required for firewall operations
@@ -274,6 +262,6 @@ When using the script:
 
 ---
 
-**Version:** 1.4.0 
-**Release Date:** May 2026  
+**Version:** 1.4.0
+**Release Date:** May 2026
 **License:** MIT
