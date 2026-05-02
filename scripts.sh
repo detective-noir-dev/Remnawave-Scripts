@@ -169,14 +169,11 @@ tr_text() {
                 HY2_UPDATING)         echo "Обновляю Hysteria2..." ;;
                 HY2_UPDATED)          echo "Hysteria2 успешно обновлён!" ;;
                 HY2_UPDATE_FAIL)      echo "Ошибка при обновлении Hysteria2." ;;
-<<<<<<< Updated upstream
-=======
                 SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
                 SUB_ZAPRET)           echo "🛡️  Установка zapret" ;;
                 ZAPRET_INSTALLING)    echo "Устанавливаю zapret..." ;;
                 ZAPRET_DONE)          echo "Zapret успешно установлен!" ;;
                 ZAPRET_FAIL)          echo "Ошибка при установке zapret." ;;
->>>>>>> Stashed changes
             esac ;;
         "en" | *)
             case "$1" in
@@ -283,14 +280,11 @@ tr_text() {
                 HY2_UPDATING)         echo "Updating Hysteria2..." ;;
                 HY2_UPDATED)          echo "Hysteria2 updated successfully!" ;;
                 HY2_UPDATE_FAIL)      echo "Failed to update Hysteria2." ;;
-<<<<<<< Updated upstream
-=======
                 SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
                 SUB_ZAPRET)           echo "🛡️  Install zapret" ;;
                 ZAPRET_INSTALLING)    echo "Installing zapret..." ;;
                 ZAPRET_DONE)          echo "Zapret installed successfully!" ;;
                 ZAPRET_FAIL)          echo "Failed to install zapret." ;;
->>>>>>> Stashed changes
             esac ;;
     esac
 }
