@@ -1,6 +1,3 @@
-Вот обновленный `README-ENG.md` с добавленным разделом про сторонние скрипты и актуализированной версией 1.4.1.
-
-```markdown
 # Remnawave-Scripts (English Version)
 
 ![version](https://img.shields.io/badge/version-1.4.1-blue)
