@@ -188,9 +188,13 @@ if [[ "$LANG_SET" == "ru" ]]; then
     echo "Конфиг: $CONFIG_DIR"
     echo ""
     if [ "$PATH_ADDED" -eq 1 ]; then
-        echo -e "\e[33m[i] PATH обновлен автоматически. Можете сразу использовать команду.\e[0m"
+        echo -e "\e[33m⚠️  PATH обновлён, но текущая сессия его ещё не видит.\e[0m"
+        echo -e "\e[33m   Выполните в терминале:\e[0m"
+        echo -e "\e[36m   source ~/.bashrc\e[0m"
+        echo -e "\e[33m   — или откройте новый терминал.\e[0m"
+        echo ""
     fi
-    echo -e "\e[32mЗапускайте прямо сейчас: $SCRIPT_NAME\e[0m"
+    echo -e "\e[32mЗапуск: $SCRIPT_NAME\e[0m"
 else
     if [ "$CURRENT_VERSION" = "(not installed)" ]; then
         echo -e "\e[32m✅ Installation completed!\e[0m"
@@ -203,7 +207,11 @@ else
     echo "Config dir: $CONFIG_DIR"
     echo ""
     if [ "$PATH_ADDED" -eq 1 ]; then
-        echo -e "\e[33m[i] PATH updated automatically. You can use the command right away.\e[0m"
+        echo -e "\e[33m⚠️  PATH was updated, but your current session doesn't see it yet.\e[0m"
+        echo -e "\e[33m   Run in your terminal:\e[0m"
+        echo -e "\e[36m   source ~/.bashrc\e[0m"
+        echo -e "\e[33m   — or open a new terminal.\e[0m"
+        echo ""
     fi
     echo -e "\e[32mRun now: $SCRIPT_NAME\e[0m"
 fi
