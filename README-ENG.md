@@ -1,10 +1,13 @@
+Вот обновленный `README-ENG.md` с добавленным разделом про сторонние скрипты и актуализированной версией 1.4.1.
+
+```markdown
 # Remnawave-Scripts (English Version)
 
 ![version](https://img.shields.io/badge/version-1.4.1-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-Remnawave-Scripts is a cross-platform Bash script with an interactive menu, bilingual support (RU/EN), random ID generation, country search with emoji flags, and port management.
+Remnawave-Scripts is a cross-platform Bash script with an interactive menu, dual language support (RU/EN), random ID generation, country search with emoji flags, and port management.
 
 It also includes a self-update system from GitHub and allows you to uninstall the script (rw-scripts) directly from the menu.
 
@@ -13,41 +16,45 @@ It also includes a self-update system from GitHub and allows you to uninstall th
 ## 📌 Features
 
 - **Random shorts_id generation** — create unique identifiers
-- **Country search** — search in Russian and English, partial matches supported
-- **Display emoji flag** and English country name
-- **💾 Memory monitoring** ⭐ v1.1.0
+- **Country search** — search in Russian and English, supports partial matches
+- **Show emoji flag** and English country name
+- **💾 Memory Monitor** ⭐ v1.1.0
   - Display free and used RAM
   - Cross-platform support (Linux, macOS)
-- **📈 Interactive process monitor (htop)** ⭐ v1.1.0
+- **📈 Interactive Process Monitor (htop)** ⭐ v1.1.0
   - Automatic htop installation if needed
-  - Real-time process, CPU, and memory monitoring
-- **🔒 Port management** ⭐ v1.2.0
+  - Real-time monitoring of processes, CPU, and memory
+- **🔒 Port Management** ⭐ v1.2.0
   - 🔓 Open ports via firewall (UFW/FirewallD/iptables)
-  - 🔒 Close ports with database removal
+  - 🔒 Close ports and remove from database
   - ✏️ Edit port descriptions
   - 📋 Beautiful list of all open ports
   - 🛡️ View firewall status
-  - 💾 Port data persistence between sessions
-- **📦 System package updates** ⭐ v1.2.3
-  - Execute `apt update && apt upgrade -y` from menu
+  - 💾 Save port data between sessions
+- **📦 System Package Update** ⭐ v1.2.3
+  - Execute `apt update && apt upgrade -y` from the menu
   - Confirmation before running
   - Support for apt and apt-get
-- **🖥️ Server Setup** ⭐ v1.3.0
+- **🖥️ Server Configuration** ⭐ v1.3.0
   - 🔑 Change SSH port
-  - ⚡ Install, remove and manage Hysteria2
-- **🛡️ Install zapret** ⭐ NEW in v1.4.0
-  - One-click install directly from the menu
-- **System information** — display system data via neofetch
-- **Language switching**: Russian / English
-- **Interactive CLI menu**
-- **Update system via GitHub**
-- **Uninstall capability** from system
+  - ⚡ Install, remove, and manage Hysteria2
+- **🛡️ Zapret Installation** ⭐ v1.4.0
+  - One-command installation directly from the menu
+- **🔧 Third-party Scripts** ⭐ NEW in v1.4.1
+  - 🌐 Quick installation of Remnawave by EGames
+  - 🤖 Installation of Reshala (Remnawave Bedolaga)
+  - Automatic environment variable handling (bashrc)
+- **System Information** — display system data via neofetch
+- **Language Switching**: Russian / English
+- **Interactive CLI Menu**
+- **GitHub Update System**
+- **Uninstall Option**
 
 ---
 
 ## 🚀 Installation
 
-One-command installation:
+Install with one command:
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh)
@@ -82,13 +89,14 @@ Or directly:
 
 ### 📁 Menu Groups
 
-| # | Group | Contents |
-|---|-------|----------|
+| # | Group | Content |
+|---|--------|------------|
 | 1 | 🆔 Short ID & Country Flags | Generate shorts_id, Get country emoji flag |
-| 2 | 📊 Resource Monitor | Free memory, htop, System information (neofetch) |
+| 2 | 📊 Resource Monitor | Free memory, htop, System info (neofetch) |
 | 3 | 🔐 Network & Ports | Port management submenu |
 | 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
-| 5 | 🖥️ Server Setup | SSH port, Zapret, Hysteria2 |
+| 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2 |
+| 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala |
 
 ---
 
@@ -103,24 +111,24 @@ Displays information about:
 
 #### 📈 Process Monitor
 - Interactive htop interface
-- Sort by CPU/memory
+- Sort by CPU/Memory
 - Process management
-- Color-coded display
+- Color-coded data display
 
-#### 🔒 Port Management (group 3)
+#### 🔒 Port Management (Group 3)
 
-**Port management submenu:**
+**Port Management Submenu:**
 
 ```
 ╔════════════════════════════════════════════╗
-║       🔒 Port Management / Ports          ║
+║      🔒 Port Management / Ports           ║
 ╚════════════════════════════════════════════╝
 
-1) 🔓 Open port
-2) 🔒 Close port
-3) ✏️  Edit description
-4) 📋 List ports
-5) 🛡️  Firewall status
+1) 🔓 Open Port
+2) 🔒 Close Port
+3) ✏️  Edit Description
+4) 📋 List Ports
+5) 🛡️  Firewall Status
 0) ⬅️  Back
 ```
 
@@ -131,28 +139,28 @@ Displays information about:
 
 ---
 
-#### 🖥️ Server Setup (group 5) ⭐ v1.3.0
+#### 🖥️ Server Configuration (Group 5) ⭐ v1.3.0
 
-**Server Setup submenu:**
+**Server Configuration Submenu:**
 
 ```
 ╔════════════════════════════════════════════╗
-║           🖥️  Server Setup               ║
+║         🖥️  Server Configuration          ║
 ╚════════════════════════════════════════════╝
 
-1) 🔑 Change SSH port
-2) 🛡️  Install zapret          ⭐ NEW in v1.4.0
+1) 🔑 Change SSH Port
+2) 🛡️  Install Zapret
 3) ⚡ Hysteria2
 0) ⬅️  Back
 ```
 
-#### 🛡️ Install zapret (group 5 → option 2) ⭐ NEW in v1.4.0
+#### 🛡️ Zapret Installation (Group 5 → Item 2)
 
-Runs the zapret installer with a single menu selection — no manual commands needed.
+Runs zapret installation with one command directly from the menu without manual input.
 
-#### ⚡ Hysteria2 (group 5 → option 3)
+#### ⚡ Hysteria2 (Group 5 → Item 3)
 
-**Hysteria2 submenu:**
+**Hysteria2 Submenu:**
 
 ```
 ╔════════════════════════════════════════════╗
@@ -161,41 +169,63 @@ Runs the zapret installer with a single menu selection — no manual commands ne
 
 1) ⚡ Install Hysteria2
 2) 🗑️  Remove Hysteria2
-3) 📝 Edit config
-4) ⚙️  Manage service
+3) 📝 Edit Config
+4) ⚙️  Service Management
 5) 📋 Logs
-6) 🔍 Check version
+6) 🔍 Check Version
 7) ⬆️  Update Hysteria2
 0) ⬅️  Back
 ```
 
 ---
 
-#### 📦 System Package Updates (group 4 → option 2)
+#### 🔧 Third-party Scripts (Group 6) ⭐ NEW in v1.4.1
 
-**Maintenance submenu:**
+**Third-party Scripts Submenu:**
 
 ```
 ╔════════════════════════════════════════════╗
-║          ⚙️  Maintenance                  ║
+║         🔧 Third-party Scripts            ║
 ╚════════════════════════════════════════════╝
 
-1) 🔄 Check for updates
-2) 📦 Update system packages
+1) 🌐 Remnawave (EGames)
+2) 🤖 Reshala
+0) ⬅️  Back
+```
+
+**What's included:**
+- **🌐 Remnawave (EGames):** Automatic installation of the reverse-proxy solution by EGamesAPI. The script downloads the installer, runs it, and correctly updates environment variables.
+- **🤖 Reshala:** Installation of the popular Reshala script by DonMatteoVPN. Includes secure download to a temporary file and auto-launch after installation.
+
+> **⚠️ Important:** After installing third-party scripts, you may need to restart your terminal or run `source ~/.bashrc` to activate new commands. The script will automatically suggest this.
+
+---
+
+#### 📦 System Package Update (Group 4 → Item 2)
+
+**Maintenance Submenu:**
+
+```
+╔════════════════════════════════════════════╗
+║         ⚙️  Maintenance                   ║
+╚════════════════════════════════════════════╝
+
+1) 🔄 Check Updates
+2) 📦 Update System Packages
 3) 🗑️  Uninstall rw-scripts
 0) ⬅️  Back
 ```
 
-**Note:** This feature is only available for Debian/Ubuntu-based systems with the apt package manager.
+**Note:** The package update function is only available for Debian/Ubuntu-based systems.
 
 ---
 
 ## 🌍 Language Support
 
-- Russian (Русский)
-- English
+- Russian (Russian)
+- English (English)
 
-Language is selected during first installation and saved in `~/.config/remnawave/lang.conf`
+Language is selected during the first installation and saved in `~/.config/remnawave/lang.conf`
 
 ---
 
@@ -214,11 +244,11 @@ Language is selected during first installation and saved in `~/.config/remnawave
 ## 📦 System Requirements
 
 - **OS**: Linux, macOS, BSD, Windows WSL
-- **Dependencies** (installed automatically when needed):
+- **Dependencies** (installed automatically if needed):
   - `bash` — main interpreter
   - `curl` — for downloading updates
   - `xxd` — for ID generation (auto-install)
-  - `neofetch` — for system information (optional)
+  - `neofetch` — for system info (optional)
   - `htop` — for process monitor (optional)
   - `jq` — for JSON handling in port management (auto-install)
   - `ufw` / `firewalld` / `iptables` — firewall for port management
@@ -240,7 +270,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-## ⭐ Support the project
+## ⭐ Support the Project
 
 If you like the project, give it a star on GitHub! 🌟
 
@@ -248,20 +278,26 @@ If you like the project, give it a star on GitHub! 🌟
 
 ## 🔐 Security
 
-**Port management:**
-- ⚠️ Sudo privileges required for firewall operations
+**Port Management:**
+- ⚠️ Requires sudo privileges for firewall operations
 - 🛡️ All changes are applied directly to the system firewall
 - 💾 Port data is stored locally in your home directory
-- 🔒 It is recommended to open only necessary ports
+- 🔒 Recommended to open only necessary ports
 
-**System package updates:**
-- ⚠️ Sudo privileges required for package installation
-- 📦 Performs full system update
+**System Package Updates:**
+- ⚠️ Requires sudo privileges for package installation
+- 📦 Performs a full system update
 - ⏱️ Process may take significant time
-- 🔄 Recommended to run regularly for system security
+- 🔄 Recommended to perform regularly for system security
+
+**Third-party Scripts:**
+- ⚠️ Scripts are downloaded from external repositories (EGamesAPI, DonMatteoVPN)
+- 🛡️ It is recommended to review the source code of third-party scripts before running
+- 🔒 Use at your own risk
 
 ---
 
-**Version:** 1.4.0
-**Release Date:** May 2026
+**Version:** 1.4.1
+**Release Date:** June 2026
 **License:** MIT
+```
