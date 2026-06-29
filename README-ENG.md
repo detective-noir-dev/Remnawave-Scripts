@@ -1,6 +1,6 @@
 # Remnawave-Scripts (English Version)
 
-![version](https://img.shields.io/badge/version-1.4.1-blue)
+![version](https://img.shields.io/badge/version-1.4.2-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -37,9 +37,10 @@ It also includes a self-update system from GitHub and allows you to uninstall th
   - ⚡ Install, remove, and manage Hysteria2
 - **🛡️ Zapret Installation** ⭐ v1.4.0
   - One-command installation directly from the menu
-- **🔧 Third-party Scripts** ⭐ NEW in v1.4.1
+- **🔧 Third-party Scripts** ⭐ v1.4.1+
   - 🌐 Quick installation of Remnawave by EGames
   - 🤖 Installation of Reshala (Remnawave Bedolaga)
+  - 🧪 Multitest installation ⭐ NEW in v1.4.2
   - Automatic environment variable handling (bashrc)
 - **System Information** — display system data via neofetch
 - **Language Switching**: Russian / English
@@ -93,7 +94,7 @@ Or directly:
 | 3 | 🔐 Network & Ports | Port management submenu |
 | 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
 | 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2 |
-| 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala |
+| 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala, Multitest |
 
 ---
 
@@ -176,7 +177,7 @@ Runs zapret installation with one command directly from the menu without manual 
 
 ---
 
-#### 🔧 Third-party Scripts (Group 6) ⭐ NEW in v1.4.1
+#### 🔧 Third-party Scripts (Group 6) ⭐ v1.4.1+
 
 **Third-party Scripts Submenu:**
 
@@ -187,12 +188,14 @@ Runs zapret installation with one command directly from the menu without manual 
 
 1) 🌐 Remnawave (EGames)
 2) 🤖 Reshala
+3) 🧪 Multitest
 0) ⬅️  Back
 ```
 
 **What's included:**
 - **🌐 Remnawave (EGames):** Automatic installation of the reverse-proxy solution by EGamesAPI. The script downloads the installer, runs it, and correctly updates environment variables.
 - **🤖 Reshala:** Installation of the popular Reshala script by DonMatteoVPN. Includes secure download to a temporary file and auto-launch after installation.
+- **🧪 Multitest:** One-command installation of the Multitest tool by saveksme — the script is placed directly into `/usr/local/bin/multitest` and is immediately ready to use.
 
 > **⚠️ Important:** After installing third-party scripts, you may need to restart your terminal or run `source ~/.bashrc` to activate new commands. The script will automatically suggest this.
 
@@ -294,7 +297,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.4.1
+**Version:** 1.4.2
 **Release Date:** June 2026
 **License:** MIT
 ```

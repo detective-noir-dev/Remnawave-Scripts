@@ -185,6 +185,10 @@ tr_text() {
                 RESHALA_DONE)         echo "Reshala успешно установлен!" ;;
                 RESHALA_FAIL)         echo "Ошибка установки Reshala." ;;
                 BASHRC_RELOAD)        echo "⚠️  Перезапустите терминал или выполните: source ~/.bashrc" ;;
+                SUB_MULTITEST)        echo "🧪 Multitest" ;;
+                MULTITEST_INSTALLING) echo "Устанавливаю Multitest..." ;;
+                MULTITEST_DONE)       echo "Multitest успешно установлен!" ;;
+                MULTITEST_FAIL)       echo "Ошибка установки Multitest." ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -307,6 +311,10 @@ tr_text() {
                 RESHALA_DONE)         echo "Reshala installed successfully!" ;;
                 RESHALA_FAIL)         echo "Failed to install Reshala." ;;
                 BASHRC_RELOAD)        echo "⚠️  Restart your terminal or run: source ~/.bashrc" ;;
+                SUB_MULTITEST)        echo "🧪 Multitest" ;;
+                MULTITEST_INSTALLING) echo "Installing Multitest..." ;;
+                MULTITEST_DONE)       echo "Multitest installed successfully!" ;;
+                MULTITEST_FAIL)       echo "Failed to install Multitest." ;;
             esac ;;
     esac
 }
@@ -1649,6 +1657,33 @@ install_reshala() {
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
+# ====== УСТАНОВКА MULTITEST ======
+install_multitest() {
+    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║    🧪 $(tr_text SUB_MULTITEST)${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+    echo
+    echo -e "${BLUE}$(tr_text MULTITEST_INSTALLING)${NC}"
+    echo -e "${DIM}Script: saveksme/multitest${NC}"
+    echo
+
+    curl -sL https://raw.githubusercontent.com/saveksme/multitest/master/multitest.sh \
+        -o /usr/local/bin/multitest && chmod +x /usr/local/bin/multitest
+    local status=$?
+
+    echo
+    if [ $status -eq 0 ]; then
+        echo -e "${GREEN}✅ $(tr_text MULTITEST_DONE)${NC}"
+        echo
+        echo -e "${CYAN}Запуск / Run: ${YELLOW}multitest${NC}"
+    else
+        echo -e "${RED}❌ $(tr_text MULTITEST_FAIL)${NC}"
+    fi
+
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
 # ====== ПОДМЕНЮ: СТОРОННИЕ СКРИПТЫ ======
 submenu_thirdparty() {
     while true; do
@@ -1657,6 +1692,7 @@ submenu_thirdparty() {
 
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_EGAMES_RW)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_RESHALA)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_MULTITEST)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -1665,6 +1701,7 @@ submenu_thirdparty() {
         case $choice in
             1) show_banner; install_egames_remnawave ;;
             2) show_banner; install_reshala ;;
+            3) show_banner; install_multitest ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
