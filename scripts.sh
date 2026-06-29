@@ -1660,7 +1660,7 @@ install_reshala() {
 # ====== УСТАНОВКА MULTITEST ======
 install_multitest() {
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    🧪 $(tr_text SUB_MULTITEST)${NC}"
+    echo -e "${CYAN}║    $(tr_text SUB_MULTITEST)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
     echo -e "${BLUE}$(tr_text MULTITEST_INSTALLING)${NC}"
@@ -1675,7 +1675,13 @@ install_multitest() {
     if [ $status -eq 0 ]; then
         echo -e "${GREEN}✅ $(tr_text MULTITEST_DONE)${NC}"
         echo
-        echo -e "${CYAN}Запуск / Run: ${YELLOW}multitest${NC}"
+        echo -e "${CYAN}Запуск multitest...${NC}"
+        sleep 1
+        if command -v multitest >/dev/null 2>&1; then
+            multitest
+        else
+            echo -e "${YELLOW}⚠️  'multitest' не найден в PATH. Выполните: multitest${NC}"
+        fi
     else
         echo -e "${RED}❌ $(tr_text MULTITEST_FAIL)${NC}"
     fi
