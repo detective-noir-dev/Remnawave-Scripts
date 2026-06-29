@@ -1677,10 +1677,10 @@ install_multitest() {
         echo
         echo -e "${CYAN}Запуск multitest...${NC}"
         sleep 1
-        if command -v multitest >/dev/null 2>&1; then
-            multitest
+        if [ -x /usr/local/bin/multitest ]; then
+            /usr/local/bin/multitest
         else
-            echo -e "${YELLOW}⚠️  'multitest' не найден в PATH. Выполните: multitest${NC}"
+            echo -e "${YELLOW}⚠️  'multitest' не найден. Выполните: multitest${NC}"
         fi
     else
         echo -e "${RED}❌ $(tr_text MULTITEST_FAIL)${NC}"
