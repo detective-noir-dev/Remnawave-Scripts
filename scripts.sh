@@ -2818,13 +2818,9 @@ show_main_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────${NC}"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_EXIT)${NC}"
         echo
-        echo -e "  ${DIM}$(tr_text PROMPT_GROUP) ${NC}${DIM}(авто-обновление каждые 3 сек)${NC}"
+        echo -e "  ${DIM}$(tr_text PROMPT_GROUP)${NC}"
 
-        # read -t 3: таймаут → перерисовка дашборда
-        read -t 3 -rp "  > " choice
-        local _rc=$?
-        # если таймаут (exit code >= 128) — просто перерисовать экран
-        [ $_rc -ge 128 ] && continue
+        read -rp "  > " choice
 
         case $choice in
             1) submenu_id_flags ;;
