@@ -220,7 +220,7 @@ tr_text() {
                 HINT_ID_FLAGS)    echo "└ Генерация shorts_id, флаги и названия стран" ;;
                 HINT_MONITOR)     echo "└ Свободная память, htop, системная информация" ;;
                 HINT_PORTS)       echo "└ Открыть/закрыть порты, UFW / FirewallD / iptables" ;;
-                HINT_SETTINGS)    echo "└ Обновление скрипта, пакеты APT, удаление" ;;
+                HINT_SETTINGS)    echo "└ Обновление, APT, очистка, память, Scanner, удаление" ;;
                 HINT_SERVER)      echo "└ Смена SSH порта, Zapret, Hysteria2" ;;
                 HINT_THIRDPARTY)  echo "└ EGames Remnawave, Reshala, Multitest" ;;
                 HINT_CLEANER)     echo "└ APT, Docker, journald, /tmp, Snap, анализатор диска" ;;
@@ -383,7 +383,7 @@ tr_text() {
                 HINT_ID_FLAGS)    echo "└ Generate shorts_id, country flags and names" ;;
                 HINT_MONITOR)     echo "└ Free memory, htop, system information" ;;
                 HINT_PORTS)       echo "└ Open/close ports, UFW / FirewallD / iptables" ;;
-                HINT_SETTINGS)    echo "└ Script update, APT packages, uninstall" ;;
+                HINT_SETTINGS)    echo "└ Updates, APT, cleaner, memory, Scanner, uninstall" ;;
                 HINT_SERVER)      echo "└ SSH port, Zapret, Hysteria2" ;;
                 HINT_THIRDPARTY)  echo "└ EGames Remnawave, Reshala, Multitest" ;;
                 HINT_CLEANER)     echo "└ APT, Docker, journald, /tmp, Snap, disk analyzer" ;;
@@ -1893,19 +1893,30 @@ submenu_maintenance() {
     while true; do
         show_banner
         print_submenu_header "$(tr_text GROUP_SETTINGS)"
-        
+
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_UPDATE)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_APT_UPDATE)"
-        echo -e "  ${RED}3)${NC} $(tr_text SUB_DELETE)"
+        echo -e "  ${DIM}──────────────────────────────${NC}"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_CLEANER)"
+        echo -e "     ${DIM}$(tr_text HINT_CLEANER)${NC}"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_MEMORY)"
+        echo -e "     ${DIM}$(tr_text HINT_MEMORY)${NC}"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SCANNER)"
+        echo -e "     ${DIM}$(tr_text HINT_SCANNER)${NC}"
+        echo -e "  ${DIM}──────────────────────────────${NC}"
+        echo -e "  ${RED}6)${NC} $(tr_text SUB_DELETE)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
         read -rp "> " choice
-        
+
         case $choice in
             1) show_banner; check_update ;;
             2) show_banner; apt_update_upgrade ;;
-            3) show_banner; delete_self ;;
+            3) submenu_cleaner ;;
+            4) submenu_memory ;;
+            5) submenu_scanner ;;
+            6) show_banner; delete_self ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
@@ -2808,12 +2819,6 @@ show_main_menu() {
         echo -e "     ${DIM}$(tr_text HINT_SERVER)${NC}"
         echo -e "  ${YELLOW}6)${NC} ${BOLD}$(tr_text GROUP_THIRDPARTY)${NC}"
         echo -e "     ${DIM}$(tr_text HINT_THIRDPARTY)${NC}"
-        echo -e "  ${YELLOW}7)${NC} ${BOLD}$(tr_text GROUP_CLEANER)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_CLEANER)${NC}"
-        echo -e "  ${YELLOW}8)${NC} ${BOLD}$(tr_text GROUP_MEMORY)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_MEMORY)${NC}"
-        echo -e "  ${YELLOW}9)${NC} ${BOLD}$(tr_text GROUP_SCANNER)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_SCANNER)${NC}"
         echo
         echo -e "  ${DIM}─────────────────────────────────────────${NC}"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_EXIT)${NC}"
@@ -2829,9 +2834,6 @@ show_main_menu() {
             4) submenu_maintenance ;;
             5) submenu_server ;;
             6) submenu_thirdparty ;;
-            7) submenu_cleaner ;;
-            8) submenu_memory ;;
-            9) submenu_scanner ;;
             0) echo -e "${GREEN}$(tr_text MSG_EXIT)${NC}"; exit 0 ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
