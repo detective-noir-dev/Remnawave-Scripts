@@ -1,6 +1,6 @@
 # Remnawave-Scripts (English Version)
 
-![version](https://img.shields.io/badge/version-1.4.6-blue)
+![version](https://img.shields.io/badge/version-1.4.7-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -352,7 +352,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.4.6
+**Version:** 1.4.7
 **Release Date:** June 2026
 **License:** MIT
 ```

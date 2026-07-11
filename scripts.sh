@@ -216,6 +216,16 @@ tr_text() {
                 SCAN_MASS)            echo "🕵️  Массовый пробив по списку" ;;
                 SCAN_TARGET)          echo "Введите цель (IP или домен):" ;;
                 SCAN_PORT)            echo "Порт(ы) через запятую (Enter = 443):" ;;
+                # === ПОДСКАЗКИ ГЛАВНОГО МЕНЮ ===
+                HINT_ID_FLAGS)    echo "└ Генерация shorts_id, флаги и названия стран" ;;
+                HINT_MONITOR)     echo "└ Свободная память, htop, системная информация" ;;
+                HINT_PORTS)       echo "└ Открыть/закрыть порты, UFW / FirewallD / iptables" ;;
+                HINT_SETTINGS)    echo "└ Обновление скрипта, пакеты APT, удаление" ;;
+                HINT_SERVER)      echo "└ Смена SSH порта, Zapret, Hysteria2" ;;
+                HINT_THIRDPARTY)  echo "└ EGames Remnawave, Reshala, Multitest" ;;
+                HINT_CLEANER)     echo "└ APT, Docker, journald, /tmp, Snap, анализатор диска" ;;
+                HINT_MEMORY)      echo "└ ZRAM, Disk Swap, гибридный режим, лимиты Docker" ;;
+                HINT_SCANNER)     echo "└ SNI для VLESS+Reality, OSINT, массовый пробив" ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -369,6 +379,16 @@ tr_text() {
                 SCAN_MASS)            echo "🕵️  Mass scan from list" ;;
                 SCAN_TARGET)          echo "Enter target (IP or domain):" ;;
                 SCAN_PORT)            echo "Port(s) comma-separated (Enter = 443):" ;;
+                # === MAIN MENU HINTS ===
+                HINT_ID_FLAGS)    echo "└ Generate shorts_id, country flags and names" ;;
+                HINT_MONITOR)     echo "└ Free memory, htop, system information" ;;
+                HINT_PORTS)       echo "└ Open/close ports, UFW / FirewallD / iptables" ;;
+                HINT_SETTINGS)    echo "└ Script update, APT packages, uninstall" ;;
+                HINT_SERVER)      echo "└ SSH port, Zapret, Hysteria2" ;;
+                HINT_THIRDPARTY)  echo "└ EGames Remnawave, Reshala, Multitest" ;;
+                HINT_CLEANER)     echo "└ APT, Docker, journald, /tmp, Snap, disk analyzer" ;;
+                HINT_MEMORY)      echo "└ ZRAM, Disk Swap, hybrid mode, Docker limits" ;;
+                HINT_SCANNER)     echo "└ SNI for VLESS+Reality, OSINT, mass scan" ;;
             esac ;;
     esac
 }
@@ -2758,30 +2778,53 @@ submenu_scanner() {
 #                        ГЛАВНОЕ МЕНЮ
 # ══════════════════════════════════════════════════════════════════
 
+# флаг: проверить обновления только один раз за сессию
+_UPDATE_CHECKED=0
+
 show_main_menu() {
     while true; do
         show_dashboard
-        auto_check_update
-        
-        echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-        echo -e "${CYAN}║${NC}           ${BOLD}$(tr_text MAIN_TITLE)${NC}                   ${CYAN}║${NC}"
-        echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+
+        # Проверка обновлений — только при первом открытии меню
+        if [ "$_UPDATE_CHECKED" -eq 0 ]; then
+            auto_check_update
+            _UPDATE_CHECKED=1
+        fi
+
+        echo -e "  ${DIM}─────────────────────────────────────────${NC}"
+        echo -e "  ${BOLD}${CYAN}  $(tr_text MAIN_TITLE)${NC}"
+        echo -e "  ${DIM}─────────────────────────────────────────${NC}"
         echo
-        echo -e "  ${YELLOW}1)${NC} $(tr_text GROUP_ID_FLAGS)"
-        echo -e "  ${YELLOW}2)${NC} $(tr_text GROUP_MONITOR)"
-        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_PORTS)"
-        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
-        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SERVER)"
-        echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_THIRDPARTY)"
-        echo -e "  ${YELLOW}7)${NC} $(tr_text GROUP_CLEANER)"
-        echo -e "  ${YELLOW}8)${NC} $(tr_text GROUP_MEMORY)"
-        echo -e "  ${YELLOW}9)${NC} $(tr_text GROUP_SCANNER)"
+
+        echo -e "  ${YELLOW}1)${NC} ${BOLD}$(tr_text GROUP_ID_FLAGS)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_ID_FLAGS)${NC}"
+        echo -e "  ${YELLOW}2)${NC} ${BOLD}$(tr_text GROUP_MONITOR)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_MONITOR)${NC}"
+        echo -e "  ${YELLOW}3)${NC} ${BOLD}$(tr_text GROUP_PORTS)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_PORTS)${NC}"
+        echo -e "  ${YELLOW}4)${NC} ${BOLD}$(tr_text GROUP_SETTINGS)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_SETTINGS)${NC}"
+        echo -e "  ${YELLOW}5)${NC} ${BOLD}$(tr_text GROUP_SERVER)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_SERVER)${NC}"
+        echo -e "  ${YELLOW}6)${NC} ${BOLD}$(tr_text GROUP_THIRDPARTY)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_THIRDPARTY)${NC}"
+        echo -e "  ${YELLOW}7)${NC} ${BOLD}$(tr_text GROUP_CLEANER)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_CLEANER)${NC}"
+        echo -e "  ${YELLOW}8)${NC} ${BOLD}$(tr_text GROUP_MEMORY)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_MEMORY)${NC}"
+        echo -e "  ${YELLOW}9)${NC} ${BOLD}$(tr_text GROUP_SCANNER)${NC}"
+        echo -e "     ${DIM}$(tr_text HINT_SCANNER)${NC}"
         echo
         echo -e "  ${DIM}─────────────────────────────────────────${NC}"
-        echo -e "  ${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_EXIT)${NC}"
         echo
-        echo -e "${BLUE}$(tr_text PROMPT_GROUP)${NC}"
-        read -rp "> " choice
+        echo -e "  ${DIM}$(tr_text PROMPT_GROUP) ${NC}${DIM}(авто-обновление каждые 3 сек)${NC}"
+
+        # read -t 3: таймаут → перерисовка дашборда
+        read -t 3 -rp "  > " choice
+        local _rc=$?
+        # если таймаут (exit code >= 128) — просто перерисовать экран
+        [ $_rc -ge 128 ] && continue
 
         case $choice in
             1) submenu_id_flags ;;
