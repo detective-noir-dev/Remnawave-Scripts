@@ -1,6 +1,6 @@
 # Remnawave-Scripts (English Version)
 
-![version](https://img.shields.io/badge/version-1.4.2-blue)
+![version](https://img.shields.io/badge/version-1.4.6-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -40,8 +40,32 @@ It also includes a self-update system from GitHub and allows you to uninstall th
 - **🔧 Third-party Scripts** ⭐ v1.4.1+
   - 🌐 Quick installation of Remnawave by EGames
   - 🤖 Installation of Reshala (Remnawave Bedolaga)
-  - 🧪 Multitest installation ⭐ NEW in v1.4.2
+  - 🧪 Multitest installation ⭐ v1.4.2
   - Automatic environment variable handling (bashrc)
+- **📊 System Dashboard** ⭐ NEW in v1.4.5
+  - Displays automatically on launch instead of the plain banner
+  - OS, kernel, uptime, active session count
+  - Virtualization type (KVM / LXC / Physical server)
+  - External IP address + ping to 8.8.8.8
+  - CPU, RAM, disk load with progress bars (▓░)
+  - Disk type detection (SSD / NVMe / HDD)
+  - Network data cached per session
+- **🧹 System Cleaner** ⭐ NEW in v1.4.6
+  - Full cleanup in one action or per category
+  - APT cache, journald, Docker prune, /tmp, Snap
+  - Shows how much space was freed after each operation
+  - Interactive disk analyzer: browse, clear, and delete files from the menu
+- **🧠 Memory & Swap Manager** ⭐ NEW in v1.4.6
+  - Hybrid mode: ZRAM (priority 100) + Disk Swap as fallback (priority −2)
+  - Dynamic recommendations based on server RAM size
+  - Detailed RAM and Swap status in real time
+  - Docker memory limit guide for 1 / 2 / 4+ GB servers
+- **🔍 Reality TLS Scanner** ⭐ NEW in v1.4.6
+  - Find ideal SNI domains for VLESS+Reality masking
+  - Single scan (OSINT): full TLS profile per IP or domain
+  - Mass scan from a target list with progress bar
+  - Smart ranking by certificate issuer weight
+  - Auto-install: downloads Go, compiles RealiTLScanner, fetches GeoIP database
 - **System Information** — display system data via neofetch
 - **Language Switching**: Russian / English
 - **Interactive CLI Menu**
@@ -95,6 +119,9 @@ Or directly:
 | 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
 | 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2 |
 | 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala, Multitest |
+| 7 | 🧹 System Cleaner | APT, journald, Docker, /tmp, Snap, disk analyzer |
+| 8 | 🧠 Memory & Swap | ZRAM, Disk Swap, hybrid mode, Docker guide |
+| 9 | 🔍 Reality TLS Scanner | SNI search for Reality, OSINT, mass scan |
 
 ---
 
@@ -173,6 +200,34 @@ Runs zapret installation with one command directly from the menu without manual 
 6) 🔍 Check Version
 7) ⬆️  Update Hysteria2
 0) ⬅️  Back
+```
+
+---
+
+#### 📊 System Dashboard ⭐ NEW in v1.4.5
+
+Launches automatically when opening the main menu instead of the plain banner.
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      🚀  REMNAWAVE-SCRIPTS                 v1.4.5
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ─── [ SYSTEM ] ───────────────────────────────────────────
+  OS / Kernel    : Ubuntu 22.04.3 LTS (5.15.0)
+  Uptime         : 3 days, 14 hours (Sessions: 2)
+  Virt           : KVM (Bare metal)
+  IP Address     : 1.2.3.4 (ping 8.8.8.8: 12.5 ms ⚡)
+
+  ─── [ HARDWARE ] ─────────────────────────────────────────
+  CPU            : AMD EPYC 7302P [4 vCPU]
+  CPU Load       : [▓▓▓░░░░░░░░░░░░░░░░░] 15%
+  Memory (RAM)   : [▓▓▓▓▓▓▓░░░░░░░░░░░░░] 35% (1.4G / 3.8G)
+  Disk (SSD)     : [▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░] 55% (14G / 25G)
+
+  ─── [ STATUS ] ───────────────────────────────────────────
+  rw-scripts     : v1.4.5
+  Language       : English
 ```
 
 ---
@@ -297,7 +352,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.4.2
+**Version:** 1.4.6
 **Release Date:** June 2026
 **License:** MIT
 ```

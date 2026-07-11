@@ -2032,148 +2032,6 @@ show_dashboard() {
 }
 
 # ══════════════════════════════════════════════════════════════════
-#                      БЕЛЫЙ СПИСОК IP
-# ══════════════════════════════════════════════════════════════════
-
-WHITELIST_FILE="$DATA_DIR/whitelist.txt"
-
-_wl_init() {
-    [ -f "$WHITELIST_FILE" ] || printf "# RW-Scripts IP Whitelist\n# Формат: IP # Комментарий\n" > "$WHITELIST_FILE"
-}
-
-_wl_get_ips() {
-    _wl_init
-    grep -v '^\s*#' "$WHITELIST_FILE" 2>/dev/null | grep -v '^\s*$' | awk '{print $1}'
-}
-
-_wl_sync_ufw() {
-    local ip="$1" action="$2"
-    local firewall; firewall=$(detect_firewall)
-    case $firewall in
-        ufw)
-            if [ "$action" = "add" ]; then
-                sudo ufw allow from "$ip" to any comment "rw-whitelist" &>/dev/null
-            else
-                sudo ufw delete allow from "$ip" to any &>/dev/null
-            fi ;;
-        firewalld)
-            if [ "$action" = "add" ]; then
-                sudo firewall-cmd --permanent --add-rich-rule="rule family=ipv4 source address=$ip accept" &>/dev/null
-            else
-                sudo firewall-cmd --permanent --remove-rich-rule="rule family=ipv4 source address=$ip accept" &>/dev/null
-            fi
-            sudo firewall-cmd --reload &>/dev/null ;;
-        iptables)
-            if [ "$action" = "add" ]; then
-                sudo iptables -I INPUT -s "$ip" -j ACCEPT 2>/dev/null
-            else
-                sudo iptables -D INPUT -s "$ip" -j ACCEPT 2>/dev/null
-            fi ;;
-    esac
-}
-
-wl_add_ip() {
-    local ip="$1" comment="${2:-Добавлен вручную}"
-    _wl_init
-    if grep -q "^${ip}" "$WHITELIST_FILE" 2>/dev/null; then
-        echo -e "${YELLOW}IP $ip уже в белом списке.${NC}"
-        return 0
-    fi
-    echo "${ip} # ${comment}" >> "$WHITELIST_FILE"
-    _wl_sync_ufw "$ip" "add"
-    echo -e "${GREEN}✅ IP $ip добавлен и разрешён в firewall.${NC}"
-}
-
-wl_remove_ip() {
-    local ip="$1"
-    _wl_init
-    if ! grep -q "^${ip}" "$WHITELIST_FILE" 2>/dev/null; then
-        echo -e "${RED}IP $ip не найден в белом списке.${NC}"
-        return 1
-    fi
-    sed -i "/^${ip}/d" "$WHITELIST_FILE"
-    _wl_sync_ufw "$ip" "remove"
-    echo -e "${GREEN}✅ IP $ip удалён из белого списка и firewall.${NC}"
-}
-
-submenu_whitelist() {
-    while true; do
-        show_banner
-        print_submenu_header "🛡️  Белый список IP"
-
-        _wl_init
-        local ips; mapfile -t ips < <(_wl_get_ips)
-        local count=${#ips[@]}
-
-        if [ "$count" -gt 0 ]; then
-            echo -e "  ${DIM}─── Доверенные IP ($count) ──────────────────────────────────${NC}"
-            local i=1
-            while IFS= read -r line; do
-                [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-                local _ip _cmt
-                _ip=$(echo "$line" | awk '{print $1}')
-                _cmt=$(echo "$line" | sed 's/^[^ ]* *# *//')
-                echo -e "  ${GREEN}$i)${NC} ${CYAN}${_ip}${NC}  ${DIM}${_cmt}${NC}"
-                ((i++))
-            done < "$WHITELIST_FILE"
-            echo
-        else
-            echo -e "  ${YELLOW}Список пуст. Добавьте IP для автоматического разрешения в firewall.${NC}"
-            echo
-        fi
-
-        local fw; fw=$(detect_firewall)
-        echo -e "  ${DIM}Активный firewall: ${CYAN}${fw}${NC}"
-        echo
-        echo -e "  ${YELLOW}1)${NC} ➕ Добавить IP"
-        echo -e "  ${YELLOW}2)${NC} ➖ Удалить IP"
-        echo -e "  ${YELLOW}3)${NC} 🔍 Определить IP текущей сессии"
-        echo
-        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
-        echo
-        read -rp "> " choice
-
-        case $choice in
-            1)
-                show_banner
-                read -rp "Введите IP адрес: " new_ip
-                [ -z "$new_ip" ] && continue
-                read -rp "Комментарий (Enter — пропустить): " cmt
-                wl_add_ip "$new_ip" "${cmt:-Добавлен вручную}"
-                read -rp "$(tr_text PRESS_ENTER)"
-                ;;
-            2)
-                show_banner
-                if [ "$count" -eq 0 ]; then
-                    echo -e "${YELLOW}Список пуст.${NC}"
-                    read -rp "$(tr_text PRESS_ENTER)"; continue
-                fi
-                read -rp "Введите IP для удаления: " del_ip
-                [ -n "$del_ip" ] && wl_remove_ip "$del_ip"
-                read -rp "$(tr_text PRESS_ENTER)"
-                ;;
-            3)
-                show_banner
-                local my_ip
-                my_ip=$(who am i 2>/dev/null | awk '{print $NF}' | tr -d '()')
-                [ -z "$my_ip" ] && my_ip=$(curl -s --connect-timeout 3 ifconfig.me 2>/dev/null)
-                if [ -n "$my_ip" ]; then
-                    echo -e "${GREEN}Ваш текущий IP: ${CYAN}${my_ip}${NC}"
-                    echo
-                    read -rp "Добавить в белый список? (y/n): " ans
-                    [[ "$ans" =~ ^[YyДд]$ ]] && wl_add_ip "$my_ip" "Auto-detected"
-                else
-                    echo -e "${RED}Не удалось определить IP.${NC}"
-                fi
-                read -rp "$(tr_text PRESS_ENTER)"
-                ;;
-            0) break ;;
-            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
-        esac
-    done
-}
-
-# ══════════════════════════════════════════════════════════════════
 #                      ОЧИСТКА СИСТЕМЫ
 # ══════════════════════════════════════════════════════════════════
 
@@ -2915,10 +2773,9 @@ show_main_menu() {
         echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
         echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SERVER)"
         echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_THIRDPARTY)"
-        echo -e "  ${YELLOW}7)${NC} 🛡️  Белый список IP"
-        echo -e "  ${YELLOW}8)${NC} $(tr_text GROUP_CLEANER)"
-        echo -e "  ${YELLOW}9)${NC} $(tr_text GROUP_MEMORY)"
-        echo -e "  ${YELLOW}10)${NC} $(tr_text GROUP_SCANNER)"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text GROUP_CLEANER)"
+        echo -e "  ${YELLOW}8)${NC} $(tr_text GROUP_MEMORY)"
+        echo -e "  ${YELLOW}9)${NC} $(tr_text GROUP_SCANNER)"
         echo
         echo -e "  ${DIM}─────────────────────────────────────────${NC}"
         echo -e "  ${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
@@ -2933,10 +2790,9 @@ show_main_menu() {
             4) submenu_maintenance ;;
             5) submenu_server ;;
             6) submenu_thirdparty ;;
-            7) submenu_whitelist ;;
-            8) submenu_cleaner ;;
-            9) submenu_memory ;;
-            10) submenu_scanner ;;
+            7) submenu_cleaner ;;
+            8) submenu_memory ;;
+            9) submenu_scanner ;;
             0) echo -e "${GREEN}$(tr_text MSG_EXIT)${NC}"; exit 0 ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
