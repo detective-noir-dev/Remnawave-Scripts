@@ -189,6 +189,33 @@ tr_text() {
                 MULTITEST_INSTALLING) echo "Устанавливаю Multitest..." ;;
                 MULTITEST_DONE)       echo "Multitest успешно установлен!" ;;
                 MULTITEST_FAIL)       echo "Ошибка установки Multitest." ;;
+                # === ОЧИСТКА СИСТЕМЫ ===
+                GROUP_CLEANER)        echo "🧹 Очистка системы" ;;
+                CLEAN_ALL)            echo "✨ Полная уборка (всё сразу)" ;;
+                CLEAN_APT)            echo "📦 Очистить APT и кэш пакетов" ;;
+                CLEAN_JOURNAL)        echo "📚 Очистить системные логи (journald)" ;;
+                CLEAN_DOCKER)         echo "🐳 Очистить мусор Docker (prune)" ;;
+                CLEAN_TMP)            echo "🗑️  Очистить /tmp и кэш пользователя" ;;
+                CLEAN_SNAP)           echo "🧩 Очистить старые Snap-пакеты" ;;
+                CLEAN_DISK_ANALY)     echo "🔍 Анализатор диска" ;;
+                CLEAN_NO_DOCKER)      echo "Docker не установлен." ;;
+                CLEAN_NO_SNAP)        echo "Snap не установлен." ;;
+                # === ПАМЯТЬ И SWAP ===
+                GROUP_MEMORY)         echo "🧠 Управление памятью и Swap" ;;
+                MEM_HYBRID)           echo "🌪️  Гибридный режим (ZRAM + Swap) [РЕКОМЕНДУЕТСЯ]" ;;
+                MEM_ZRAM_ONLY)        echo "🧩 Только ZRAM (турбо-сжатие)" ;;
+                MEM_SWAP_ONLY)        echo "💽 Только Disk Swap" ;;
+                MEM_REMOVE_ALL)       echo "🗑️  Отключить ZRAM/Swap полностью" ;;
+                MEM_SHOW_STATUS)      echo "📊 Подробный статус памяти" ;;
+                MEM_INSTRUCTIONS)     echo "📖 Инструкция (лимиты Docker)" ;;
+                MEM_ZRAM_PERCENT)     echo "Введите процент сжатия (10-100, по умолчанию 60):" ;;
+                MEM_SWAP_SIZE)        echo "Введите размер в GB (например, 2):" ;;
+                # === REALITY SCANNER ===
+                GROUP_SCANNER)        echo "🔍 Reality TLS Scanner" ;;
+                SCAN_SINGLE)          echo "🔬 Одиночное сканирование (OSINT)" ;;
+                SCAN_MASS)            echo "🕵️  Массовый пробив по списку" ;;
+                SCAN_TARGET)          echo "Введите цель (IP или домен):" ;;
+                SCAN_PORT)            echo "Порт(ы) через запятую (Enter = 443):" ;;
             esac ;;
         "en" | *)
             case "$1" in
@@ -315,6 +342,33 @@ tr_text() {
                 MULTITEST_INSTALLING) echo "Installing Multitest..." ;;
                 MULTITEST_DONE)       echo "Multitest installed successfully!" ;;
                 MULTITEST_FAIL)       echo "Failed to install Multitest." ;;
+                # === SYSTEM CLEANER ===
+                GROUP_CLEANER)        echo "🧹 System Cleaner" ;;
+                CLEAN_ALL)            echo "✨ Full cleanup (everything)" ;;
+                CLEAN_APT)            echo "📦 Clean APT cache" ;;
+                CLEAN_JOURNAL)        echo "📚 Clean system logs (journald)" ;;
+                CLEAN_DOCKER)         echo "🐳 Clean Docker garbage (prune)" ;;
+                CLEAN_TMP)            echo "🗑️  Clean /tmp and user cache" ;;
+                CLEAN_SNAP)           echo "🧩 Clean old Snap packages" ;;
+                CLEAN_DISK_ANALY)     echo "🔍 Disk analyzer" ;;
+                CLEAN_NO_DOCKER)      echo "Docker is not installed." ;;
+                CLEAN_NO_SNAP)        echo "Snap is not installed." ;;
+                # === MEMORY & SWAP ===
+                GROUP_MEMORY)         echo "🧠 Memory & Swap Manager" ;;
+                MEM_HYBRID)           echo "🌪️  Hybrid mode (ZRAM + Swap) [RECOMMENDED]" ;;
+                MEM_ZRAM_ONLY)        echo "🧩 ZRAM only (turbo compression)" ;;
+                MEM_SWAP_ONLY)        echo "💽 Disk Swap only" ;;
+                MEM_REMOVE_ALL)       echo "🗑️  Disable ZRAM/Swap completely" ;;
+                MEM_SHOW_STATUS)      echo "📊 Detailed memory status" ;;
+                MEM_INSTRUCTIONS)     echo "📖 Guide (Docker memory limits)" ;;
+                MEM_ZRAM_PERCENT)     echo "Enter compression percent (10-100, default 60):" ;;
+                MEM_SWAP_SIZE)        echo "Enter size in GB (e.g. 2):" ;;
+                # === REALITY SCANNER ===
+                GROUP_SCANNER)        echo "🔍 Reality TLS Scanner" ;;
+                SCAN_SINGLE)          echo "🔬 Single scan (OSINT)" ;;
+                SCAN_MASS)            echo "🕵️  Mass scan from list" ;;
+                SCAN_TARGET)          echo "Enter target (IP or domain):" ;;
+                SCAN_PORT)            echo "Port(s) comma-separated (Enter = 443):" ;;
             esac ;;
     esac
 }
@@ -1839,12 +1893,1016 @@ submenu_maintenance() {
 }
 
 # ══════════════════════════════════════════════════════════════════
+#                     СИСТЕМНЫЙ ДАШБОРД
+# ══════════════════════════════════════════════════════════════════
+
+# Кэш для медленных сетевых запросов (живёт в рамках сессии)
+_DASH_CACHE_INIT=0
+_DASH_EXT_IP=""
+_DASH_PING=""
+_DASH_VIRT=""
+
+show_dashboard() {
+    clear
+
+    # ── Сбор данных ──
+    local os_name kernel uptime_str users_count
+    local cpu_model cpu_cores cpu_pct
+    local ram_pct ram_used_g ram_total_g
+    local disk_pct disk_used disk_total disk_type lang_display
+
+    # OS / Kernel
+    if [ -f /etc/os-release ]; then
+        os_name=$(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-Linux}")
+    else
+        os_name="$(uname -s)"
+    fi
+    kernel=$(uname -r | cut -d'-' -f1)
+
+    # Аптайм + активные сессии
+    uptime_str=$(uptime -p 2>/dev/null | sed 's/^up //' || echo "N/A")
+    users_count=$(who 2>/dev/null | wc -l || echo "1")
+
+    # Виртуализация (кэш на сессию)
+    if [ -z "$_DASH_VIRT" ]; then
+        if command -v systemd-detect-virt >/dev/null 2>&1; then
+            local _vt; _vt=$(systemd-detect-virt 2>/dev/null || echo "unknown")
+            case "$_vt" in
+                kvm|qemu)  _DASH_VIRT="KVM (Честное железо)" ;;
+                lxc)       _DASH_VIRT="Container (LXC)" ;;
+                openvz)    _DASH_VIRT="Container (OpenVZ)" ;;
+                none)      _DASH_VIRT="Физический сервер" ;;
+                *)         _DASH_VIRT="${_vt}" ;;
+            esac
+        else
+            _DASH_VIRT="N/A"
+        fi
+    fi
+
+    # CPU
+    cpu_model=$(grep -m1 "model name" /proc/cpuinfo 2>/dev/null \
+        | sed 's/.*: //;s/(R)//g;s/(TM)//g;s/  */ /g;s/ @.*//;s/^ //;s/ $//' \
+        || echo "N/A")
+    cpu_cores=$(nproc 2>/dev/null || echo "1")
+    local _load; _load=$(cut -d' ' -f1 /proc/loadavg 2>/dev/null || echo "0")
+    cpu_pct=$(awk "BEGIN{v=($_load/${cpu_cores:-1})*100;if(v>100)v=100;printf\"%d\",v}" 2>/dev/null || echo "0")
+
+    # RAM
+    ram_pct=0; ram_used_g="?"; ram_total_g="?"
+    if command -v free >/dev/null 2>&1; then
+        local _rtotal _rused
+        _rtotal=$(free -m 2>/dev/null | awk '/^Mem:/{print $2}')
+        _rused=$(free -m  2>/dev/null | awk '/^Mem:/{print $3}')
+        ram_pct=$(( _rused * 100 / (_rtotal > 0 ? _rtotal : 1) ))
+        ram_total_g=$(awk "BEGIN{printf\"%.1f\",${_rtotal:-0}/1024}")
+        ram_used_g=$(awk  "BEGIN{printf\"%.1f\",${_rused:-0}/1024}")
+    fi
+
+    # Диск + тип
+    disk_used=$(df -h / 2>/dev/null | awk 'NR==2{print $3}' || echo "?")
+    disk_total=$(df -h / 2>/dev/null | awk 'NR==2{print $2}' || echo "?")
+    disk_pct=$(df / 2>/dev/null | awk 'NR==2{gsub(/%/,"",$5);print $5}' || echo "0")
+    disk_pct=${disk_pct:-0}
+    disk_type="HDD"
+    local _md; _md=$(df / 2>/dev/null | awk 'NR==2{print $1}' | sed 's|/dev/||;s/[0-9]*$//;s/p[0-9]*$//')
+    [ -f "/sys/block/${_md}/queue/rotational" ] && \
+        [ "$(cat "/sys/block/${_md}/queue/rotational" 2>/dev/null)" = "0" ] && disk_type="SSD"
+    [[ "$_md" == *nvme* ]] && disk_type="NVMe"
+
+    # Внешний IP + пинг (кэш на сессию, чтобы не долбить ifconfig.me)
+    if [ "${_DASH_CACHE_INIT:-0}" -eq 0 ]; then
+        _DASH_EXT_IP=$(curl -s --connect-timeout 3 -4 ifconfig.me 2>/dev/null \
+            || curl -s --connect-timeout 3 https://api.ipify.org 2>/dev/null \
+            || hostname -I 2>/dev/null | awk '{print $1}')
+        local _p; _p=$(ping -c1 -W1 8.8.8.8 2>/dev/null | grep -oE 'time=[0-9.]+' | cut -d= -f2)
+        [ -n "$_p" ] && _DASH_PING="${_p} ms ⚡" || _DASH_PING="OFFLINE ❌"
+        _DASH_CACHE_INIT=1
+    fi
+
+    # Язык
+    [ "$LANG_SET" = "ru" ] && lang_display="Русский" || lang_display="English"
+
+    # ── Прогресс-бар: _pbar <pct> [width=20] ──
+    _pbar() {
+        local pct=${1:-0} w=${2:-20}
+        local filled=$(( pct * w / 100 ))
+        local empty=$(( w - filled ))
+        local col i
+        if   [ "$pct" -ge 90 ]; then col=$RED
+        elif [ "$pct" -ge 70 ]; then col=$YELLOW
+        else                          col=$GREEN
+        fi
+        local b="${col}["
+        for ((i=0; i<filled; i++)); do b+="▓"; done
+        for ((i=0; i<empty;  i++)); do b+="░"; done
+        b+="]${NC}"
+        echo -e "$b"
+    }
+
+    local cpu_bar ram_bar disk_bar
+    cpu_bar=$(_pbar "$cpu_pct")
+    ram_bar=$(_pbar "$ram_pct")
+    disk_bar=$(_pbar "$disk_pct")
+
+    # ── Отрисовка ──
+    echo
+    echo -e "  ${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  ${BOLD}${CYAN}      🚀  REMNAWAVE-SCRIPTS${NC}                 ${GREEN}v${VERSION}${NC}"
+    echo -e "  ${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo
+
+    echo -e "  ${DIM}─── [ СИСТЕМА ] ──────────────────────────────────────────${NC}"
+    echo -e "  ${CYAN}ОС / Ядро      ${NC}: $os_name ${DIM}($kernel)${NC}"
+    echo -e "  ${CYAN}Аптайм         ${NC}: $uptime_str ${DIM}(Сессий: $users_count)${NC}"
+    echo -e "  ${CYAN}Виртуалка      ${NC}: $_DASH_VIRT"
+    echo -e "  ${CYAN}IP Адрес       ${NC}: ${YELLOW}${_DASH_EXT_IP}${NC} ${DIM}(ping 8.8.8.8: ${_DASH_PING})${NC}"
+    echo
+
+    echo -e "  ${DIM}─── [ ЖЕЛЕЗО ] ───────────────────────────────────────────${NC}"
+    echo -e "  ${CYAN}CPU            ${NC}: ${cpu_model:0:40} ${DIM}[${cpu_cores} vCPU]${NC}"
+    echo -e "  ${CYAN}Загрузка CPU   ${NC}: ${cpu_bar} ${BOLD}${cpu_pct}%${NC}"
+    echo -e "  ${CYAN}Память (RAM)   ${NC}: ${ram_bar} ${BOLD}${ram_pct}%${NC} ${DIM}(${ram_used_g}G / ${ram_total_g}G)${NC}"
+    echo -e "  ${CYAN}Диск (${disk_type})    ${NC}: ${disk_bar} ${BOLD}${disk_pct}%${NC} ${DIM}(${disk_used} / ${disk_total})${NC}"
+    echo
+
+    echo -e "  ${DIM}─── [ СТАТУС ] ───────────────────────────────────────────${NC}"
+    echo -e "  ${CYAN}rw-scripts     ${NC}: ${GREEN}v${VERSION}${NC}"
+    echo -e "  ${CYAN}Язык           ${NC}: $lang_display"
+    echo
+}
+
+# ══════════════════════════════════════════════════════════════════
+#                      БЕЛЫЙ СПИСОК IP
+# ══════════════════════════════════════════════════════════════════
+
+WHITELIST_FILE="$DATA_DIR/whitelist.txt"
+
+_wl_init() {
+    [ -f "$WHITELIST_FILE" ] || printf "# RW-Scripts IP Whitelist\n# Формат: IP # Комментарий\n" > "$WHITELIST_FILE"
+}
+
+_wl_get_ips() {
+    _wl_init
+    grep -v '^\s*#' "$WHITELIST_FILE" 2>/dev/null | grep -v '^\s*$' | awk '{print $1}'
+}
+
+_wl_sync_ufw() {
+    local ip="$1" action="$2"
+    local firewall; firewall=$(detect_firewall)
+    case $firewall in
+        ufw)
+            if [ "$action" = "add" ]; then
+                sudo ufw allow from "$ip" to any comment "rw-whitelist" &>/dev/null
+            else
+                sudo ufw delete allow from "$ip" to any &>/dev/null
+            fi ;;
+        firewalld)
+            if [ "$action" = "add" ]; then
+                sudo firewall-cmd --permanent --add-rich-rule="rule family=ipv4 source address=$ip accept" &>/dev/null
+            else
+                sudo firewall-cmd --permanent --remove-rich-rule="rule family=ipv4 source address=$ip accept" &>/dev/null
+            fi
+            sudo firewall-cmd --reload &>/dev/null ;;
+        iptables)
+            if [ "$action" = "add" ]; then
+                sudo iptables -I INPUT -s "$ip" -j ACCEPT 2>/dev/null
+            else
+                sudo iptables -D INPUT -s "$ip" -j ACCEPT 2>/dev/null
+            fi ;;
+    esac
+}
+
+wl_add_ip() {
+    local ip="$1" comment="${2:-Добавлен вручную}"
+    _wl_init
+    if grep -q "^${ip}" "$WHITELIST_FILE" 2>/dev/null; then
+        echo -e "${YELLOW}IP $ip уже в белом списке.${NC}"
+        return 0
+    fi
+    echo "${ip} # ${comment}" >> "$WHITELIST_FILE"
+    _wl_sync_ufw "$ip" "add"
+    echo -e "${GREEN}✅ IP $ip добавлен и разрешён в firewall.${NC}"
+}
+
+wl_remove_ip() {
+    local ip="$1"
+    _wl_init
+    if ! grep -q "^${ip}" "$WHITELIST_FILE" 2>/dev/null; then
+        echo -e "${RED}IP $ip не найден в белом списке.${NC}"
+        return 1
+    fi
+    sed -i "/^${ip}/d" "$WHITELIST_FILE"
+    _wl_sync_ufw "$ip" "remove"
+    echo -e "${GREEN}✅ IP $ip удалён из белого списка и firewall.${NC}"
+}
+
+submenu_whitelist() {
+    while true; do
+        show_banner
+        print_submenu_header "🛡️  Белый список IP"
+
+        _wl_init
+        local ips; mapfile -t ips < <(_wl_get_ips)
+        local count=${#ips[@]}
+
+        if [ "$count" -gt 0 ]; then
+            echo -e "  ${DIM}─── Доверенные IP ($count) ──────────────────────────────────${NC}"
+            local i=1
+            while IFS= read -r line; do
+                [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+                local _ip _cmt
+                _ip=$(echo "$line" | awk '{print $1}')
+                _cmt=$(echo "$line" | sed 's/^[^ ]* *# *//')
+                echo -e "  ${GREEN}$i)${NC} ${CYAN}${_ip}${NC}  ${DIM}${_cmt}${NC}"
+                ((i++))
+            done < "$WHITELIST_FILE"
+            echo
+        else
+            echo -e "  ${YELLOW}Список пуст. Добавьте IP для автоматического разрешения в firewall.${NC}"
+            echo
+        fi
+
+        local fw; fw=$(detect_firewall)
+        echo -e "  ${DIM}Активный firewall: ${CYAN}${fw}${NC}"
+        echo
+        echo -e "  ${YELLOW}1)${NC} ➕ Добавить IP"
+        echo -e "  ${YELLOW}2)${NC} ➖ Удалить IP"
+        echo -e "  ${YELLOW}3)${NC} 🔍 Определить IP текущей сессии"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+
+        case $choice in
+            1)
+                show_banner
+                read -rp "Введите IP адрес: " new_ip
+                [ -z "$new_ip" ] && continue
+                read -rp "Комментарий (Enter — пропустить): " cmt
+                wl_add_ip "$new_ip" "${cmt:-Добавлен вручную}"
+                read -rp "$(tr_text PRESS_ENTER)"
+                ;;
+            2)
+                show_banner
+                if [ "$count" -eq 0 ]; then
+                    echo -e "${YELLOW}Список пуст.${NC}"
+                    read -rp "$(tr_text PRESS_ENTER)"; continue
+                fi
+                read -rp "Введите IP для удаления: " del_ip
+                [ -n "$del_ip" ] && wl_remove_ip "$del_ip"
+                read -rp "$(tr_text PRESS_ENTER)"
+                ;;
+            3)
+                show_banner
+                local my_ip
+                my_ip=$(who am i 2>/dev/null | awk '{print $NF}' | tr -d '()')
+                [ -z "$my_ip" ] && my_ip=$(curl -s --connect-timeout 3 ifconfig.me 2>/dev/null)
+                if [ -n "$my_ip" ]; then
+                    echo -e "${GREEN}Ваш текущий IP: ${CYAN}${my_ip}${NC}"
+                    echo
+                    read -rp "Добавить в белый список? (y/n): " ans
+                    [[ "$ans" =~ ^[YyДд]$ ]] && wl_add_ip "$my_ip" "Auto-detected"
+                else
+                    echo -e "${RED}Не удалось определить IP.${NC}"
+                fi
+                read -rp "$(tr_text PRESS_ENTER)"
+                ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ══════════════════════════════════════════════════════════════════
+#                      ОЧИСТКА СИСТЕМЫ
+# ══════════════════════════════════════════════════════════════════
+
+_pkg_install() {
+    for pkg in "$@"; do
+        if ! command -v "$pkg" >/dev/null 2>&1 && ! dpkg -s "$pkg" >/dev/null 2>&1; then
+            echo -e "${BLUE}📦 Устанавливаю $pkg...${NC}"
+            sudo apt-get install -y "$pkg" &>/dev/null \
+                || sudo apt install -y "$pkg" &>/dev/null \
+                || true
+        fi
+    done
+}
+
+_clean_get_free() { df -k / | awk 'NR==2{print $4}'; }
+
+_clean_human() {
+    local kb=$1
+    if (( kb > 1048576 )); then awk "BEGIN{printf\"%.1f GB\",${kb}/1048576}"
+    elif (( kb > 1024 ));  then awk "BEGIN{printf\"%.1f MB\",${kb}/1024}"
+    else echo "${kb} KB"; fi
+}
+
+_clean_run() {
+    local title=$1; shift
+    local before; before=$(_clean_get_free)
+    echo -e "${BLUE}──────────────────────────────${NC}"
+    echo -e "${CYAN}▶ $title${NC}"
+    echo -e "${BLUE}──────────────────────────────${NC}"
+    "$@"
+    local after; after=$(_clean_get_free)
+    local diff=$(( after - before ))
+    echo
+    if (( diff > 0 )); then
+        echo -e "${GREEN}✅ Освобождено: $(_clean_human $diff)${NC}"
+    else
+        echo -e "${YELLOW}ℹ️  Мусора не найдено.${NC}"
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+_do_clean_apt() {
+    echo -e "${BLUE}Очистка APT кэша...${NC}"
+    sudo apt-get autoremove -y 2>/dev/null
+    sudo apt-get clean -y 2>/dev/null
+    sudo apt-get autoclean -y 2>/dev/null
+    local ookla="/etc/apt/sources.list.d/ookla_speedtest-cli.list"
+    [ -f "$ookla" ] && sudo rm -f "$ookla" "$ookla.save" \
+        && echo -e "${YELLOW}Удалён сломанный репозиторий Ookla.${NC}"
+}
+
+_do_clean_journal() {
+    echo -e "${BLUE}Очистка системных логов (journald)...${NC}"
+    sudo journalctl --vacuum-time=3d 2>/dev/null
+    sudo journalctl --vacuum-size=100M 2>/dev/null
+}
+
+_do_clean_docker() {
+    if ! command -v docker >/dev/null 2>&1; then
+        echo -e "${YELLOW}$(tr_text CLEAN_NO_DOCKER)${NC}"; return
+    fi
+    echo -e "${BLUE}Очистка Docker (system prune)...${NC}"
+    sudo docker system prune -a --volumes -f
+}
+
+_do_clean_tmp() {
+    echo -e "${BLUE}Очистка /tmp и кэша пользователя...${NC}"
+    sudo rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
+    rm -rf ~/.cache/* 2>/dev/null || true
+    echo -e "${GREEN}Временные файлы удалены.${NC}"
+}
+
+_do_clean_snap() {
+    if ! command -v snap >/dev/null 2>&1; then
+        echo -e "${YELLOW}$(tr_text CLEAN_NO_SNAP)${NC}"; return
+    fi
+    echo -e "${BLUE}Очистка старых Snap-пакетов...${NC}"
+    sudo snap set system refresh.retain=2 2>/dev/null || true
+    while read -r snapname revision; do
+        [ -n "$snapname" ] && sudo snap remove "$snapname" --revision="$revision" 2>/dev/null
+    done < <(snap list --all 2>/dev/null | awk '/disabled/{print $1,$3}')
+}
+
+_do_clean_all() {
+    _do_clean_journal
+    _do_clean_apt
+    _do_clean_docker
+    _do_clean_tmp
+    _do_clean_snap
+}
+
+_disk_inspector() {
+    local dir=$1 mode=$2
+    while true; do
+        show_banner
+        print_submenu_header "📁 $dir"
+        echo
+        [ "$mode" = "block" ] && echo -e "  ${RED}⚠️  Только просмотр! Удаление может сломать систему.${NC}" && echo
+        local i=1
+        declare -a _di_paths=()
+        while read -r line; do
+            local sz; sz=$(echo "$line" | awk '{print $1}')
+            local fp; fp=$(echo "$line" | cut -f2-)
+            local nm; nm=$(basename "$fp")
+            if [ -d "$fp" ]; then
+                echo -e "  ${YELLOW}$i)${NC} 📁 ${CYAN}$(printf "%-8s" "$sz")${NC} $nm/"
+            else
+                echo -e "  ${YELLOW}$i)${NC} 📄 ${GREEN}$(printf "%-8s" "$sz")${NC} $nm"
+            fi
+            _di_paths[$i]="$fp"
+            ((i++))
+        done < <(du -sh "$dir"/* 2>/dev/null | sort -hr | head -15)
+        [ $i -eq 1 ] && echo -e "  ${YELLOW}Пусто или нет доступа.${NC}"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "Номер (0 = назад): " sel
+        [ "$sel" = "0" ] || [ -z "$sel" ] && return
+        if [[ "$sel" =~ ^[0-9]+$ ]] && [ -n "${_di_paths[$sel]:-}" ]; then
+            local target="${_di_paths[$sel]}"
+            if [ -d "$target" ]; then
+                _disk_inspector "$target" "$mode"
+            elif [ -f "$target" ]; then
+                show_banner
+                print_submenu_header "📄 $(basename "$target")"
+                echo -e "  Размер: ${YELLOW}$(du -sh "$target" | awk '{print $1}')${NC}"
+                echo
+                echo -e "  ${YELLOW}1)${NC} 👀 Последние 50 строк"
+                [ "$mode" != "block" ] && echo -e "  ${YELLOW}2)${NC} ${RED}🗑️  Удалить / очистить${NC}"
+                echo
+                echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+                echo
+                read -rp "> " fsel
+                case $fsel in
+                    1) clear; tail -n 50 "$target" 2>/dev/null || echo -e "${RED}Бинарный файл.${NC}"
+                       read -rp "$(tr_text PRESS_ENTER)" ;;
+                    2) [ "$mode" != "block" ] && {
+                           if [ "$mode" = "truncate" ]; then
+                               > "$target"; echo -e "${GREEN}✅ Файл очищен.${NC}"
+                           else
+                               sudo rm -f "$target"; echo -e "${GREEN}✅ Файл удалён.${NC}"
+                           fi
+                           read -rp "$(tr_text PRESS_ENTER)"; return; } ;;
+                esac
+            fi
+        fi
+    done
+}
+
+_disk_analyzer() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text CLEAN_DISK_ANALY)"
+        echo
+        echo -e "  ${YELLOW}1)${NC} 📚 /var/log                ${DIM}(логи — очистка)${NC}"
+        echo -e "  ${YELLOW}2)${NC} 🐳 /var/lib/docker         ${DIM}(Docker — только просмотр)${NC}"
+        echo -e "  ${YELLOW}3)${NC} 📦 /var/cache/apt          ${DIM}(APT — удаление)${NC}"
+        echo -e "  ${YELLOW}4)${NC} 🗑️  /tmp                    ${DIM}(временные — удаление)${NC}"
+        echo -e "  ${YELLOW}5)${NC} 🌐 /opt/remnawave           ${DIM}(панель — только просмотр)${NC}"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        case $choice in
+            1) _disk_inspector "/var/log"        "truncate" ;;
+            2) _disk_inspector "/var/lib/docker" "block"    ;;
+            3) _disk_inspector "/var/cache/apt"  "rm"       ;;
+            4) _disk_inspector "/tmp"             "rm"       ;;
+            5) _disk_inspector "/opt/remnawave"  "block"    ;;
+            0) return ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+submenu_cleaner() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text GROUP_CLEANER)"
+        echo -e "  ${DIM}Свободно: ${GREEN}$(_clean_human $(_clean_get_free))${NC}"
+        echo
+        echo -e "  ${YELLOW}1)${NC} $(tr_text CLEAN_ALL)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text CLEAN_APT)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text CLEAN_JOURNAL)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text CLEAN_DOCKER)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text CLEAN_TMP)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text CLEAN_SNAP)"
+        echo -e "  ${DIM}──────────────────────────────${NC}"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text CLEAN_DISK_ANALY)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        case $choice in
+            1) _clean_run "ПОЛНАЯ УБОРКА"  _do_clean_all    ;;
+            2) _clean_run "APT"            _do_clean_apt    ;;
+            3) _clean_run "ЖУРНАЛЫ"        _do_clean_journal ;;
+            4) _clean_run "DOCKER"         _do_clean_docker ;;
+            5) _clean_run "/TMP"           _do_clean_tmp    ;;
+            6) _clean_run "SNAP"           _do_clean_snap   ;;
+            7) _disk_analyzer ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ══════════════════════════════════════════════════════════════════
+#                  УПРАВЛЕНИЕ ПАМЯТЬЮ И SWAP
+# ══════════════════════════════════════════════════════════════════
+
+_mem_swap_status() {
+    local swp; swp=$(free -m 2>/dev/null | awk '/^Swap:/{print $2}')
+    local has_zram; has_zram=$(lsblk 2>/dev/null | grep -i zram)
+    local has_file; has_file=$(swapon --show --noheadings 2>/dev/null | grep -i swapfile)
+    if [ -n "$has_zram" ] && [ -n "$has_file" ]; then
+        echo -e "${GREEN}[ГИБРИД: ZRAM + Disk Swap]${NC}"
+    elif [ -n "$has_zram" ]; then
+        echo -e "${GREEN}[ZRAM: ${swp} MB]${NC}"
+    elif [ -n "$swp" ] && [ "$swp" != "0" ]; then
+        echo -e "${YELLOW}[Disk Swap: ${swp} MB]${NC}"
+    else
+        echo -e "${RED}[ВЫКЛЮЧЕН]${NC}"
+    fi
+}
+
+_mem_show_status() {
+    show_banner
+    print_submenu_header "$(tr_text MEM_SHOW_STATUS)"
+    local mt mu mc ma st su sf
+    mt=$(free -m 2>/dev/null | awk '/^Mem:/{print $2}')
+    mu=$(free -m 2>/dev/null | awk '/^Mem:/{print $3}')
+    mc=$(free -m 2>/dev/null | awk '/^Mem:/{print $6}')
+    ma=$(free -m 2>/dev/null | awk '/^Mem:/{print $7}')
+    st=$(free -m 2>/dev/null | awk '/^Swap:/{print $2}')
+    su=$(free -m 2>/dev/null | awk '/^Swap:/{print $3}')
+    sf=$(free -m 2>/dev/null | awk '/^Swap:/{print $4}')
+    echo -e "  ${CYAN}💻 Оперативная память (RAM):${NC}"
+    echo -e "    └─ Всего:        ${GREEN}${mt} MB${NC}"
+    echo -e "    └─ Используется: ${YELLOW}${mu} MB${NC}"
+    echo -e "    └─ Кэш/Буферы:  ${BLUE}${mc} MB${NC}"
+    echo -e "    └─ Свободно:     ${GREEN}${ma} MB${NC}"
+    echo
+    echo -e "  ${CYAN}💽 Файл подкачки (ZRAM / Swap):${NC}"
+    if [ "${st:-0}" = "0" ]; then
+        echo -e "    └─ ${RED}ВЫКЛЮЧЕН (рекомендуется включить ZRAM!)${NC}"
+    else
+        lsblk 2>/dev/null | grep -q zram \
+            && echo -e "    └─ Тип: ${GREEN}ZRAM (сжатие в ОЗУ)${NC}" \
+            || echo -e "    └─ Тип: ${YELLOW}Disk Swap${NC}"
+        echo -e "    └─ Выделено:     ${GREEN}${st} MB${NC}"
+        echo -e "    └─ Используется: ${RED}${su} MB${NC}"
+        echo -e "    └─ Свободно:     ${GREEN}${sf} MB${NC}"
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+_mem_show_instructions() {
+    show_banner
+    print_submenu_header "$(tr_text MEM_INSTRUCTIONS)"
+    echo -e "  ${CYAN}${BOLD}ZRAM vs Disk Swap:${NC}"
+    echo -e "  ${GREEN}ZRAM${NC} — сжатие в ОЗУ, скорость = RAM. Идеален для VPN."
+    echo -e "       Обязателен для серверов 1-2 ГБ!"
+    echo -e "  ${YELLOW}Disk Swap${NC} — в 10-50× медленнее ZRAM. Только если ОЗУ < 512 МБ."
+    echo
+    echo -e "  ${CYAN}${BOLD}Лимиты памяти в docker-compose.yml (блок remnanode):${NC}"
+    echo
+    echo -e "  ${BOLD}▶ Сервер 1 ГБ RAM:${NC}"
+    echo -e "${CYAN}    environment:
+      - NODE_OPTIONS=--max-old-space-size=256
+    deploy:
+      resources:
+        limits:
+          memory: 768M${NC}"
+    echo
+    echo -e "  ${BOLD}▶ Сервер 2 ГБ RAM:${NC}"
+    echo -e "${CYAN}    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
+    deploy:
+      resources:
+        limits:
+          memory: 1536M${NC}"
+    echo
+    echo -e "  ${BOLD}▶ Сервер 4+ ГБ RAM:${NC}"
+    echo -e "${CYAN}    environment:
+      - NODE_OPTIONS=--max-old-space-size=1024
+    deploy:
+      resources:
+        limits:
+          memory: 3072M${NC}"
+    echo
+    echo -e "  ${YELLOW}После изменений: docker compose down && docker compose up -d${NC}"
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+_mem_install_hybrid() {
+    echo -e "${BLUE}Настройка гибридной памяти (ZRAM 50% + Disk Swap 2GB)...${NC}"
+    _pkg_install zram-tools bc
+    printf "ALGO=lz4\nPERCENT=50\nPRIORITY=100\n" | sudo tee /etc/default/zramswap >/dev/null
+    sudo systemctl restart zramswap >/dev/null 2>&1
+    sudo systemctl enable zramswap >/dev/null 2>&1
+    if [ ! -f /swapfile ]; then
+        echo -e "${BLUE}Создание Disk Swap 2GB (резервная страховка)...${NC}"
+        sudo fallocate -l 2G /swapfile 2>/dev/null \
+            || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 status=none
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile >/dev/null 2>&1
+        sudo swapon -p -2 /swapfile 2>/dev/null || sudo swapon /swapfile
+        grep -qE '^/swapfile\s' /etc/fstab \
+            || echo '/swapfile none swap sw,pri=-2 0 0' | sudo tee -a /etc/fstab >/dev/null
+    fi
+    echo -e "${GREEN}✅ Гибридная память: ZRAM (prio 100) + Swap (prio -2).${NC}"
+}
+
+_mem_install_zram() {
+    local pct=$1
+    echo -e "${BLUE}Установка ZRAM (${pct}%)...${NC}"
+    sudo swapoff -a 2>/dev/null || true
+    sudo rm -f /swapfile 2>/dev/null
+    sudo sed -i '/^\/swapfile/d' /etc/fstab 2>/dev/null
+    _pkg_install zram-tools bc
+    printf "ALGO=lz4\nPERCENT=%s\nPRIORITY=100\n" "$pct" | sudo tee /etc/default/zramswap >/dev/null
+    sudo systemctl restart zramswap >/dev/null 2>&1
+    sudo systemctl enable zramswap >/dev/null 2>&1
+    echo -e "${GREEN}✅ ZRAM ${pct}% активирован!${NC}"
+}
+
+_mem_install_swap() {
+    local sz=$1
+    echo -e "${BLUE}Создание Disk Swap ${sz}GB...${NC}"
+    sudo systemctl stop zramswap 2>/dev/null || true
+    sudo apt-get remove --purge zram-tools -y >/dev/null 2>&1 || true
+    sudo swapoff -a 2>/dev/null || true
+    sudo rm -f /swapfile 2>/dev/null
+    sudo fallocate -l "${sz}G" /swapfile \
+        || sudo dd if=/dev/zero of=/swapfile bs=1M count=$(( sz * 1024 )) status=none
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile >/dev/null 2>&1
+    sudo swapon /swapfile
+    grep -qE '^/swapfile\s' /etc/fstab \
+        || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+    echo -e "${GREEN}✅ Disk Swap ${sz}GB создан!${NC}"
+}
+
+_mem_remove_all() {
+    echo -e "${BLUE}Удаление ZRAM и Disk Swap...${NC}"
+    sudo systemctl stop zramswap 2>/dev/null || true
+    sudo systemctl disable zramswap 2>/dev/null || true
+    sudo apt-get remove --purge zram-tools -y >/dev/null 2>&1 || true
+    sudo swapoff -a 2>/dev/null || true
+    sudo rm -f /swapfile 2>/dev/null
+    sudo sed -i '/^\/swapfile/d' /etc/fstab 2>/dev/null
+    echo -e "${GREEN}✅ ZRAM и Swap полностью удалены.${NC}"
+}
+
+submenu_memory() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text GROUP_MEMORY)"
+
+        local ram_kb; ram_kb=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
+        local ram_mb=$(( ${ram_kb:-0} / 1024 ))
+        local ram_gb=$(( (ram_mb + 512) / 1024 ))
+        local rec_zram rec_swap
+        if   [ "$ram_mb" -le 1024 ]; then rec_zram=60; rec_swap=2
+        elif [ "$ram_mb" -le 2048 ]; then rec_zram=50; rec_swap=2
+        elif [ "$ram_mb" -le 4096 ]; then rec_zram=40; rec_swap=4
+        else                              rec_zram=25; rec_swap=4; fi
+
+        echo -e "  ${DIM}RAM: ${GREEN}${ram_gb} GB (${ram_mb} MB)${NC}  |  Swap: $(_mem_swap_status)"
+        echo
+        echo -e "  ${YELLOW}1)${NC} $(tr_text MEM_HYBRID)"
+        echo -e "     ${DIM}└ Рекомендовано: ZRAM ${rec_zram}% + Swap ${rec_swap}GB${NC}"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text MEM_ZRAM_ONLY)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text MEM_SWAP_ONLY)"
+        echo -e "  ${DIM}──────────────────────────────${NC}"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text MEM_REMOVE_ALL)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text MEM_SHOW_STATUS)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text MEM_INSTRUCTIONS)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        case $choice in
+            1) show_banner; _mem_install_hybrid; read -rp "$(tr_text PRESS_ENTER)" ;;
+            2) show_banner
+               echo -e "${YELLOW}$(tr_text MEM_ZRAM_PERCENT)${NC}"
+               read -rp "> " pct; pct=${pct:-60}
+               [[ "$pct" =~ ^[0-9]+$ ]] || { echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; sleep 1; continue; }
+               _mem_install_zram "$pct"; read -rp "$(tr_text PRESS_ENTER)" ;;
+            3) show_banner
+               echo -e "${YELLOW}$(tr_text MEM_SWAP_SIZE)${NC}"
+               read -rp "> " sz; sz=${sz:-2}
+               [[ "$sz" =~ ^[0-9]+$ ]] || { echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; sleep 1; continue; }
+               _mem_install_swap "$sz"; read -rp "$(tr_text PRESS_ENTER)" ;;
+            4) show_banner; _mem_remove_all; read -rp "$(tr_text PRESS_ENTER)" ;;
+            5) _mem_show_status ;;
+            6) _mem_show_instructions ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ══════════════════════════════════════════════════════════════════
+#                    REALITY TLS SCANNER
+# ══════════════════════════════════════════════════════════════════
+
+SCANNER_DIR="/opt/RealityTLScanner"
+SCANNER_BIN="$SCANNER_DIR/RealiTLScanner"
+SCANNER_GEO="$SCANNER_DIR/Country.mmdb"
+SCANNER_LIST="$SCANNER_DIR/targets.txt"
+
+_scan_install() {
+    export PATH=/usr/local/go/bin:$PATH
+    mkdir -p "$SCANNER_DIR/reports" 2>/dev/null
+
+    if [ ! -f "$SCANNER_BIN" ]; then
+        echo -e "${YELLOW}Устанавливаю RealiTLScanner (нужен Go для компиляции)...${NC}"
+        _pkg_install git curl wget
+
+        local go_arch="amd64"
+        [ "$(uname -m)" = "aarch64" ] && go_arch="arm64"
+        local go_ver
+        go_ver=$(curl -4 -fsSL --connect-timeout 20 'https://go.dev/VERSION?m=text' 2>/dev/null | head -1)
+        [[ "$go_ver" == go1.* ]] || go_ver="go1.22.6"
+        echo -e "${BLUE}Загрузка Go ${go_ver} (${go_arch})...${NC}"
+        curl -4 -sL --connect-timeout 120 \
+            -o /tmp/go.tar.gz \
+            "https://go.dev/dl/${go_ver}.linux-${go_arch}.tar.gz" || {
+            echo -e "${RED}❌ Не удалось загрузить Go.${NC}"; return 1; }
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+        rm /tmp/go.tar.gz
+        export PATH=/usr/local/go/bin:$PATH
+
+        local src="$SCANNER_DIR/src"
+        rm -rf "$src"
+        git clone https://github.com/xtls/RealiTLScanner.git "$src" || {
+            echo -e "${RED}❌ Не удалось клонировать репозиторий.${NC}"; return 1; }
+        echo -e "${CYAN}Компиляция...${NC}"
+        cd "$src" || return 1
+        go build -o "$SCANNER_BIN" && chmod +x "$SCANNER_BIN"
+        rm -rf "$src"
+        cd - >/dev/null
+        [ -f "$SCANNER_BIN" ] \
+            && echo -e "${GREEN}✅ RealiTLScanner установлен!${NC}" \
+            || { echo -e "${RED}❌ Ошибка компиляции.${NC}"; return 1; }
+    fi
+
+    if [ ! -f "$SCANNER_GEO" ]; then
+        echo -e "${BLUE}Загрузка GeoIP базы...${NC}"
+        curl -sL --connect-timeout 30 \
+            -o "$SCANNER_GEO" \
+            "https://github.com/Loyalsoldier/geoip/releases/latest/download/Country.mmdb" \
+            || echo -e "${YELLOW}⚠️ Не удалось загрузить GeoIP базу.${NC}"
+    fi
+}
+
+_scan_ensure() {
+    if [ ! -f "$SCANNER_BIN" ]; then
+        echo -e "${YELLOW}Сканер не установлен.${NC}"
+        read -rp "Установить сейчас? (y/n): " ans
+        [[ "$ans" =~ ^[YyДд]$ ]] || return 1
+        _scan_install || return 1
+    fi
+    export PATH=/usr/local/go/bin:$PATH
+    return 0
+}
+
+_scan_analyze() {
+    local file=$1
+    [ ! -f "$file" ] && return
+    local lines; lines=$(wc -l < "$file" 2>/dev/null)
+    [ "${lines:-0}" -le 1 ] && echo -e "${YELLOW}Результатов нет.${NC}" && return
+    echo -e "${GREEN}🏆 ТОП-10 лучших SNI:${NC}"
+    echo -e "${DIM}──────────────────────────────────────────${NC}"
+    awk -F, 'NR>1{
+        iss=tolower($4); w=9
+        if(iss~/google|apple|microsoft/)       w=1
+        else if(iss~/digicert|globalsign|sectigo/) w=2
+        else if(iss~/cloudflare/)              w=3
+        else if(iss~/lets encrypt|zerossl/)    w=4
+        if(w<9){ port=($6?$6:"443"); print w"|"$3"|"$1"|"port"|"$5"|"$4 }
+    }' "$file" | sort -t'|' -k1,1n | uniq | head -10 | \
+    while IFS='|' read -r w dom ip port geo iss; do
+        case $w in
+            1) echo -e "  💎 ${CYAN}${BOLD}${dom}${NC}" ;;
+            2|3) echo -e "  📍 ${GREEN}${dom}${NC}" ;;
+            *) echo -e "  🔸 ${dom}" ;;
+        esac
+        echo -e "     ${DIM}IP: ${ip}  Порт: ${YELLOW}${port}${NC}${DIM}  ГЕО: ${geo}  ${iss}${NC}"
+    done
+}
+
+_scan_single() {
+    _scan_ensure || return
+    show_banner
+    print_submenu_header "$(tr_text SCAN_SINGLE)"
+    echo -e "  ${CYAN}Проверяет конкретный IP/домен на пригодность для Reality-маскировки.${NC}"
+    echo
+    read -rp "$(tr_text SCAN_TARGET) " target
+    [ -z "$target" ] && return
+    read -rp "$(tr_text SCAN_PORT) " ports; ports=${ports:-443}
+
+    local scan_target="$target"
+    [[ "$target" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && scan_target="${target}/32"
+
+    local ts; ts=$(date +%s)
+    local out="$SCANNER_DIR/reports/scan_${ts}.csv"
+    echo "ip,feasible,cert-domain,cert-issuer,geo,port" > "$out"
+    cd "$SCANNER_DIR" || return
+
+    IFS=',' read -ra _PORT_ARR <<< "${ports// /}"
+    trap 'echo -e "\n${YELLOW}Прерывание...${NC}"' INT
+    for port in "${_PORT_ARR[@]}"; do
+        echo -e "${BLUE}──── Порт ${port} ────${NC}"
+        local tmp="$SCANNER_DIR/.tmp_${ts}.csv"
+        local log
+        log=$("$SCANNER_BIN" -addr "$scan_target" -port "$port" -timeout 5 -v -out "$tmp" 2>&1)
+        rm -f "$tmp"
+        local found=false
+        while IFS= read -r line; do
+            if [[ "$line" == *"Connected to target"* ]]; then
+                found=true
+                local feas ip tls alpn dom iss geo
+                feas=$(echo "$line" | grep -oP 'feasible=\K[^ ]+')
+                ip=$(echo   "$line" | grep -oP 'ip=\K[^ ]+')
+                tls=$(echo  "$line" | grep -oP 'tls=\K[^ "]+' | head -1)
+                alpn=$(echo "$line" | grep -oP 'alpn=\K[^ "]+' | head -1)
+                dom=$(echo  "$line" | grep -oP 'cert-domain=\K[^ "]+' | head -1)
+                iss=$(echo  "$line" | grep -oP 'cert-issuer=\K[^ "]+' | head -1)
+                geo=$(echo  "$line" | grep -oP 'geo=\K[^ ]+')
+                echo
+                echo -e "  🌐 IP:       ${ip:-?}"
+                [ "$feas" = "true" ] \
+                    && echo -e "  ${GREEN}✅ ПОДХОДИТ ДЛЯ REALITY${NC}" \
+                    || echo -e "  ${RED}❌ НЕ ПОДХОДИТ${NC}"
+                echo -e "  🔒 TLS:      ${tls:-?}    ⚡ ALPN: ${alpn:-?}"
+                echo -e "  📍 Домен:    ${dom:-?}"
+                echo -e "  🏢 Издатель: ${iss:-?}    🌍 ГЕО: ${geo:-?}"
+                echo
+                echo "${ip},${feas},${dom},${iss},${geo},${port}" >> "$out"
+            elif [[ "$line" == *"TLS handshake failed"* || "$line" == *"Cannot dial"* ]]; then
+                found=true
+                echo -e "  ${RED}❌ Соединение не установлено (TLS/connect error).${NC}"
+            fi
+        done <<< "$log"
+        $found || echo -e "  ${YELLOW}⚠️ Нет ответа от ${target}:${port}${NC}"
+    done
+    trap - INT
+    cd - >/dev/null
+
+    local cnt; cnt=$(( $(wc -l < "$out" 2>/dev/null) - 1 ))
+    [ "$cnt" -gt 0 ] && echo && _scan_analyze "$out"
+    echo
+    echo -e "${DIM}Отчёт: $out${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+_scan_mass() {
+    _scan_ensure || return
+    touch "$SCANNER_LIST"
+    if [ ! -s "$SCANNER_LIST" ]; then
+        show_banner
+        print_submenu_header "$(tr_text SCAN_MASS)"
+        echo -e "  ${YELLOW}Файл списка пуст: $SCANNER_LIST${NC}"
+        echo -e "  ${DIM}Добавьте цели через меню «Список целей».${NC}"
+        echo
+        read -rp "$(tr_text PRESS_ENTER)"; return
+    fi
+    show_banner
+    print_submenu_header "$(tr_text SCAN_MASS)"
+    local total; total=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null || echo 0)
+    echo -e "  ${CYAN}Целей в списке: ${YELLOW}$total${NC}"
+    echo
+    read -rp "$(tr_text SCAN_PORT) " ports; ports=${ports:-443}
+
+    local ts; ts=$(date +%s)
+    local out="$SCANNER_DIR/reports/mass_${ts}.csv"
+    echo "ip,feasible,cert-domain,cert-issuer,geo,port" > "$out"
+    cd "$SCANNER_DIR" || return
+
+    IFS=',' read -ra _PORT_ARR <<< "${ports// /}"
+    local done_cnt=0
+    trap 'echo -e "\n${YELLOW}Прерывание — сохраняем...${NC}"; break' INT
+    while IFS= read -r raw; do
+        [ -z "$raw" ] && continue
+        local t="$raw"
+        [[ "$t" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && t="${t}/32"
+        ((done_cnt++))
+        echo -ne "\r\033[K${CYAN}[$done_cnt/$total]${NC} ${YELLOW}${raw}${NC}..."
+        for port in "${_PORT_ARR[@]}"; do
+            local tmp="$SCANNER_DIR/.tmp_${ts}.csv"
+            local log
+            log=$("$SCANNER_BIN" -addr "$t" -port "$port" -timeout 5 -v -out "$tmp" 2>&1)
+            rm -f "$tmp"
+            while IFS= read -r line; do
+                if [[ "$line" == *"Connected to target"* ]]; then
+                    local feas ip dom iss geo
+                    feas=$(echo "$line" | grep -oP 'feasible=\K[^ ]+')
+                    ip=$(echo   "$line" | grep -oP 'ip=\K[^ ]+')
+                    dom=$(echo  "$line" | grep -oP 'cert-domain=\K[^ "]+' | head -1)
+                    iss=$(echo  "$line" | grep -oP 'cert-issuer=\K[^ "]+' | head -1)
+                    geo=$(echo  "$line" | grep -oP 'geo=\K[^ ]+')
+                    echo "${ip},${feas},${dom},${iss},${geo},${port}" >> "$out"
+                fi
+            done <<< "$log"
+        done
+    done < "$SCANNER_LIST"
+    trap - INT
+
+    echo -e "\r\033[K${GREEN}✅ Готово! (${done_cnt} целей просканировано)${NC}"
+    cd - >/dev/null
+    echo
+    _scan_analyze "$out"
+    echo
+    echo -e "${DIM}Отчёт: $out${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+_scan_manage_list() {
+    while true; do
+        show_banner
+        print_submenu_header "📋 Список целей"
+        touch "$SCANNER_LIST"
+        local cnt; cnt=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null || echo 0)
+        echo -e "  ${DIM}$SCANNER_LIST (${cnt} целей)${NC}"
+        echo
+        if [ "$cnt" -gt 0 ]; then
+            grep -n '.' "$SCANNER_LIST" 2>/dev/null | head -20 | \
+                while IFS=: read -r n line; do echo -e "  ${DIM}$n)${NC} $line"; done
+            [ "$cnt" -gt 20 ] && echo -e "  ${DIM}... и ещё $(( cnt - 20 )) записей${NC}"
+            echo
+        fi
+        echo -e "  ${YELLOW}1)${NC} ➕ Добавить цель (IP или домен)"
+        echo -e "  ${YELLOW}2)${NC} 🗑️  Очистить весь список"
+        echo -e "  ${YELLOW}3)${NC} ✏️  Открыть в nano"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        case $choice in
+            1) read -rp "IP или домен: " t
+               [ -n "$t" ] && echo "$t" >> "$SCANNER_LIST" \
+               && echo -e "${GREEN}✅ Добавлено: $t${NC}" && sleep 1 ;;
+            2) > "$SCANNER_LIST"; echo -e "${GREEN}✅ Список очищен.${NC}"; sleep 1 ;;
+            3) command -v nano >/dev/null 2>&1 && nano "$SCANNER_LIST" \
+               || { echo -e "${RED}nano не установлен.${NC}"; sleep 1; } ;;
+            0) return ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+_scan_reports() {
+    while true; do
+        show_banner
+        print_submenu_header "📂 Отчёты сканера"
+        local rdir="$SCANNER_DIR/reports"
+        mkdir -p "$rdir"
+        local i=1
+        declare -a _rfiles=()
+        while IFS= read -r f; do
+            local base; base=$(basename "$f")
+            local sz; sz=$(du -sh "$f" | awk '{print $1}')
+            local rlines; rlines=$(wc -l < "$f" 2>/dev/null)
+            echo -e "  ${YELLOW}$i)${NC} ${base} ${DIM}(${sz}, ${rlines} строк)${NC}"
+            _rfiles[$i]="$f"; ((i++))
+        done < <(ls -t "$rdir"/*.csv 2>/dev/null)
+        [ ${#_rfiles[@]} -eq 0 ] && echo -e "  ${YELLOW}Отчётов нет.${NC}"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "Номер для анализа (0 = назад): " sel
+        [ "$sel" = "0" ] || [ -z "$sel" ] && return
+        if [[ "$sel" =~ ^[0-9]+$ ]] && [ -n "${_rfiles[$sel]:-}" ]; then
+            show_banner
+            print_submenu_header "📊 $(basename "${_rfiles[$sel]}")"
+            _scan_analyze "${_rfiles[$sel]}"
+            echo
+            read -rp "$(tr_text PRESS_ENTER)"
+        fi
+    done
+}
+
+submenu_scanner() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text GROUP_SCANNER)"
+        echo -e "  ${DIM}Поиск идеальных SNI-доменов для маскировки Reality/VLESS.${NC}"
+        local _sc_status
+        [ -f "$SCANNER_BIN" ] \
+            && _sc_status="${GREEN}✅ Установлен${NC}" \
+            || _sc_status="${RED}❌ Не установлен${NC}"
+        echo -e "  ${DIM}Статус сканера: $_sc_status${NC}"
+        echo
+        echo -e "  ${YELLOW}1)${NC} $(tr_text SCAN_SINGLE)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SCAN_MASS)"
+        echo -e "  ${YELLOW}3)${NC} 📋 Список целей"
+        echo -e "  ${YELLOW}4)${NC} 📂 Отчёты"
+        echo -e "  ${DIM}──────────────────────────────${NC}"
+        echo -e "  ${YELLOW}5)${NC} 🔧 Установить / переустановить сканер"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+        case $choice in
+            1) _scan_single ;;
+            2) _scan_mass ;;
+            3) _scan_manage_list ;;
+            4) _scan_reports ;;
+            5) show_banner; _scan_install; read -rp "$(tr_text PRESS_ENTER)" ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+# ══════════════════════════════════════════════════════════════════
 #                        ГЛАВНОЕ МЕНЮ
 # ══════════════════════════════════════════════════════════════════
 
 show_main_menu() {
     while true; do
-        show_banner
+        show_dashboard
         auto_check_update
         
         echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
@@ -1857,6 +2915,10 @@ show_main_menu() {
         echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
         echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SERVER)"
         echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_THIRDPARTY)"
+        echo -e "  ${YELLOW}7)${NC} 🛡️  Белый список IP"
+        echo -e "  ${YELLOW}8)${NC} $(tr_text GROUP_CLEANER)"
+        echo -e "  ${YELLOW}9)${NC} $(tr_text GROUP_MEMORY)"
+        echo -e "  ${YELLOW}10)${NC} $(tr_text GROUP_SCANNER)"
         echo
         echo -e "  ${DIM}─────────────────────────────────────────${NC}"
         echo -e "  ${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
@@ -1871,6 +2933,10 @@ show_main_menu() {
             4) submenu_maintenance ;;
             5) submenu_server ;;
             6) submenu_thirdparty ;;
+            7) submenu_whitelist ;;
+            8) submenu_cleaner ;;
+            9) submenu_memory ;;
+            10) submenu_scanner ;;
             0) echo -e "${GREEN}$(tr_text MSG_EXIT)${NC}"; exit 0 ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
