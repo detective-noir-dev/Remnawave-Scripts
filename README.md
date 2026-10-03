@@ -1,6 +1,6 @@
 # Remnawave-Scripts (Русская версия)
 
-![версия](https://img.shields.io/badge/версия-1.4.7-blue)
+![версия](https://img.shields.io/badge/версия-1.5.0-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -37,6 +37,9 @@ Remnawave-Scripts — это кроссплатформенный Bash-скри�
   - ⚡ Установка, удаление и управление Hysteria2
 - **🛡️ Установка zapret** ⭐ v1.4.0
   - Установка одной командой прямо из меню
+- **☁️ Cloudflare WARP** ⭐ v1.5.0
+  - Установка WARP в режиме SOCKS5-прокси с выбором порта
+  - Статус, включение, отключение и полное удаление
 - **🔧 Сторонние скрипты** ⭐ v1.4.1+
   - 🌐 Быстрая установка Remnawave от EGames
   - 🤖 Установка Reshala (Remnawave Bedolaga)
@@ -117,7 +120,7 @@ rw-scripts
 | 2 | 📊 Монитор ресурсов | Свободная память, htop, Системная информация (neofetch) |
 | 3 | 🔐 Сеть и порты | Подменю управления портами |
 | 4 | ⚙️ Обслуживание | Проверка обновлений, Обновление системных пакетов, Удаление |
-| 5 | 🖥️ Настройка сервера | SSH порт, Zapret, Hysteria2 |
+| 5 | 🖥️ Настройка сервера | SSH порт, Zapret, Hysteria2, Cloudflare WARP |
 | 6 | 🔧 Сторонние скрипты | Remnawave (EGames), Reshala, Multitest |
 | 7 | 🧹 Очистка системы | APT, journald, Docker, /tmp, Snap, анализатор диска |
 | 8 | 🧠 Память и Swap | ZRAM, Disk Swap, гибридный режим, инструкция Docker |
@@ -176,6 +179,7 @@ rw-scripts
 1) 🔑 Сменить SSH порт
 2) 🛡️  Установка zapret
 3) ⚡ Hysteria2
+4) ☁️  Cloudflare WARP
 0) ⬅️  Назад
 ```
 
@@ -201,6 +205,23 @@ rw-scripts
 7) ⬆️  Обновить Hysteria2
 0) ⬅️  Назад
 ```
+
+#### ☁️ Cloudflare WARP (группа 5 → пункт 4)
+
+Устанавливает Cloudflare WARP в режиме прокси (SOCKS5 на `127.0.0.1:<порт>`, по умолчанию 40000). Поддерживаются Ubuntu и Debian, нужны права root.
+
+**Подменю Cloudflare WARP:**
+
+```
+1) Установка WARP
+2) Статус WARP
+3) Отключить WARP
+4) Включить WARP
+5) Удалить WARP
+0) ⬅️  Назад
+```
+
+После установки показываются порт, внешний IP и страна. Использовать прокси: `export ALL_PROXY=socks5://127.0.0.1:<порт>`.
 
 ---
 
@@ -352,7 +373,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.4.7
+**Версия:** 1.5.0
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```

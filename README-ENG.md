@@ -1,6 +1,6 @@
 # Remnawave-Scripts (English Version)
 
-![version](https://img.shields.io/badge/version-1.4.7-blue)
+![version](https://img.shields.io/badge/version-1.5.0-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -37,6 +37,9 @@ It also includes a self-update system from GitHub and allows you to uninstall th
   - ⚡ Install, remove, and manage Hysteria2
 - **🛡️ Zapret Installation** ⭐ v1.4.0
   - One-command installation directly from the menu
+- **☁️ Cloudflare WARP** ⭐ v1.5.0
+  - Install WARP as a SOCKS5 proxy with a custom port
+  - Status, enable, disable and full removal
 - **🔧 Third-party Scripts** ⭐ v1.4.1+
   - 🌐 Quick installation of Remnawave by EGames
   - 🤖 Installation of Reshala (Remnawave Bedolaga)
@@ -117,7 +120,7 @@ Or directly:
 | 2 | 📊 Resource Monitor | Free memory, htop, System info (neofetch) |
 | 3 | 🔐 Network & Ports | Port management submenu |
 | 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
-| 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2 |
+| 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2, Cloudflare WARP |
 | 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala, Multitest |
 | 7 | 🧹 System Cleaner | APT, journald, Docker, /tmp, Snap, disk analyzer |
 | 8 | 🧠 Memory & Swap | ZRAM, Disk Swap, hybrid mode, Docker guide |
@@ -176,6 +179,7 @@ Displays information about:
 1) 🔑 Change SSH Port
 2) 🛡️  Install Zapret
 3) ⚡ Hysteria2
+4) ☁️  Cloudflare WARP
 0) ⬅️  Back
 ```
 
@@ -201,6 +205,23 @@ Runs zapret installation with one command directly from the menu without manual 
 7) ⬆️  Update Hysteria2
 0) ⬅️  Back
 ```
+
+#### ☁️ Cloudflare WARP (Group 5 → Item 4)
+
+Installs Cloudflare WARP in proxy mode (SOCKS5 on `127.0.0.1:<port>`, default 40000). Ubuntu and Debian are supported, root is required.
+
+**Cloudflare WARP Submenu:**
+
+```
+1) Install WARP
+2) WARP status
+3) Disable WARP
+4) Enable WARP
+5) Uninstall WARP
+0) ⬅️  Back
+```
+
+After installation the port, external IP and country are shown. To use the proxy: `export ALL_PROXY=socks5://127.0.0.1:<port>`.
 
 ---
 
@@ -352,7 +373,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.4.7
+**Version:** 1.5.0
 **Release Date:** June 2026
 **License:** MIT
 ```

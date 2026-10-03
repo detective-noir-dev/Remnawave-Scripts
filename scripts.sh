@@ -174,6 +174,37 @@ tr_text() {
                 ZAPRET_INSTALLING)    echo "Устанавливаю zapret..." ;;
                 ZAPRET_DONE)          echo "Zapret успешно установлен!" ;;
                 ZAPRET_FAIL)          echo "Ошибка при установке zapret." ;;
+                SUB_WARP)             echo "☁️  Cloudflare WARP" ;;
+                SUB_WARP_INSTALL)     echo "Установка WARP" ;;
+                SUB_WARP_STATUS)      echo "Статус WARP" ;;
+                SUB_WARP_DISCONNECT)  echo "Отключить WARP" ;;
+                SUB_WARP_CONNECT)     echo "Включить WARP" ;;
+                SUB_WARP_UNINSTALL)   echo "Удалить WARP" ;;
+                WARP_NOT_INSTALLED)   echo "WARP не установлен. Сначала установите его." ;;
+                WARP_STATUS_OK)       echo "WARP подключён" ;;
+                WARP_STATUS_BAD)      echo "WARP НЕ подключён" ;;
+                WARP_ALREADY_OFF)     echo "WARP уже отключён." ;;
+                WARP_ALREADY_ON)      echo "WARP уже подключён." ;;
+                WARP_DISCONNECTED)    echo "WARP отключён." ;;
+                WARP_CONNECTED)       echo "WARP подключён." ;;
+                WARP_UNINSTALL_CONFIRM) echo "Полностью удалить Cloudflare WARP? (y/N)" ;;
+                WARP_UNINSTALLING)    echo "Удаляю WARP..." ;;
+                WARP_UNINSTALLED)     echo "WARP удалён." ;;
+                WARP_CANCELLED)       echo "Отменено." ;;
+                WARP_PORT_PROMPT)     echo "Введите порт для WARP прокси (по умолчанию 40000):" ;;
+                WARP_PORT_INVALID)    echo "Неверный порт, допустимо 1-65535." ;;
+                WARP_ROOT_REQUIRED)   echo "Для установки WARP нужны права root." ;;
+                WARP_OS_UNSUPPORTED)  echo "Поддерживаются только Ubuntu и Debian." ;;
+                WARP_INSTALLING)      echo "Устанавливаю Cloudflare WARP..." ;;
+                WARP_REPO_FAIL)       echo "Не удалось добавить репозиторий Cloudflare." ;;
+                WARP_PKG_FAIL)        echo "Не удалось установить пакет cloudflare-warp." ;;
+                WARP_CONFIG_FAIL)     echo "Не удалось настроить WARP (регистрация/порт/режим)." ;;
+                WARP_CONNECT_FAIL)    echo "Не удалось подключиться к WARP." ;;
+                WARP_DONE)            echo "WARP установлен и подключён!" ;;
+                WARP_PORT_LABEL)      echo "Порт прокси" ;;
+                WARP_IP_LABEL)        echo "Внешний IP" ;;
+                WARP_COUNTRY_LABEL)   echo "Страна" ;;
+                WARP_CMDS)            echo "Команды управления" ;;
                 # === ПОДМЕНЮ: Сторонние скрипты ===
                 GROUP_THIRDPARTY)     echo "🔧 Сторонние скрипты" ;;
                 SUB_EGAMES_RW)        echo "🌐 Remnawave (EGames)" ;;
@@ -337,6 +368,37 @@ tr_text() {
                 ZAPRET_INSTALLING)    echo "Installing zapret..." ;;
                 ZAPRET_DONE)          echo "Zapret installed successfully!" ;;
                 ZAPRET_FAIL)          echo "Failed to install zapret." ;;
+                SUB_WARP)             echo "☁️  Cloudflare WARP" ;;
+                SUB_WARP_INSTALL)     echo "Install WARP" ;;
+                SUB_WARP_STATUS)      echo "WARP status" ;;
+                SUB_WARP_DISCONNECT)  echo "Disable WARP" ;;
+                SUB_WARP_CONNECT)     echo "Enable WARP" ;;
+                SUB_WARP_UNINSTALL)   echo "Uninstall WARP" ;;
+                WARP_NOT_INSTALLED)   echo "WARP is not installed. Install it first." ;;
+                WARP_STATUS_OK)       echo "WARP is connected" ;;
+                WARP_STATUS_BAD)      echo "WARP is NOT connected" ;;
+                WARP_ALREADY_OFF)     echo "WARP is already disconnected." ;;
+                WARP_ALREADY_ON)      echo "WARP is already connected." ;;
+                WARP_DISCONNECTED)    echo "WARP disconnected." ;;
+                WARP_CONNECTED)       echo "WARP connected." ;;
+                WARP_UNINSTALL_CONFIRM) echo "Remove Cloudflare WARP completely? (y/N)" ;;
+                WARP_UNINSTALLING)    echo "Removing WARP..." ;;
+                WARP_UNINSTALLED)     echo "WARP removed." ;;
+                WARP_CANCELLED)       echo "Cancelled." ;;
+                WARP_PORT_PROMPT)     echo "Enter WARP proxy port (default 40000):" ;;
+                WARP_PORT_INVALID)    echo "Invalid port, must be 1-65535." ;;
+                WARP_ROOT_REQUIRED)   echo "Root privileges are required to install WARP." ;;
+                WARP_OS_UNSUPPORTED)  echo "Only Ubuntu and Debian are supported." ;;
+                WARP_INSTALLING)      echo "Installing Cloudflare WARP..." ;;
+                WARP_REPO_FAIL)       echo "Failed to add Cloudflare repository." ;;
+                WARP_PKG_FAIL)        echo "Failed to install cloudflare-warp package." ;;
+                WARP_CONFIG_FAIL)     echo "Failed to configure WARP (registration/port/mode)." ;;
+                WARP_CONNECT_FAIL)    echo "Failed to connect to WARP." ;;
+                WARP_DONE)            echo "WARP installed and connected!" ;;
+                WARP_PORT_LABEL)      echo "Proxy port" ;;
+                WARP_IP_LABEL)        echo "External IP" ;;
+                WARP_COUNTRY_LABEL)   echo "Country" ;;
+                WARP_CMDS)            echo "Management commands" ;;
                 # === SUBMENU: Third-party Scripts ===
                 GROUP_THIRDPARTY)     echo "🔧 Third-party Scripts" ;;
                 SUB_EGAMES_RW)        echo "🌐 Remnawave (EGames)" ;;
@@ -1661,6 +1723,203 @@ install_zapret() {
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
+# ====== УСТАНОВКА CLOUDFLARE WARP ======
+install_warp() {
+    echo -e "${BLUE}☁️  $(tr_text WARP_INSTALLING)${NC}"
+    echo
+
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${RED}❌ $(tr_text WARP_ROOT_REQUIRED)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    # shellcheck disable=SC1091
+    if [ -f /etc/os-release ]; then . /etc/os-release; fi
+    if [[ "$ID" != "ubuntu" && "$ID" != "debian" ]]; then
+        echo -e "${RED}❌ $(tr_text WARP_OS_UNSUPPORTED)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    local warp_port
+    while true; do
+        echo -e "${BLUE}$(tr_text WARP_PORT_PROMPT)${NC}"
+        read -rp "> " warp_port
+        warp_port="${warp_port:-40000}"
+        if [[ "$warp_port" =~ ^[0-9]+$ ]] && (( warp_port >= 1 && warp_port <= 65535 )); then
+            break
+        fi
+        echo -e "${RED}$(tr_text WARP_PORT_INVALID)${NC}"
+    done
+
+    apt-get update -y
+    apt-get install -y curl gnupg2 apt-transport-https lsb-release ca-certificates
+
+    if ! curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
+        || ! echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
+            > /etc/apt/sources.list.d/cloudflare-client.list; then
+        echo -e "${RED}❌ $(tr_text WARP_REPO_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    apt-get update -y
+    if ! apt-get install -y cloudflare-warp; then
+        echo -e "${RED}❌ $(tr_text WARP_PKG_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if ! { warp-cli --accept-tos registration new \
+        && warp-cli --accept-tos proxy port "$warp_port" \
+        && warp-cli --accept-tos mode proxy; }; then
+        echo -e "${RED}❌ $(tr_text WARP_CONFIG_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if ! timeout 15 warp-cli --accept-tos connect; then
+        echo -e "${RED}❌ $(tr_text WARP_CONNECT_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+    sleep 3
+
+    local warp_ip country
+    warp_ip=$(curl --socks5 "127.0.0.1:$warp_port" -s -m 10 https://ifconfig.me)
+    [ -n "$warp_ip" ] && country=$(curl --socks5 "127.0.0.1:$warp_port" -s -m 10 "https://ipapi.co/$warp_ip/country_name/")
+
+    echo
+    echo -e "${GREEN}✅ $(tr_text WARP_DONE)${NC}"
+    echo -e "  ${BOLD}$(tr_text WARP_PORT_LABEL):${NC} $warp_port"
+    [ -n "$warp_ip" ] && echo -e "  ${BOLD}$(tr_text WARP_IP_LABEL):${NC} $warp_ip"
+    [ -n "$country" ] && [ "$country" != "Undefined" ] && echo -e "  ${BOLD}$(tr_text WARP_COUNTRY_LABEL):${NC} $country"
+    echo
+    echo -e "${CYAN}$(tr_text WARP_CMDS):${NC}"
+    echo -e "  ${DIM}warp-cli status | warp-cli disconnect | warp-cli connect | warp-cli settings list${NC}"
+    echo -e "  ${DIM}export ALL_PROXY=socks5://127.0.0.1:$warp_port${NC}"
+
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+_warp_installed() {
+    if ! command -v warp-cli >/dev/null 2>&1; then
+        echo -e "${RED}❌ $(tr_text WARP_NOT_INSTALLED)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+}
+
+_warp_is_connected() { warp-cli --accept-tos status 2>/dev/null | grep -q "Connected"; }
+
+# ====== СТАТУС CLOUDFLARE WARP ======
+warp_status() {
+    _warp_installed || return 1
+    local status_output
+    status_output=$(warp-cli --accept-tos status 2>/dev/null)
+
+    if echo "$status_output" | grep -q "Connected"; then
+        echo -e "${GREEN}✅ $(tr_text WARP_STATUS_OK)${NC}"
+        local port warp_ip country
+        port=$(warp-cli --accept-tos settings list 2>/dev/null | grep "WarpProxy on port" | awk '{print $NF}')
+        echo
+        if [ -n "$port" ]; then
+            warp_ip=$(curl --socks5 "127.0.0.1:$port" -s -m 10 https://ifconfig.me)
+            [ -n "$warp_ip" ] && country=$(curl --socks5 "127.0.0.1:$port" -s -m 10 "https://ipapi.co/$warp_ip/country_name/")
+            echo -e "  ${BOLD}$(tr_text WARP_PORT_LABEL):${NC} $port"
+            [ -n "$warp_ip" ] && echo -e "  ${BOLD}$(tr_text WARP_IP_LABEL):${NC} $warp_ip"
+            [ -n "$country" ] && [ "$country" != "Undefined" ] && echo -e "  ${BOLD}$(tr_text WARP_COUNTRY_LABEL):${NC} $country"
+        fi
+    else
+        echo -e "${RED}❌ $(tr_text WARP_STATUS_BAD)${NC}"
+        echo "$status_output"
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+# ====== ОТКЛЮЧЕНИЕ CLOUDFLARE WARP ======
+warp_disconnect() {
+    _warp_installed || return 1
+    if _warp_is_connected; then
+        if warp-cli --accept-tos disconnect >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ $(tr_text WARP_DISCONNECTED)${NC}"
+        else
+            echo -e "${RED}❌ $(tr_text WARP_CONNECT_FAIL)${NC}"
+        fi
+    else
+        echo -e "${YELLOW}ℹ️  $(tr_text WARP_ALREADY_OFF)${NC}"
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+# ====== ВКЛЮЧЕНИЕ CLOUDFLARE WARP ======
+warp_connect() {
+    _warp_installed || return 1
+    if _warp_is_connected; then
+        echo -e "${YELLOW}ℹ️  $(tr_text WARP_ALREADY_ON)${NC}"
+    elif warp-cli --accept-tos connect >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ $(tr_text WARP_CONNECTED)${NC}"
+    else
+        echo -e "${RED}❌ $(tr_text WARP_CONNECT_FAIL)${NC}"
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+# ====== УДАЛЕНИЕ CLOUDFLARE WARP ======
+uninstall_warp() {
+    _warp_installed || return 1
+    read -rp "$(tr_text WARP_UNINSTALL_CONFIRM) " ans
+    if [[ ! "$ans" =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}$(tr_text WARP_CANCELLED)${NC}"
+        sleep 1
+        return 0
+    fi
+
+    echo -e "${BLUE}$(tr_text WARP_UNINSTALLING)${NC}"
+    _warp_is_connected && warp-cli --accept-tos disconnect >/dev/null 2>&1
+    warp-cli --accept-tos registration delete >/dev/null 2>&1
+    apt-get purge -y cloudflare-warp >/dev/null 2>&1
+    apt-get autoremove -y >/dev/null 2>&1
+    rm -f /etc/apt/sources.list.d/cloudflare-client.list /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+
+    echo -e "${GREEN}✅ $(tr_text WARP_UNINSTALLED)${NC}"
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+# ====== ПОДМЕНЮ: CLOUDFLARE WARP ======
+submenu_warp() {
+    while true; do
+        show_banner
+        print_submenu_header "$(tr_text SUB_WARP)"
+
+        echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_WARP_INSTALL)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_WARP_STATUS)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_WARP_DISCONNECT)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_WARP_CONNECT)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_WARP_UNINSTALL)"
+        echo
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
+        echo
+        read -rp "> " choice
+
+        case $choice in
+            1) show_banner; install_warp ;;
+            2) show_banner; warp_status ;;
+            3) show_banner; warp_disconnect ;;
+            4) show_banner; warp_connect ;;
+            5) show_banner; uninstall_warp ;;
+            0) break ;;
+            *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
 # ====== УСТАНОВКА REMNAWAVE ОТ EGAMES ======
 install_egames_remnawave() {
     echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
@@ -1796,6 +2055,7 @@ submenu_server() {
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_SSH_PORT)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_ZAPRET)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_HY2_SUBMENU)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_WARP)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -1805,6 +2065,7 @@ submenu_server() {
             1) show_banner; change_ssh_port ;;
             2) show_banner; install_zapret ;;
             3) submenu_hysteria2 ;;
+            4) submenu_warp ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
