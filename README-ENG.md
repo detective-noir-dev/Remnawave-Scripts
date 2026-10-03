@@ -37,9 +37,11 @@ It also includes a self-update system from GitHub and allows you to uninstall th
   - ⚡ Install, remove, and manage Hysteria2
 - **🛡️ Zapret Installation** ⭐ v1.4.0
   - One-command installation directly from the menu
-- **☁️ Cloudflare WARP** ⭐ v1.5.0
-  - Install WARP as a SOCKS5 proxy with a custom port
-  - Status, enable, disable and full removal
+- **☁️ Cloudflare WARP** ⭐ NEW in v1.5.0
+  - 📥 Install WARP as a SOCKS5 proxy with a custom port (default 40000)
+  - 📋 Status: connection, proxy port, external IP and country
+  - 🛑 Disable and 🟢 enable without uninstalling
+  - 🗑️ Full removal (package, repository, key) with confirmation
 - **🔧 Third-party Scripts** ⭐ v1.4.1+
   - 🌐 Quick installation of Remnawave by EGames
   - 🤖 Installation of Reshala (Remnawave Bedolaga)
@@ -206,7 +208,7 @@ Runs zapret installation with one command directly from the menu without manual 
 0) ⬅️  Back
 ```
 
-#### ☁️ Cloudflare WARP (Group 5 → Item 4)
+#### ☁️ Cloudflare WARP (Group 5 → Item 4) ⭐ NEW in v1.5.0
 
 Installs Cloudflare WARP in proxy mode (SOCKS5 on `127.0.0.1:<port>`, default 40000). Ubuntu and Debian are supported, root is required.
 
