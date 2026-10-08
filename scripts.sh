@@ -1723,6 +1723,48 @@ install_zapret() {
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
+# Запускает команду под крутилкой, вывод скрыт; при ошибке показывает хвост лога
+_run_spinner() {
+    local log rc spinner_pid
+    log=$(mktemp)
+    loading_bar &
+    spinner_pid=$!
+    "$@" >"$log" 2>&1
+    rc=$?
+    kill "$spinner_pid" >/dev/null 2>&1
+    wait "$spinner_pid" 2>/dev/null
+    tput cnorm
+    printf "\r%*s\r" 40 ""
+    [ $rc -ne 0 ] && tail -n 15 "$log"
+    rm -f "$log"
+    return $rc
+}
+
+_warp_prepare_repo() {
+    apt-get update -y \
+        && apt-get install -y curl gnupg2 apt-transport-https lsb-release ca-certificates \
+        && curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
+        && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
+            > /etc/apt/sources.list.d/cloudflare-client.list \
+        && apt-get update -y
+}
+
+_warp_configure() {
+    warp-cli --accept-tos registration new \
+        && warp-cli --accept-tos proxy port "$1" \
+        && warp-cli --accept-tos mode proxy
+}
+
+_warp_connect_wait() {
+    timeout 15 warp-cli --accept-tos connect && sleep 3
+}
+
+# Страна выхода через Cloudflare trace (без лимитов, возвращает код, напр. "NL")
+_warp_country() {
+    curl --socks5 "127.0.0.1:$1" -s -m 10 https://www.cloudflare.com/cdn-cgi/trace 2>/dev/null \
+        | sed -n 's/^loc=\([A-Z]\{2\}\)$/\1/p'
+}
+
 # ====== УСТАНОВКА CLOUDFLARE WARP ======
 install_warp() {
     echo -e "${BLUE}☁️  $(tr_text WARP_INSTALLING)${NC}"
@@ -1753,52 +1795,45 @@ install_warp() {
         echo -e "${RED}$(tr_text WARP_PORT_INVALID)${NC}"
     done
 
-    apt-get update -y
-    apt-get install -y curl gnupg2 apt-transport-https lsb-release ca-certificates
+    export DEBIAN_FRONTEND=noninteractive
 
-    if ! curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
-        || ! echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
-            > /etc/apt/sources.list.d/cloudflare-client.list; then
+    _run_spinner _warp_prepare_repo || {
         echo -e "${RED}❌ $(tr_text WARP_REPO_FAIL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
-    fi
+    }
 
-    apt-get update -y
-    if ! apt-get install -y cloudflare-warp; then
+    _run_spinner apt-get install -y cloudflare-warp || {
         echo -e "${RED}❌ $(tr_text WARP_PKG_FAIL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
-    fi
+    }
 
-    if ! { warp-cli --accept-tos registration new \
-        && warp-cli --accept-tos proxy port "$warp_port" \
-        && warp-cli --accept-tos mode proxy; }; then
+    _run_spinner _warp_configure "$warp_port" || {
         echo -e "${RED}❌ $(tr_text WARP_CONFIG_FAIL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
-    fi
+    }
 
-    if ! timeout 15 warp-cli --accept-tos connect; then
+    _run_spinner _warp_connect_wait || {
         echo -e "${RED}❌ $(tr_text WARP_CONNECT_FAIL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
-    fi
-    sleep 3
+    }
 
     local warp_ip country
     warp_ip=$(curl --socks5 "127.0.0.1:$warp_port" -s -m 10 https://ifconfig.me)
-    [ -n "$warp_ip" ] && country=$(curl --socks5 "127.0.0.1:$warp_port" -s -m 10 "https://ipapi.co/$warp_ip/country_name/")
+    country=$(_warp_country "$warp_port")
 
     echo
     echo -e "${GREEN}✅ $(tr_text WARP_DONE)${NC}"
     echo -e "  ${BOLD}$(tr_text WARP_PORT_LABEL):${NC} $warp_port"
     [ -n "$warp_ip" ] && echo -e "  ${BOLD}$(tr_text WARP_IP_LABEL):${NC} $warp_ip"
-    [ -n "$country" ] && [ "$country" != "Undefined" ] && echo -e "  ${BOLD}$(tr_text WARP_COUNTRY_LABEL):${NC} $country"
+    [ -n "$country" ] && echo -e "  ${BOLD}$(tr_text WARP_COUNTRY_LABEL):${NC} $country"
     echo
-    echo -e "${CYAN}$(tr_text WARP_CMDS):${NC}"
-    echo -e "  ${DIM}warp-cli status | warp-cli disconnect | warp-cli connect | warp-cli settings list${NC}"
-    echo -e "  ${DIM}export ALL_PROXY=socks5://127.0.0.1:$warp_port${NC}"
+    echo -e "${BOLD}${CYAN}▶ $(tr_text WARP_CMDS):${NC}"
+    echo -e "  ${BOLD}${YELLOW}warp-cli status${NC} | ${BOLD}${YELLOW}warp-cli disconnect${NC} | ${BOLD}${YELLOW}warp-cli connect${NC} | ${BOLD}${YELLOW}warp-cli settings list${NC}"
+    echo -e "  ${BOLD}${GREEN}export ALL_PROXY=socks5://127.0.0.1:$warp_port${NC}"
 
     echo
     read -rp "$(tr_text PRESS_ENTER)"
@@ -1827,10 +1862,10 @@ warp_status() {
         echo
         if [ -n "$port" ]; then
             warp_ip=$(curl --socks5 "127.0.0.1:$port" -s -m 10 https://ifconfig.me)
-            [ -n "$warp_ip" ] && country=$(curl --socks5 "127.0.0.1:$port" -s -m 10 "https://ipapi.co/$warp_ip/country_name/")
+            country=$(_warp_country "$port")
             echo -e "  ${BOLD}$(tr_text WARP_PORT_LABEL):${NC} $port"
             [ -n "$warp_ip" ] && echo -e "  ${BOLD}$(tr_text WARP_IP_LABEL):${NC} $warp_ip"
-            [ -n "$country" ] && [ "$country" != "Undefined" ] && echo -e "  ${BOLD}$(tr_text WARP_COUNTRY_LABEL):${NC} $country"
+            [ -n "$country" ] && echo -e "  ${BOLD}$(tr_text WARP_COUNTRY_LABEL):${NC} $country"
         fi
     else
         echo -e "${RED}❌ $(tr_text WARP_STATUS_BAD)${NC}"
