@@ -198,6 +198,7 @@ Runs zapret installation with one command directly from the menu without manual 
 ║              ⚡ Hysteria2                 ║
 ╚════════════════════════════════════════════╝
 
+── For Mihomo core ──
 1) ⚡ Install Hysteria2
 2) 🗑️  Remove Hysteria2
 3) 📝 Edit Config
@@ -205,6 +206,9 @@ Runs zapret installation with one command directly from the menu without manual 
 5) 📋 Logs
 6) 🔍 Check Version
 7) ⬆️  Update Hysteria2
+
+── For Remnawave node ──
+8) 🔧 Configure Hysteria2 for node (Remnanode)
 0) ⬅️  Back
 ```
 

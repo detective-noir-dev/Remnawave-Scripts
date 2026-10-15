@@ -170,6 +170,23 @@ tr_text() {
                 HY2_UPDATED)          echo "Hysteria2 успешно обновлён!" ;;
                 HY2_UPDATE_FAIL)      echo "Ошибка при обновлении Hysteria2." ;;
                 SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
+                SUB_HY2_REMNA)        echo "🔧 Настроить Hysteria2 для ноды (Remnanode)" ;;
+                HY2_GROUP_MIHOMO)     echo "── Для ядра Mihomo (отдельный сервер Hysteria2) ──" ;;
+                HY2_GROUP_NODE)       echo "── Для ноды Remnawave (Xray-инбаунд) ──" ;;
+                HY2R_NO_COMPOSE)      echo "Не найден /opt/remnanode/docker-compose.yml. Remnanode установлен?" ;;
+                HY2R_DOMAIN_PROMPT)   echo "Введите домен (сертификат Let's Encrypt уже должен быть выпущен):" ;;
+                HY2R_DOMAIN_INVALID)  echo "Неверный домен." ;;
+                HY2R_NO_CERT)         echo "Сертификат не найден:" ;;
+                HY2R_PORT_PROMPT)     echo "Введите UDP-порт для Hysteria2 (по умолчанию 443):" ;;
+                HY2R_NO_VOLUMES)      echo "В docker-compose.yml нет секции 'volumes:'. Добавьте монтирования вручную." ;;
+                HY2R_COMPOSE_DONE)    echo "docker-compose.yml обновлён (бэкап: docker-compose.yml.bak)." ;;
+                HY2R_HOOK_DONE)       echo "Хук продления сертификата создан." ;;
+                HY2R_RESTART_CONFIRM) echo "Перезапустить Remnanode сейчас (docker compose down && up -d)? (y/N)" ;;
+                HY2R_RESTART_FAIL)    echo "Не удалось перезапустить Remnanode." ;;
+                HY2R_DONE)            echo "Hysteria2 для Remnanode подготовлен!" ;;
+                HY2R_XRAY_HINT)       echo "Укажите эти пути к сертификату в Xray-инбаунде (панель Remnawave):" ;;
+                HY2R_ALREADY)         echo "Hysteria2 для Remnanode уже настроен." ;;
+                HY2R_RECONFIGURE)     echo "Настроить заново? (y/N)" ;;
                 SUB_ZAPRET)           echo "🛡️  Установка zapret" ;;
                 ZAPRET_INSTALLING)    echo "Устанавливаю zapret..." ;;
                 ZAPRET_DONE)          echo "Zapret успешно установлен!" ;;
@@ -364,6 +381,23 @@ tr_text() {
                 HY2_UPDATED)          echo "Hysteria2 updated successfully!" ;;
                 HY2_UPDATE_FAIL)      echo "Failed to update Hysteria2." ;;
                 SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
+                SUB_HY2_REMNA)        echo "🔧 Configure Hysteria2 for node (Remnanode)" ;;
+                HY2_GROUP_MIHOMO)     echo "── For Mihomo core (standalone Hysteria2 server) ──" ;;
+                HY2_GROUP_NODE)       echo "── For Remnawave node (Xray inbound) ──" ;;
+                HY2R_NO_COMPOSE)      echo "File /opt/remnanode/docker-compose.yml not found. Is Remnanode installed?" ;;
+                HY2R_DOMAIN_PROMPT)   echo "Enter your domain (Let's Encrypt certificate must already exist):" ;;
+                HY2R_DOMAIN_INVALID)  echo "Invalid domain." ;;
+                HY2R_NO_CERT)         echo "Certificate not found:" ;;
+                HY2R_PORT_PROMPT)     echo "Enter UDP port for Hysteria2 (default 443):" ;;
+                HY2R_NO_VOLUMES)      echo "No 'volumes:' section in docker-compose.yml. Add the mounts manually." ;;
+                HY2R_COMPOSE_DONE)    echo "docker-compose.yml updated (backup: docker-compose.yml.bak)." ;;
+                HY2R_HOOK_DONE)       echo "Certificate renewal hook created." ;;
+                HY2R_RESTART_CONFIRM) echo "Restart Remnanode now (docker compose down && up -d)? (y/N)" ;;
+                HY2R_RESTART_FAIL)    echo "Failed to restart Remnanode." ;;
+                HY2R_DONE)            echo "Hysteria2 prepared for Remnanode!" ;;
+                HY2R_XRAY_HINT)       echo "Use these certificate paths in the Xray inbound (Remnawave panel):" ;;
+                HY2R_ALREADY)         echo "Hysteria2 for Remnanode is already configured." ;;
+                HY2R_RECONFIGURE)     echo "Reconfigure anyway? (y/N)" ;;
                 SUB_ZAPRET)           echo "🛡️  Install zapret" ;;
                 ZAPRET_INSTALLING)    echo "Installing zapret..." ;;
                 ZAPRET_DONE)          echo "Zapret installed successfully!" ;;
@@ -1678,11 +1712,154 @@ update_hysteria2() {
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
+# ====== НАСТРОЙКА HYSTERIA2 ДЛЯ REMNANODE (Xray inbound) ======
+_hy2r_open_udp() {
+    local port=$1 fw
+    fw=$(detect_firewall)
+    case $fw in
+        ufw)       ufw allow "$port"/udp >/dev/null 2>&1 ;;
+        firewalld) firewall-cmd --permanent --add-port="$port"/udp >/dev/null 2>&1 && firewall-cmd --reload >/dev/null 2>&1 ;;
+        iptables)  iptables -C INPUT -p udp --dport "$port" -j ACCEPT 2>/dev/null || iptables -A INPUT -p udp --dport "$port" -j ACCEPT
+                   command -v netfilter-persistent >/dev/null 2>&1 && netfilter-persistent save >/dev/null 2>&1 ;;
+        *)         return 1 ;;
+    esac
+    add_port_to_json "$port" "udp" "Hysteria2 (Remnanode)" >/dev/null 2>&1
+    return 0
+}
+
+setup_hysteria2_remnanode() {
+    local dir="/opt/remnanode" compose="/opt/remnanode/docker-compose.yml"
+    local hook="/etc/letsencrypt/renewal-hooks/deploy/restart-remnanode.sh"
+    local ssl_dir="/var/lib/remnawave/configs/xray/ssl"
+
+    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║    $(tr_text SUB_HY2_REMNA)${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+    echo
+
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${RED}❌ $(tr_text WARP_ROOT_REQUIRED)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+    if [ ! -f "$compose" ]; then
+        echo -e "${RED}❌ $(tr_text HY2R_NO_COMPOSE)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    # --- уже настроено? ---
+    if grep -q "$ssl_dir/cert.pem" "$compose" && grep -q "$ssl_dir/cert.key" "$compose" && [ -x "$hook" ]; then
+        local cur
+        cur=$(grep "$ssl_dir/cert.pem" "$compose" | sed -E 's|.*/live/([^/]+)/.*|\1|' | head -1)
+        echo -e "${YELLOW}⚠️  $(tr_text HY2R_ALREADY)${NC}"
+        [ -n "$cur" ] && echo -e "  ${BOLD}Domain:${NC} $cur"
+        echo -e "  ${BOLD}Compose:${NC} $compose"
+        echo -e "  ${BOLD}Hook:${NC}    $hook"
+        echo
+        echo -e "${YELLOW}$(tr_text HY2R_RECONFIGURE)${NC}"
+        read -r ans
+        [[ ! "$ans" =~ ^[YyДд]$ ]] && { read -rp "$(tr_text PRESS_ENTER)"; return 0; }
+        echo
+    fi
+
+    local domain
+    echo -e "${BLUE}$(tr_text HY2R_DOMAIN_PROMPT)${NC}"
+    read -rp "> " domain
+    if ! [[ "$domain" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]]; then
+        echo -e "${RED}❌ $(tr_text HY2R_DOMAIN_INVALID)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    local live="/etc/letsencrypt/live/$domain"
+    if [ ! -f "$live/fullchain.pem" ] || [ ! -f "$live/privkey.pem" ]; then
+        echo -e "${RED}❌ $(tr_text HY2R_NO_CERT) $live${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    local port
+    while true; do
+        echo -e "${BLUE}$(tr_text HY2R_PORT_PROMPT)${NC}"
+        read -rp "> " port
+        port="${port:-443}"
+        if [[ "$port" =~ ^[0-9]+$ ]] && (( port >= 1 && port <= 65535 )); then
+            break
+        fi
+        echo -e "${RED}$(tr_text WARP_PORT_INVALID)${NC}"
+    done
+
+    # --- docker-compose.yml: добавляем недостающие монтирования ---
+    local want=()
+    grep -q '/dev/shm:/dev/shm' "$compose" || want+=("/dev/shm:/dev/shm:rw")
+    grep -q "$ssl_dir/cert.pem" "$compose" || want+=("$live/fullchain.pem:$ssl_dir/cert.pem:ro")
+    grep -q "$ssl_dir/cert.key" "$compose" || want+=("$live/privkey.pem:$ssl_dir/cert.key:ro")
+
+    if [ ${#want[@]} -gt 0 ]; then
+        if ! grep -qE '^[[:space:]]+volumes:[[:space:]]*$' "$compose"; then
+            echo -e "${RED}❌ $(tr_text HY2R_NO_VOLUMES)${NC}"
+            printf '  - %s\n' "${want[@]}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        fi
+        cp "$compose" "$compose.bak"
+        local tmp
+        tmp=$(mktemp)
+        awk -v items="$(printf '%s\n' "${want[@]}")" '
+            { print }
+            !done && /^[[:space:]]+volumes:[[:space:]]*$/ {
+                match($0, /^[[:space:]]*/)
+                ind = substr($0, 1, RLENGTH) "  "
+                n = split(items, a, "\n")
+                for (i = 1; i <= n; i++) print ind "- " a[i]
+                done = 1
+            }' "$compose" > "$tmp" && cat "$tmp" > "$compose"
+        rm -f "$tmp"
+        echo -e "${GREEN}✅ $(tr_text HY2R_COMPOSE_DONE)${NC}"
+    fi
+
+    # --- хук перезапуска при продлении сертификата ---
+    mkdir -p "$(dirname "$hook")"
+    printf '#!/bin/bash\ncd %s && docker compose restart remnanode\n' "$dir" > "$hook"
+    chmod +x "$hook"
+    echo -e "${GREEN}✅ $(tr_text HY2R_HOOK_DONE)${NC}"
+
+    # --- файрвол ---
+    if _hy2r_open_udp "$port"; then
+        echo -e "${GREEN}✅ UDP $port${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Firewall not detected / Файрвол не найден: open UDP $port manually${NC}"
+    fi
+
+    # --- перезапуск ---
+    echo
+    echo -e "${YELLOW}$(tr_text HY2R_RESTART_CONFIRM)${NC}"
+    read -r ans
+    if [[ "$ans" =~ ^[YyДд]$ ]]; then
+        if ! (cd "$dir" && docker compose down && docker compose up -d); then
+            echo -e "${RED}❌ $(tr_text HY2R_RESTART_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        fi
+    fi
+
+    echo
+    echo -e "${GREEN}✅ $(tr_text HY2R_DONE)${NC}"
+    echo -e "${BLUE}$(tr_text HY2R_XRAY_HINT)${NC}"
+    echo -e "  ${BOLD}${YELLOW}certificateFile${NC}: $ssl_dir/cert.pem"
+    echo -e "  ${BOLD}${YELLOW}keyFile${NC}:         $ssl_dir/cert.key"
+    echo -e "  ${BOLD}${YELLOW}port${NC}:            $port/udp"
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
 submenu_hysteria2() {
     while true; do
         show_banner
         print_submenu_header "$(tr_text SUB_HY2_SUBMENU)"
 
+        echo -e "  ${BOLD}${CYAN}$(tr_text HY2_GROUP_MIHOMO)${NC}"
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_HY2_INSTALL)"
         echo -e "  ${RED}2)${NC} $(tr_text SUB_HY2_REMOVE)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_HY2_CONFIG)"
@@ -1690,6 +1867,9 @@ submenu_hysteria2() {
         echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_HY2_LOGS)"
         echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_HY2_VERSION)"
         echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_HY2_UPDATE)"
+        echo
+        echo -e "  ${BOLD}${CYAN}$(tr_text HY2_GROUP_NODE)${NC}"
+        echo -e "  ${YELLOW}8)${NC} $(tr_text SUB_HY2_REMNA)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -1703,6 +1883,7 @@ submenu_hysteria2() {
             5) show_banner; show_hysteria2_logs ;;
             6) show_banner; check_hysteria2_version ;;
             7) show_banner; update_hysteria2 ;;
+            8) show_banner; setup_hysteria2_remnanode ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
