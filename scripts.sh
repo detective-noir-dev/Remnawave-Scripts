@@ -1341,7 +1341,7 @@ install_hysteria2() {
         echo -e "${GREEN}✅ $(tr_text HY2_INSTALLED)${NC}"
         [ -n "$new_ver" ] && echo -e "${CYAN}Версия / Version: ${YELLOW}${new_ver}${NC}"
         echo
-        echo -e "${CYAN}Следующий шаг:${NC} Настройте конфиг → пункт ${YELLOW}4) $(tr_text SUB_HY2_CONFIG)${NC}"
+        echo -e "${CYAN}Следующий шаг:${NC} Настройте конфиг → пункт ${YELLOW}3) $(tr_text SUB_HY2_CONFIG)${NC}"
     else
         echo -e "${RED}❌ Ошибка установки / Installation failed.${NC}"
     fi
@@ -1710,7 +1710,7 @@ update_hysteria2() {
         echo -e "${GREEN}✅ $(tr_text HY2_UPDATED)${NC}"
         [ -n "$new_ver" ] && echo -e "${CYAN}Новая версия / New version: ${YELLOW}${new_ver}${NC}"
         echo
-        echo -e "${DIM}Перезапустите сервис для применения: пункт 5 → 2${NC}"
+        echo -e "${DIM}Перезапустите сервис для применения: пункт 5 → 3 → 4 → 2${NC}"
     else
         echo -e "${RED}❌ $(tr_text HY2_UPDATE_FAIL)${NC}"
     fi
@@ -1821,8 +1821,15 @@ setup_hysteria2_remnanode() {
                 n = split(items, a, "\n")
                 for (i = 1; i <= n; i++) print ind "- " a[i]
                 done = 1
-            }' "$compose" > "$tmp" && cat "$tmp" > "$compose"
+            }' "$compose" > "$tmp" && [ -s "$tmp" ] && cat "$tmp" > "$compose"
+        local awk_rc=$?
         rm -f "$tmp"
+        if [ $awk_rc -ne 0 ]; then
+            echo -e "${RED}❌ $(tr_text HY2R_NO_VOLUMES)${NC}"
+            printf '  - %s\n' "${want[@]}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        fi
         echo -e "${GREEN}✅ $(tr_text HY2R_COMPOSE_DONE)${NC}"
     fi
 
@@ -2661,7 +2668,7 @@ _disk_inspector() {
             fi
             _di_paths[$i]="$fp"
             ((i++))
-        done < <(du -sh "$dir"/* 2>/dev/null | sort -hr | head -15)
+        done < <(sudo du -sh "$dir"/* 2>/dev/null | sort -hr | head -15)
         [ $i -eq 1 ] && echo -e "  ${YELLOW}Пусто или нет доступа.${NC}"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
@@ -2684,13 +2691,15 @@ _disk_inspector() {
                 echo
                 read -rp "> " fsel
                 case $fsel in
-                    1) clear; tail -n 50 "$target" 2>/dev/null || echo -e "${RED}Бинарный файл.${NC}"
+                    1) clear; sudo tail -n 50 "$target" 2>/dev/null || echo -e "${RED}Не удалось прочитать файл.${NC}"
                        read -rp "$(tr_text PRESS_ENTER)" ;;
                     2) [ "$mode" != "block" ] && {
                            if [ "$mode" = "truncate" ]; then
-                               > "$target"; echo -e "${GREEN}✅ Файл очищен.${NC}"
+                               sudo truncate -s 0 "$target" && echo -e "${GREEN}✅ Файл очищен.${NC}" \
+                                   || echo -e "${RED}❌ Не удалось очистить файл.${NC}"
                            else
-                               sudo rm -f "$target"; echo -e "${GREEN}✅ Файл удалён.${NC}"
+                               sudo rm -f "$target" && echo -e "${GREEN}✅ Файл удалён.${NC}" \
+                                   || echo -e "${RED}❌ Не удалось удалить файл.${NC}"
                            fi
                            read -rp "$(tr_text PRESS_ENTER)"; return; } ;;
                 esac
@@ -2967,7 +2976,10 @@ SCANNER_LIST="$SCANNER_DIR/targets.txt"
 
 _scan_install() {
     export PATH=/usr/local/go/bin:$PATH
-    mkdir -p "$SCANNER_DIR/reports" 2>/dev/null
+    # /opt принадлежит root: без прав создаём каталог через sudo и отдаём его текущему пользователю
+    mkdir -p "$SCANNER_DIR/reports" 2>/dev/null \
+        || { sudo mkdir -p "$SCANNER_DIR/reports" && sudo chown -R "$(id -u):$(id -g)" "$SCANNER_DIR"; } \
+        || { echo -e "${RED}❌ Не удалось создать $SCANNER_DIR${NC}"; return 1; }
 
     if [ ! -f "$SCANNER_BIN" ]; then
         echo -e "${YELLOW}Устанавливаю RealiTLScanner (нужен Go для компиляции)...${NC}"
