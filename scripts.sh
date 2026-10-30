@@ -35,7 +35,7 @@ show_banner() {
 # ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ ======
 auto_check_update() {
     local latest
-    latest=$(curl -s "$REPO_URL/version.txt" | tr -d '\r\n')
+    latest=$(curl -fsS --connect-timeout 3 -m 5 "$REPO_URL/version.txt" 2>/dev/null | tr -d '\r\n')
     if [ -n "$latest" ] && [ "$latest" != "$VERSION" ]; then
         echo -e "${YELLOW}⚠️  A new version is available: $latest (you are on $VERSION)"
         echo -e "   Go to [4] Maintenance → [1] Update to install.${NC}"
@@ -680,8 +680,9 @@ add_port_to_json() {
     ensure_jq || return 1
     
     local temp_file=$(mktemp)
-    jq ". += [{\"port\": \"$port\", \"protocol\": \"$protocol\", \"description\": \"$description\", \"timestamp\": $timestamp}]" "$PORTS_FILE" > "$temp_file"
-    mv "$temp_file" "$PORTS_FILE"
+    jq --arg p "$port" --arg pr "$protocol" --arg d "$description" --argjson t "$timestamp" \
+        '. += [{port: $p, protocol: $pr, description: $d, timestamp: $t}]' "$PORTS_FILE" > "$temp_file" \
+        && mv "$temp_file" "$PORTS_FILE" || { rm -f "$temp_file"; return 1; }
 }
 
 remove_port_from_json() {
@@ -689,8 +690,8 @@ remove_port_from_json() {
     ensure_jq || return 1
     
     local temp_file=$(mktemp)
-    jq "map(select(.port != \"$port\" or .protocol != \"$protocol\"))" "$PORTS_FILE" > "$temp_file"
-    mv "$temp_file" "$PORTS_FILE"
+    jq --arg p "$port" --arg pr "$protocol" 'map(select(.port != $p or .protocol != $pr))' "$PORTS_FILE" > "$temp_file" \
+        && mv "$temp_file" "$PORTS_FILE" || { rm -f "$temp_file"; return 1; }
 }
 
 edit_port_description() {
@@ -698,8 +699,9 @@ edit_port_description() {
     ensure_jq || return 1
     
     local temp_file=$(mktemp)
-    jq "map(if .port == \"$port\" and .protocol == \"$protocol\" then .description = \"$new_description\" else . end)" "$PORTS_FILE" > "$temp_file"
-    mv "$temp_file" "$PORTS_FILE"
+    jq --arg p "$port" --arg pr "$protocol" --arg d "$new_description" \
+        'map(if .port == $p and .protocol == $pr then .description = $d else . end)' "$PORTS_FILE" > "$temp_file" \
+        && mv "$temp_file" "$PORTS_FILE" || { rm -f "$temp_file"; return 1; }
 }
 
 # ====== ПОЛУЧЕНИЕ РЕАЛЬНЫХ ОТКРЫТЫХ ПОРТОВ ИЗ FIREWALL ======
@@ -717,7 +719,7 @@ get_firewall_ports() {
             done)
             
             # Также парсим порты в формате "443/tcp ALLOW"
-            ports_list+=$(sudo ufw status 2>/dev/null | grep -E "ALLOW" | grep -oE "[0-9]+/(tcp|udp)" | while read line; do
+            ports_list+=$'\n'$(sudo ufw status 2>/dev/null | grep -E "ALLOW" | grep -oE "[0-9]+/(tcp|udp)" | while read line; do
                 port=$(echo "$line" | cut -d'/' -f1)
                 proto=$(echo "$line" | cut -d'/' -f2)
                 echo "$port|$proto"
@@ -954,7 +956,7 @@ edit_port() {
     esac
     
     ensure_jq || return 1
-    local exists=$(jq -r ".[] | select(.port == \"$port\" and .protocol == \"$protocol\") | .description" "$PORTS_FILE")
+    local exists=$(jq -r --arg p "$port" --arg pr "$protocol" '.[] | select(.port == $p and .protocol == $pr) | .description' "$PORTS_FILE")
     
     if [ -z "$exists" ]; then
         echo -e "${RED}❌ Порт не найден.${NC}"
@@ -1213,7 +1215,12 @@ check_update() {
 delete_self() {
     echo -e "${RED}$(tr_text CONFIRM_DEL)${NC}"
     read -r ans
-    [[ "$ans" =~ ^[YyДд]$ ]] && { "$DATA_DIR/uninstall.sh"; exit 0; }
+    if [[ "$ans" =~ ^[YyДд]$ ]]; then
+        "$DATA_DIR/uninstall.sh"
+        # uninstall.sh сам спрашивает подтверждение: выходим, только если скрипт реально удалён
+        [ -e "$SCRIPT_PATH" ] || exit 0
+        return 0
+    fi
     echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
 }
 
@@ -1957,9 +1964,11 @@ install_warp() {
         return 1
     fi
 
+    # os-release читаем в подоболочке: иначе он перезапишет глобальный VERSION версией ОС
+    local os_id
     # shellcheck disable=SC1091
-    if [ -f /etc/os-release ]; then . /etc/os-release; fi
-    if [[ "$ID" != "ubuntu" && "$ID" != "debian" ]]; then
+    os_id=$([ -f /etc/os-release ] && . /etc/os-release && echo "$ID")
+    if [[ "$os_id" != "ubuntu" && "$os_id" != "debian" ]]; then
         echo -e "${RED}❌ $(tr_text WARP_OS_UNSUPPORTED)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
