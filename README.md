@@ -379,7 +379,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.6.1
+**Версия:** 1.6.15
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```

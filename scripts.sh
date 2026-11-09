@@ -2600,9 +2600,10 @@ _clean_run() {
 
 _do_clean_apt() {
     echo -e "${BLUE}Очистка APT кэша...${NC}"
-    sudo apt-get autoremove -y 2>/dev/null
+    sudo apt-get autoremove --purge -y 2>/dev/null
     sudo apt-get clean -y 2>/dev/null
     sudo apt-get autoclean -y 2>/dev/null
+    sudo find /var/cache/apt -type f \( -name '*.deb' -o -name '*.bin' \) -delete 2>/dev/null || true
     local ookla="/etc/apt/sources.list.d/ookla_speedtest-cli.list"
     [ -f "$ookla" ] && sudo rm -f "$ookla" "$ookla.save" \
         && echo -e "${YELLOW}Удалён сломанный репозиторий Ookla.${NC}"
@@ -2610,8 +2611,21 @@ _do_clean_apt() {
 
 _do_clean_journal() {
     echo -e "${BLUE}Очистка системных логов (journald)...${NC}"
+    # без rotate vacuum не трогает активный файл журнала
+    sudo journalctl --rotate 2>/dev/null
     sudo journalctl --vacuum-time=3d 2>/dev/null
     sudo journalctl --vacuum-size=100M 2>/dev/null
+}
+
+_do_clean_logs() {
+    echo -e "${BLUE}Очистка /var/log и логов контейнеров...${NC}"
+    # архивные и ротированные логи удаляем
+    sudo find /var/log -type f \( -name '*.gz' -o -name '*.xz' -o -name '*.bz2' -o -name '*.zst'         -o -name '*.old' -o -name '*.[0-9]' \) -delete 2>/dev/null || true
+    # живые текстовые логи обнуляем (journal не трогаем — им занимается journalctl)
+    sudo find /var/log -type f ! -path '/var/log/journal/*' \( -name '*.log' -o -name 'syslog'         -o -name 'messages' -o -name 'btmp' -o -name 'wtmp' -o -name 'lastlog' \)         -exec truncate -s 0 {} + 2>/dev/null || true
+    # json-логи Docker-контейнеров (работающим контейнерам truncate безопасен)
+    sudo find /var/lib/docker/containers -type f -name '*-json.log*'         -exec truncate -s 0 {} + 2>/dev/null || true
+    echo -e "${GREEN}Логи очищены.${NC}"
 }
 
 _do_clean_docker() {
@@ -2620,12 +2634,14 @@ _do_clean_docker() {
     fi
     echo -e "${BLUE}Очистка Docker (system prune)...${NC}"
     sudo docker system prune -a --volumes -f
+    sudo docker builder prune -a -f 2>/dev/null || true
 }
 
 _do_clean_tmp() {
     echo -e "${BLUE}Очистка /tmp и кэша пользователя...${NC}"
-    sudo rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
-    rm -rf ~/.cache/* 2>/dev/null || true
+    # find -delete, чтобы уходили и скрытые файлы (rm -rf /tmp/* их пропускает)
+    sudo find /tmp /var/tmp -mindepth 1 -delete 2>/dev/null || true
+    rm -rf ~/.cache/* ~/.cache/.[!.]* 2>/dev/null || true
     echo -e "${GREEN}Временные файлы удалены.${NC}"
 }
 
@@ -2642,6 +2658,7 @@ _do_clean_snap() {
 
 _do_clean_all() {
     _do_clean_journal
+    _do_clean_logs
     _do_clean_apt
     _do_clean_docker
     _do_clean_tmp
@@ -3339,4 +3356,20 @@ show_main_menu() {
 }
 
 # ====== ЗАПУСК ======
+# rw-scripts clean — полная уборка без меню (для cron и планировщика)
+case "${1:-}" in
+    clean|--clean)
+        before=$(_clean_get_free)
+        _do_clean_all
+        after=$(_clean_get_free)
+        diff=$(( after - before ))
+        echo
+        if (( diff > 0 )); then
+            echo -e "${GREEN}✅ Освобождено: $(_clean_human $diff)${NC}"
+        else
+            echo -e "${YELLOW}ℹ️  Мусора не найдено.${NC}"
+        fi
+        echo "Свободно: $(_clean_human $(_clean_get_free))"
+        exit 0 ;;
+esac
 show_main_menu
