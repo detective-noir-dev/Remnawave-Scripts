@@ -23,7 +23,7 @@ missing=$(grep -ohE 'tr_text [A-Z][A-Z0-9_]+' scripts.sh | awk '{print $2}' | so
 if [ -z "$missing" ]; then ok "все tr_text KEY есть в словаре"; else bad "нет в словаре: $(echo $missing)"; fi
 
 # 4. SHA256SUMS соответствует файлам
-if tools/gen-checksums.sh --check >/dev/null 2>&1; then ok "SHA256SUMS актуален"; else bad "SHA256SUMS устарел: запусти tools/gen-checksums.sh"; fi
+if bash tools/gen-checksums.sh --check >/dev/null 2>&1; then ok "SHA256SUMS актуален"; else bad "SHA256SUMS устарел: запусти tools/gen-checksums.sh"; fi
 
 # 5. fetch_verified: подходящий хэш ставит файл, чужой хэш и неизвестное имя отклоняются
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
