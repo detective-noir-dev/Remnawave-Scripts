@@ -1,0 +1,24 @@
+---
+aliases: ["Cloudflare WARP (подменю)"]
+tags: [rw-menu]
+тип: меню
+строка: 2128
+файл: scripts.sh
+---
+# Cloudflare WARP (подменю)
+
+`submenu_warp` · `scripts.sh` L2128
+
+Подменю: 1 установить, 2 статус, 3 отключить, 4 включить, 5 удалить. 0 — назад.
+
+## Содержит
+- [[install_warp]] — Установка Cloudflare WARP
+- [[warp_status]] — Статус WARP
+- [[warp_disconnect]] — Отключить WARP
+- [[warp_connect]] — Включить WARP
+- [[uninstall_warp]] — Удалить WARP
+- [[_warp_installed]] — Проверка: WARP установлен
+- [[_warp_is_connected]] — Проверка: WARP подключён
+
+## Откуда вызывается
+- [[submenu_server]]
