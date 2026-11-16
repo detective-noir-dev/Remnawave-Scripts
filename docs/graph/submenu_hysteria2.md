@@ -2,12 +2,12 @@
 aliases: ["Hysteria2 (подменю)"]
 tags: [rw-menu]
 тип: меню
-строка: 1871
-файл: scripts.sh
+строка: 510
+файл: lib/hy2.sh
 ---
 # Hysteria2 (подменю)
 
-`submenu_hysteria2` · `scripts.sh` L1871
+`submenu_hysteria2` · `lib/hy2.sh` L510
 
 Две группы. Для Mihomo/клиента: 1 установить, 2 удалить, 3 конфиг, 4 управление сервисом, 5 логи, 6 проверка версии, 7 обновить. Для ноды: 8 настройка Hysteria2 под Remnanode. 0 — назад.
 

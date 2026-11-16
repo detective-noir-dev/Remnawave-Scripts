@@ -2,12 +2,12 @@
 aliases: ["Меню 3 · Network & Ports"]
 tags: [rw-menu]
 тип: меню
-строка: 1594
-файл: scripts.sh
+строка: 454
+файл: lib/firewall.sh
 ---
 # Меню 3 · Network & Ports
 
-`submenu_network` · `scripts.sh` L1594
+`submenu_network` · `lib/firewall.sh` L454
 
 Тонкая обёртка: просто вызывает `port_management`.
 

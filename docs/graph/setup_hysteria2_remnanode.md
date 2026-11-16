@@ -2,12 +2,12 @@
 aliases: ["Hysteria2 для Remnanode (Xray inbound)"]
 tags: [rw-func]
 тип: действие
-строка: 1737
-файл: scripts.sh
+строка: 376
+файл: lib/hy2.sh
 ---
 # Hysteria2 для Remnanode (Xray inbound)
 
-`setup_hysteria2_remnanode` · `scripts.sh` L1737
+`setup_hysteria2_remnanode` · `lib/hy2.sh` L376
 
 Подготавливает ноду Remnawave к Xray-инбаунду Hysteria2 с TLS-сертификатом Let's Encrypt. Нужен root и существующий `/opt/remnanode/docker-compose.yml`.
 

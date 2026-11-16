@@ -2,12 +2,12 @@
 aliases: ["Обновление системных пакетов"]
 tags: [rw-func]
 тип: действие
-строка: 2307
-файл: scripts.sh
+строка: 89
+файл: lib/maintenance.sh
 ---
 # Обновление системных пакетов
 
-`apt_update_upgrade` · `scripts.sh` L2307
+`apt_update_upgrade` · `lib/maintenance.sh` L89
 
 `apt update` и затем `apt upgrade -y` под спиннером, вывод скрыт. Каждый шаг проверяется отдельно. Перед стартом — подтверждение.
 

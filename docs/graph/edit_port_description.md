@@ -2,12 +2,12 @@
 aliases: ["Запись нового описания"]
 tags: [rw-func]
 тип: действие
-строка: 697
-файл: scripts.sh
+строка: 71
+файл: lib/firewall.sh
 ---
 # Запись нового описания
 
-`edit_port_description` · `scripts.sh` L697
+`edit_port_description` · `lib/firewall.sh` L71
 
 Через `jq map(if … then .description = … else . end)` обновляет описание записи с заданными `port` + `protocol`.
 

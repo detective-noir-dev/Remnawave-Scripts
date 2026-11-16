@@ -2,12 +2,12 @@
 aliases: ["Проверка: WARP установлен"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 2039
-файл: scripts.sh
+строка: 123
+файл: lib/warp.sh
 ---
 # Проверка: WARP установлен
 
-`_warp_installed` · `scripts.sh` L2039
+`_warp_installed` · `lib/warp.sh` L123
 
 Если `warp-cli` не найден — сообщение и код 1. Первая строка каждого пункта подменю WARP, кроме установки.
 

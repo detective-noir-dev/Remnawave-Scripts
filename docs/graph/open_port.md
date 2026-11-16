@@ -2,12 +2,12 @@
 aliases: ["Открыть порт"]
 tags: [rw-func]
 тип: действие
-строка: 777
-файл: scripts.sh
+строка: 151
+файл: lib/firewall.sh
 ---
 # Открыть порт
 
-`open_port` · `scripts.sh` L777
+`open_port` · `lib/firewall.sh` L151
 
 Открывает порт в файрволе и записывает его в `ports.json` с описанием.
 

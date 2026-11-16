@@ -1,6 +1,8 @@
-# Remnawave-Scripts (English Version)
+# Remnawave-Scripts
 
-![version](https://img.shields.io/badge/version-1.7.0-blue)
+🇷🇺 [Русская версия](README.md) (main document)
+
+![version](https://img.shields.io/badge/version-1.8.0-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -302,6 +304,18 @@ Launches automatically when opening the main menu instead of the plain banner.
 
 ---
 
+## ⌨️ Commands without the menu
+
+For cron, CI and bug reports:
+
+```bash
+rw-scripts clean              # full system cleanup, no prompts
+rw-scripts doctor [--online]  # diagnostics: dependencies, privileges, modules, dictionary, repo reachability
+rw-scripts version            # print version
+```
+
+---
+
 ## 🌍 Language Support
 
 - Russian (Russian)
@@ -313,13 +327,20 @@ Language is selected during the first installation and saved in `~/.config/remna
 
 ## 🛠️ Repository Structure
 
-- **scripts.sh** — main script
+- **scripts.sh** — core: settings, language, hash verification, module loading, entry point
+- **lib/** — modules sourced by scripts.sh, one file per topic:
+  `pkg.sh` (package managers), `firewall.sh` (ports), `hy2.sh` (Hysteria2), `warp.sh` (WARP),
+  `cleaner.sh`, `memory.sh`, `scanner.sh`, `maintenance.sh`, `server.sh`, `ids.sh`, `system.sh`,
+  `thirdparty.sh`, `menus.sh` (main menu and dashboard), `doctor.sh` (diagnostics)
+- **lang/** — UI dictionaries (`ru.sh`, `en.sh`)
+- **SHA256SUMS** — hashes of every installed file; install and update are verified against it
+- **tests/**, **tools/**, **.githooks/** — tests (`bash tests/run.sh`, bats in `tests/bats`), hash generation, git hooks
 - **install.sh** — installer (copies to ~/.local/bin/rw-scripts)
 - **uninstall.sh** — uninstaller
 - **countries.csv** — country database (RU/EN + ISO)
 - **version.txt** — current version
-- **README.md** — project description (RU)
-- **README-ENG.md** — project description (EN)
+- **README.md** — project description (RU, main document)
+- **README-ENG.md** — translation of README.md (EN)
 
 ---
 
@@ -379,7 +400,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Release Date:** June 2026
 **License:** MIT
 ```

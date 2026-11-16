@@ -2,12 +2,12 @@
 aliases: ["Редактирование конфига Hysteria2"]
 tags: [rw-func]
 тип: действие
-строка: 1392
-файл: scripts.sh
+строка: 87
+файл: lib/hy2.sh
 ---
 # Редактирование конфига Hysteria2
 
-`edit_hysteria2_config` · `scripts.sh` L1392
+`edit_hysteria2_config` · `lib/hy2.sh` L87
 
 Открывает `/etc/hysteria/config.yaml` в nano/vim/vi. Если файла нет — сначала создаёт базовый.
 

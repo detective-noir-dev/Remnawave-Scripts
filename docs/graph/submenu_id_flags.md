@@ -2,12 +2,12 @@
 aliases: ["Меню 1 · Short ID & Flags"]
 tags: [rw-menu]
 тип: меню
-строка: 1548
-файл: scripts.sh
+строка: 84
+файл: lib/ids.sh
 ---
 # Меню 1 · Short ID & Flags
 
-`submenu_id_flags` · `scripts.sh` L1548
+`submenu_id_flags` · `lib/ids.sh` L84
 
 Подменю: 1 — генерация Short ID, 2 — поиск страны и флага. 0 — назад.
 

@@ -5,13 +5,57 @@ on:
   pull_request:
 
 jobs:
-  check:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: ShellCheck
-        run: shellcheck --severity=warning scripts.sh install.sh uninstall.sh lang/*.sh tools/*.sh tests/*.sh
+        run: shellcheck --severity=warning scripts.sh install.sh uninstall.sh lib/*.sh lang/*.sh tools/*.sh tests/*.sh .githooks/pre-commit
 
-      - name: Tests
+  # Тесты на разных дистрибутивах: ubuntu 22/24 прямо на раннере, debian и alpine в контейнерах.
+  test:
+    name: test (${{ matrix.name }})
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: ubuntu-22.04, runner: ubuntu-22.04, image: "",            install: apt-host, experimental: false }
+          - { name: ubuntu-24.04, runner: ubuntu-24.04, image: "",            install: apt-host, experimental: false }
+          - { name: debian-12,    runner: ubuntu-latest, image: "debian:12",   install: apt,      experimental: false }
+          # alpine = musl + busybox: ловит места, где скрипт опирается на GNU-утилиты
+          - { name: alpine-3.20,  runner: ubuntu-latest, image: "alpine:3.20", install: apk,      experimental: true }
+    steps:
+      - name: Dependencies (apt, host runner)
+        if: matrix.install == 'apt-host'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bats jq
+
+      - name: Dependencies (apt, container)
+        if: matrix.install == 'apt'
+        run: apt-get update -qq && apt-get install -y -qq bash bats curl jq git coreutils
+
+      - name: Dependencies (apk, container)
+        if: matrix.install == 'apk'
+        run: apk add --no-cache bash bats curl jq git coreutils
+
+      - uses: actions/checkout@v4
+
+      - name: Tests (syntax, dictionaries, checksums, doctor, bats)
+        shell: bash
         run: bash tests/run.sh
+
+      - name: Smoke test, installed layout
+        shell: bash
+        run: |
+          # как после install.sh: бинарь отдельно, модули и словари в каталоге данных
+          export HOME="$RUNNER_TEMP/home"; mkdir -p "$HOME/.local/bin" "$HOME/.local/share/remnawave"
+          cp scripts.sh "$HOME/.local/bin/rw-scripts"
+          cp -r lib lang "$HOME/.local/share/remnawave/"
+          cp version.txt countries.csv "$HOME/.local/share/remnawave/"
+          out=$("$HOME/.local/bin/rw-scripts" doctor)
+          echo "$out"
+          grep -q "all modules loaded" <<<"$out"
+          [ "$("$HOME/.local/bin/rw-scripts" version)" = "$(cat version.txt)" ]

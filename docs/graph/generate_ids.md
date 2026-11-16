@@ -2,12 +2,12 @@
 aliases: ["Генерация Short ID"]
 tags: [rw-func]
 тип: действие
-строка: 1106
-файл: scripts.sh
+строка: 18
+файл: lib/ids.sh
 ---
 # Генерация Short ID
 
-`generate_ids` · `scripts.sh` L1106
+`generate_ids` · `lib/ids.sh` L18
 
 Генерирует N случайных 16-символьных hex-идентификаторов (для `shortIds` в Reality/Xray), по одному в строке в формате `"id",` — готово для вставки в JSON.
 

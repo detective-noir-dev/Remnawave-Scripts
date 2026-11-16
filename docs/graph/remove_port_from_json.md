@@ -2,12 +2,12 @@
 aliases: ["Удаление порта из ports.json"]
 tags: [rw-func]
 тип: действие
-строка: 688
-файл: scripts.sh
+строка: 62
+файл: lib/firewall.sh
 ---
 # Удаление порта из ports.json
 
-`remove_port_from_json` · `scripts.sh` L688
+`remove_port_from_json` · `lib/firewall.sh` L62
 
 Оставляет в массиве все записи, кроме совпадающей по `port` + `protocol` (`jq map(select(...))`).
 

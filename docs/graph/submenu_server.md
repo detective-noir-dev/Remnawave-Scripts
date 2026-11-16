@@ -2,12 +2,12 @@
 aliases: ["Меню 5 · Server Setup"]
 tags: [rw-menu]
 тип: меню
-строка: 2282
-файл: scripts.sh
+строка: 12
+файл: lib/menus.sh
 ---
 # Меню 5 · Server Setup
 
-`submenu_server` · `scripts.sh` L2282
+`submenu_server` · `lib/menus.sh` L12
 
 Подменю: 1 сменить порт SSH, 2 установить Zapret, 3 Hysteria2, 4 Cloudflare WARP. 0 — назад.
 

@@ -2,12 +2,12 @@
 aliases: ["Меню 2 · Resource Monitor"]
 tags: [rw-menu]
 тип: меню
-строка: 1570
-файл: scripts.sh
+строка: 95
+файл: lib/system.sh
 ---
 # Меню 2 · Resource Monitor
 
-`submenu_monitor` · `scripts.sh` L1570
+`submenu_monitor` · `lib/system.sh` L95
 
 Подменю: 1 — память, 2 — htop, 3 — системная информация. 0 — назад.
 

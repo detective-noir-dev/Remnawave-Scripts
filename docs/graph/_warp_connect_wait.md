@@ -2,12 +2,12 @@
 aliases: ["Подключение WARP"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 1953
-файл: scripts.sh
+строка: 37
+файл: lib/warp.sh
 ---
 # Подключение WARP
 
-`_warp_connect_wait` · `scripts.sh` L1953
+`_warp_connect_wait` · `lib/warp.sh` L37
 
 `timeout 15 warp-cli connect` и пауза 3 секунды.
 

@@ -2,12 +2,12 @@
 aliases: ["Установка Zapret"]
 tags: [rw-func]
 тип: действие
-строка: 1907
-файл: scripts.sh
+строка: 84
+файл: lib/server.sh
 ---
 # Установка Zapret
 
-`install_zapret` · `scripts.sh` L1907
+`install_zapret` · `lib/server.sh` L84
 
 Скачивает установщик `z4r` (IndeecFOX/z4r) и запускает его (`sh z4r`). Показывает «готово» или «ошибка».
 

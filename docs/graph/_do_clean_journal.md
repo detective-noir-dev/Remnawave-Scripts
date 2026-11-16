@@ -2,12 +2,12 @@
 aliases: ["Очистка журналов"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 2611
-файл: scripts.sh
+строка: 44
+файл: lib/cleaner.sh
 ---
 # Очистка журналов
 
-`_do_clean_journal` · `scripts.sh` L2611
+`_do_clean_journal` · `lib/cleaner.sh` L44
 
 `journalctl --vacuum-time=3d` и `--vacuum-size=100M`: оставляет логи за 3 дня и не более 100 МБ.
 

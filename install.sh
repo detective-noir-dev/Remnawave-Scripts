@@ -10,61 +10,58 @@ DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/remnawave"
 mkdir -p "$CONFIG_DIR" "$INSTALL_DIR" "$DATA_DIR"
 
 # === ПРОВЕРКА И УСТАНОВКА SUDO ===
+# Один список менеджеров пакетов: «имя|команда установки sudo». Порядок = приоритет.
+SUDO_INSTALL_TABLE=(
+    "apt-get|apt-get update -qq && apt-get install -y sudo"
+    "dnf|dnf install -y sudo"
+    "yum|yum install -y sudo"
+    "pacman|pacman -Sy --noconfirm sudo"
+    "zypper|zypper install -y sudo"
+    "apk|apk add sudo"
+)
+
+# команда установки sudo для первого найденного менеджера (код 1, если менеджера нет)
+sudo_install_cmd() {
+    local entry
+    for entry in "${SUDO_INSTALL_TABLE[@]}"; do
+        if command -v "${entry%%|*}" >/dev/null 2>&1; then
+            echo "${entry#*|}"
+            return 0
+        fi
+    done
+    return 1
+}
+
 check_and_install_sudo() {
-    if ! command -v sudo >/dev/null 2>&1; then
-        echo -e "\e[33m⚠️  'sudo' не найден в системе. Устанавливаю...\e[0m"
-        
-        # Проверяем, запущен ли скрипт от root
-        if [ "$EUID" -ne 0 ]; then
-            echo -e "\e[31m❌ Для установки sudo требуются права root.\e[0m"
-            echo -e "\e[33m💡 Запустите скрипт от root или установите sudo вручную:\e[0m"
-            
-            if command -v apt-get >/dev/null 2>&1; then
-                echo "   su -c 'apt-get update && apt-get install -y sudo'"
-            elif command -v dnf >/dev/null 2>&1; then
-                echo "   su -c 'dnf install -y sudo'"
-            elif command -v yum >/dev/null 2>&1; then
-                echo "   su -c 'yum install -y sudo'"
-            elif command -v pacman >/dev/null 2>&1; then
-                echo "   su -c 'pacman -Sy --noconfirm sudo'"
-            elif command -v zypper >/dev/null 2>&1; then
-                echo "   su -c 'zypper install -y sudo'"
-            fi
-            
-            read -rp "Продолжить установку без sudo? (y/n): " choice
-            if [[ ! "$choice" =~ ^[YyДд]$ ]]; then
-                echo -e "\e[31m❌ Установка отменена.\e[0m"
-                exit 1
-            fi
-            return 1
+    command -v sudo >/dev/null 2>&1 && return 0
+
+    echo -e "\e[33m⚠️  'sudo' не найден в системе. Устанавливаю...\e[0m"
+    local cmd
+    cmd=$(sudo_install_cmd) || {
+        echo -e "\e[31m❌ Не удалось определить пакетный менеджер.\e[0m"
+        return 1
+    }
+
+    # без root поставить sudo нельзя: подсказываем команду и спрашиваем, продолжать ли
+    if [ "$EUID" -ne 0 ]; then
+        echo -e "\e[31m❌ Для установки sudo требуются права root.\e[0m"
+        echo -e "\e[33m💡 Запустите скрипт от root или установите sudo вручную:\e[0m"
+        echo "   su -c '$cmd'"
+        read -rp "Продолжить установку без sudo? (y/n): " choice
+        if [[ ! "$choice" =~ ^[YyДд]$ ]]; then
+            echo -e "\e[31m❌ Установка отменена.\e[0m"
+            exit 1
         fi
-        
-        # Устанавливаем sudo (от root)
-        if command -v apt-get >/dev/null 2>&1; then
-            apt-get update -qq && apt-get install -y sudo
-        elif command -v dnf >/dev/null 2>&1; then
-            dnf install -y sudo
-        elif command -v yum >/dev/null 2>&1; then
-            yum install -y sudo
-        elif command -v pacman >/dev/null 2>&1; then
-            pacman -Sy --noconfirm sudo
-        elif command -v zypper >/dev/null 2>&1; then
-            zypper install -y sudo
-        elif command -v apk >/dev/null 2>&1; then
-            apk add sudo
-        else
-            echo -e "\e[31m❌ Не удалось определить пакетный менеджер.\e[0m"
-            return 1
-        fi
-        
-        if command -v sudo >/dev/null 2>&1; then
-            echo -e "\e[32m✅ sudo успешно установлен!\e[0m"
-        else
-            echo -e "\e[31m❌ Не удалось установить sudo.\e[0m"
-            return 1
-        fi
+        return 1
     fi
-    return 0
+
+    bash -c "$cmd"
+    if command -v sudo >/dev/null 2>&1; then
+        echo -e "\e[32m✅ sudo успешно установлен!\e[0m"
+    else
+        echo -e "\e[31m❌ Не удалось установить sudo.\e[0m"
+        return 1
+    fi
 }
 
 # Проверяем sudo перед началом установки
@@ -156,6 +153,17 @@ download_verified lang/en.sh "$DATA_DIR/lang/en.sh"
 download_verified uninstall.sh "$DATA_DIR/uninstall.sh"
 chmod +x "$DATA_DIR/uninstall.sh"
 download_verified countries.csv "$DATA_DIR/countries.csv"
+
+# модули lib/*.sh: список берём из SHA256SUMS, ставим целиком через staging (старые модули не остаются)
+rm -rf "$DATA_DIR/lib.new"; mkdir -p "$DATA_DIR/lib.new"
+LIB_NAMES=$(awk '{ f=$2; sub(/^\*/, "", f) } f ~ /^lib\/[A-Za-z0-9_]+\.sh$/ { print f }' <<<"$SUMS")
+if [ -z "$LIB_NAMES" ]; then
+    echo -e "\e[31m❌ No lib/*.sh modules listed in SHA256SUMS\e[0m"; exit 1
+fi
+while read -r lib_name; do
+    download_verified "$lib_name" "$DATA_DIR/lib.new/$(basename "$lib_name")"
+done <<<"$LIB_NAMES"
+rm -rf "$DATA_DIR/lib"; mv "$DATA_DIR/lib.new" "$DATA_DIR/lib"
 
 # version.txt (обновляем "боевой" файл)
 mv "$DATA_DIR/version.txt.new" "$DATA_DIR/version.txt"

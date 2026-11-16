@@ -2,12 +2,12 @@
 aliases: ["Отчёты сканера"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 3222
-файл: scripts.sh
+строка: 255
+файл: lib/scanner.sh
 ---
 # Отчёты сканера
 
-`_scan_reports` · `scripts.sh` L3222
+`_scan_reports` · `lib/scanner.sh` L255
 
 Список CSV-отчётов из `reports/` (новые сверху, размер и число строк). Выбор номера открывает `_scan_analyze` для этого отчёта.
 

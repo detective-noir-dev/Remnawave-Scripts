@@ -1,0 +1,46 @@
+name: Release
+
+# Релиз выпускается тегом vX.Y.Z. Тег должен совпадать с version.txt, SHA256SUMS — с файлами.
+# Заметки берутся из раздела "## X.Y.Z" в CHANGELOG.md.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches version.txt
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          ver="$(tr -d '\r\n' < version.txt)"
+          if [ "$tag" != "$ver" ]; then
+            echo "Тег $GITHUB_REF_NAME не совпадает с version.txt ($ver)" >&2
+            exit 1
+          fi
+
+      - name: Checksums are up to date
+        run: bash tools/gen-checksums.sh --check
+
+      - name: Tests
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq bats jq
+          bash tests/run.sh
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          awk -v v="$tag" '$0 ~ "^## "v"$" {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "В CHANGELOG.md нет раздела ## $tag" >&2; exit 1; fi
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" SHA256SUMS \
+            --title "$GITHUB_REF_NAME" --notes-file notes.md

@@ -1,6 +1,8 @@
-# Remnawave-Scripts (Русская версия)
+# Remnawave-Scripts
 
-![версия](https://img.shields.io/badge/версия-1.7.0-blue)
+🇬🇧 [English version](README-ENG.md)
+
+![версия](https://img.shields.io/badge/версия-1.8.0-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -302,6 +304,18 @@ rw-scripts
 
 ---
 
+## ⌨️ Команды без меню
+
+Для cron, CI и баг-репортов:
+
+```bash
+rw-scripts clean              # полная очистка системы, без вопросов
+rw-scripts doctor [--online]  # диагностика: зависимости, права, модули, словарь, доступность репозитория
+rw-scripts version            # версия
+```
+
+---
+
 ## 🌍 Поддержка языков
 
 - Русский (Russian)
@@ -313,13 +327,20 @@ rw-scripts
 
 ## 🛠️ Структура репозитория
 
-- **scripts.sh** — основной скрипт
+- **scripts.sh** — ядро: настройки, язык, проверка хэшей, загрузка модулей, запуск
+- **lib/** — модули (подключаются из scripts.sh), по одному файлу на тему:
+  `pkg.sh` (пакетные менеджеры), `firewall.sh` (порты), `hy2.sh` (Hysteria2), `warp.sh` (WARP),
+  `cleaner.sh`, `memory.sh`, `scanner.sh`, `maintenance.sh`, `server.sh`, `ids.sh`, `system.sh`,
+  `thirdparty.sh`, `menus.sh` (главное меню и дашборд), `doctor.sh` (диагностика)
+- **lang/** — словари интерфейса (`ru.sh`, `en.sh`)
+- **SHA256SUMS** — хэши всех устанавливаемых файлов; по ним проверяются установка и обновление
+- **tests/**, **tools/**, **.githooks/** — тесты (`bash tests/run.sh`, bats в `tests/bats`), генерация хэшей, хуки git
 - **install.sh** — установщик (копирует в ~/.local/bin/rw-scripts)
 - **uninstall.sh** — удаление
 - **countries.csv** — база данных стран (RU/EN + ISO)
 - **version.txt** — текущая версия
-- **README.md** — описание проекта (RU)
-- **README-ENG.md** — описание проекта (EN)
+- **README.md** — описание проекта (RU, основной файл)
+- **README-ENG.md** — перевод README.md (EN)
 
 ---
 
@@ -379,7 +400,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.7.0
+**Версия:** 1.8.0
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```

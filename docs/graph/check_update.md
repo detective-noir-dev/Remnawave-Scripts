@@ -2,12 +2,12 @@
 aliases: ["Обновление скрипта"]
 tags: [rw-func]
 тип: действие
-строка: 1172
-файл: scripts.sh
+строка: 6
+файл: lib/maintenance.sh
 ---
 # Обновление скрипта
 
-`check_update` · `scripts.sh` L1172
+`check_update` · `lib/maintenance.sh` L6
 
 Сверяет локальную версию с `version.txt` в репозитории и, с подтверждением, обновляет сам скрипт.
 

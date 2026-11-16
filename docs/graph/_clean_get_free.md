@@ -2,12 +2,12 @@
 aliases: ["Свободное место на /"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 2573
-файл: scripts.sh
+строка: 5
+файл: lib/cleaner.sh
 ---
 # Свободное место на /
 
-`_clean_get_free` · `scripts.sh` L2573
+`_clean_get_free` · `lib/cleaner.sh` L5
 
 Печатает свободное место корня в КБ (`df -k /`).
 

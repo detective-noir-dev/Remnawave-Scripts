@@ -2,12 +2,12 @@
 aliases: ["Проверка: WARP подключён"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 2047
-файл: scripts.sh
+строка: 131
+файл: lib/warp.sh
 ---
 # Проверка: WARP подключён
 
-`_warp_is_connected` · `scripts.sh` L2047
+`_warp_is_connected` · `lib/warp.sh` L131
 
 Возвращает 0, если `warp-cli status` содержит «Connected».
 

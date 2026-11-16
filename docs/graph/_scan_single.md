@@ -2,12 +2,12 @@
 aliases: ["Скан одного адреса"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 3062
-файл: scripts.sh
+строка: 95
+файл: lib/scanner.sh
 ---
 # Скан одного адреса
 
-`_scan_single` · `scripts.sh` L3062
+`_scan_single` · `lib/scanner.sh` L95
 
 Проверяет конкретный IP или домен на пригодность для Reality: подходит ли он для маскировки.
 

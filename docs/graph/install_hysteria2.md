@@ -2,12 +2,12 @@
 aliases: ["Установка Hysteria2"]
 tags: [rw-func]
 тип: действие
-строка: 1311
-файл: scripts.sh
+строка: 6
+файл: lib/hy2.sh
 ---
 # Установка Hysteria2
 
-`install_hysteria2` · `scripts.sh` L1311
+`install_hysteria2` · `lib/hy2.sh` L6
 
 Ставит Hysteria2 официальным установщиком `bash <(curl -fsSL https://get.hy2.sh/)`. Если уже установлен — показывает версию и спрашивает, запускать ли заново. После успеха советует настроить конфиг.
 

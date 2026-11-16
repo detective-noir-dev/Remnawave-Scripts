@@ -2,12 +2,12 @@
 aliases: ["Установка RealiTLScanner"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 2977
-файл: scripts.sh
+строка: 10
+файл: lib/scanner.sh
 ---
 # Установка RealiTLScanner
 
-`_scan_install` · `scripts.sh` L2977
+`_scan_install` · `lib/scanner.sh` L10
 
 Собирает сканер из исходников и скачивает GeoIP-базу.
 

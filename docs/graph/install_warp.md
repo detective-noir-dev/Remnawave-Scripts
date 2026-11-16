@@ -2,12 +2,12 @@
 aliases: ["Установка Cloudflare WARP"]
 tags: [rw-func]
 тип: действие
-строка: 1964
-файл: scripts.sh
+строка: 48
+файл: lib/warp.sh
 ---
 # Установка Cloudflare WARP
 
-`install_warp` · `scripts.sh` L1964
+`install_warp` · `lib/warp.sh` L48
 
 Ставит `cloudflare-warp` и настраивает его как локальный SOCKS5-прокси. Только Ubuntu/Debian и только root. Каждый шаг идёт под спиннером.
 

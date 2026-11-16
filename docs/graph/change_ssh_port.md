@@ -2,12 +2,12 @@
 aliases: ["Смена SSH-порта"]
 tags: [rw-func]
 тип: действие
-строка: 1232
-файл: scripts.sh
+строка: 6
+файл: lib/server.sh
 ---
 # Смена SSH-порта
 
-`change_ssh_port` · `scripts.sh` L1232
+`change_ssh_port` · `lib/server.sh` L6
 
 Безопасно меняет порт SSH-сервера и открывает его в файрволе.
 

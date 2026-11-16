@@ -2,12 +2,12 @@
 aliases: ["Системная информация"]
 tags: [rw-func]
 тип: действие
-строка: 502
-файл: scripts.sh
+строка: 6
+файл: lib/system.sh
 ---
 # Системная информация
 
-`show_system_info` · `scripts.sh` L502
+`show_system_info` · `lib/system.sh` L6
 
 Запускает `neofetch`. Если его нет — предлагает установить (y/n) под спиннером (apt/dnf/yum/pacman/zypper/brew).
 

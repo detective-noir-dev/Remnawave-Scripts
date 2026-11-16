@@ -8,3 +8,6 @@ version.txt text eol=lf
 
 SHA256SUMS text eol=lf
 *.yml text eol=lf
+*.bats text eol=lf
+*.bash text eol=lf
+.githooks/* text eol=lf

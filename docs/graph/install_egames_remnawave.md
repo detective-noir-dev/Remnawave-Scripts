@@ -2,12 +2,12 @@
 aliases: ["Remnawave от eGames"]
 tags: [rw-func]
 тип: действие
-строка: 2156
-файл: scripts.sh
+строка: 6
+файл: lib/thirdparty.sh
 ---
 # Remnawave от eGames
 
-`install_egames_remnawave` · `scripts.sh` L2156
+`install_egames_remnawave` · `lib/thirdparty.sh` L6
 
 Запускает `install_remnawave.sh` из репозитория eGamesAPI/remnawave-reverse-proxy. После успеха подгружает `~/.bashrc`.
 

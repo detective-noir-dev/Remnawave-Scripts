@@ -2,12 +2,12 @@
 aliases: ["Очистка /tmp"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 2625
-файл: scripts.sh
+строка: 72
+файл: lib/cleaner.sh
 ---
 # Очистка /tmp
 
-`_do_clean_tmp` · `scripts.sh` L2625
+`_do_clean_tmp` · `lib/cleaner.sh` L72
 
 Удаляет `/tmp/*`, `/var/tmp/*` и `~/.cache/*`.
 

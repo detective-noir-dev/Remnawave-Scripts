@@ -2,12 +2,12 @@
 aliases: ["Закрыть порт"]
 tags: [rw-func]
 тип: действие
-строка: 859
-файл: scripts.sh
+строка: 233
+файл: lib/firewall.sh
 ---
 # Закрыть порт
 
-`close_port` · `scripts.sh` L859
+`close_port` · `lib/firewall.sh` L233
 
 Закрывает порт в файрволе и убирает его из `ports.json`.
 

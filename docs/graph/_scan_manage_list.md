@@ -2,12 +2,12 @@
 aliases: ["Список целей"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 3188
-файл: scripts.sh
+строка: 221
+файл: lib/scanner.sh
 ---
 # Список целей
 
-`_scan_manage_list` · `scripts.sh` L3188
+`_scan_manage_list` · `lib/scanner.sh` L221
 
 Показывает первые 20 записей `targets.txt`. Действия: 1 добавить IP/домен, 2 очистить список, 3 открыть в nano. 0 — назад.
 

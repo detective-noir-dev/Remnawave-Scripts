@@ -2,12 +2,12 @@
 aliases: ["Анализатор диска"]
 tags: [rw-menu]
 тип: меню
-строка: 2711
-файл: scripts.sh
+строка: 160
+файл: lib/cleaner.sh
 ---
 # Анализатор диска
 
-`_disk_analyzer` · `scripts.sh` L2711
+`_disk_analyzer` · `lib/cleaner.sh` L160
 
 Подменю выбора каталога для просмотра: `/var/log` (можно очищать), `/var/lib/docker` (только просмотр), `/var/cache/apt` (удаление), `/tmp` (удаление), `/opt/remnawave` (только просмотр). Каждый открывает `_disk_inspector` со своим режимом.
 
