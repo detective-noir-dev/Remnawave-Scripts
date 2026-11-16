@@ -163,7 +163,7 @@ fi
 while read -r lib_name; do
     download_verified "$lib_name" "$DATA_DIR/lib.new/$(basename "$lib_name")"
 done <<<"$LIB_NAMES"
-rm -rf "$DATA_DIR/lib"; mv "$DATA_DIR/lib.new" "$DATA_DIR/lib"
+rm -rf "${DATA_DIR:?}/lib"; mv "$DATA_DIR/lib.new" "$DATA_DIR/lib"
 
 # version.txt (обновляем "боевой" файл)
 mv "$DATA_DIR/version.txt.new" "$DATA_DIR/version.txt"

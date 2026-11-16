@@ -82,7 +82,9 @@ if [ $rc -eq 0 ]; then ok "load_modules: модули докачаны и под
 # подменённый модуль не должен подключаться
 echo 'echo EVIL' > "$tmp/mrepo/lib/x.sh"
 (
+    # shellcheck disable=SC1090
     source <(sed -n '/^_sha256_of()/,/^# ====== СЛОВАРЬ/p' scripts.sh | sed '$d')
+    # shellcheck disable=SC1090
     source <(sed -n '/^_lib_names()/,/^load_modules || exit 1/p' scripts.sh | sed '$d')
     DATA_DIR="$tmp/mdata2"; LIB_DIR="$DATA_DIR/lib"
     REPO_URL="file://$(cd "$tmp/mrepo" && { pwd -W 2>/dev/null || pwd; })"

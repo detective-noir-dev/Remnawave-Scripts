@@ -53,6 +53,7 @@ jobs:
           # как после install.sh: бинарь отдельно, модули и словари в каталоге данных
           export HOME="$RUNNER_TEMP/home"; mkdir -p "$HOME/.local/bin" "$HOME/.local/share/remnawave"
           cp scripts.sh "$HOME/.local/bin/rw-scripts"
+          chmod +x "$HOME/.local/bin/rw-scripts"
           cp -r lib lang "$HOME/.local/share/remnawave/"
           cp version.txt countries.csv "$HOME/.local/share/remnawave/"
           out=$("$HOME/.local/bin/rw-scripts" doctor)
