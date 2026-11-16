@@ -99,7 +99,7 @@ if [ $rc -ne 0 ] && [ ! -e "$tmp/mdata2/lib" ]; then ok "load_modules: чужо�
     mkdir -p "$H/.local/bin" "$D"
     layout() {
         cp scripts.sh "$B"; chmod +x "$B"
-        rm -rf "$D/lib" "$D/lang"; cp -r lib lang "$D/"
+        rm -rf "${D:?}/lib" "${D:?}/lang"; cp -r lib lang "$D/"
         cp version.txt countries.csv uninstall.sh SHA256SUMS "$D/"
     }
     chk() { [ "$2" = "$3" ] || { echo "  $1: получено [$2], ожидалось [$3]"; exit 1; }; }
