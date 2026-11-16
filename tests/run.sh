@@ -92,6 +92,38 @@ echo 'echo EVIL' > "$tmp/mrepo/lib/x.sh"
 ); rc=$?
 if [ $rc -ne 0 ] && [ ! -e "$tmp/mdata2/lib" ]; then ok "load_modules: чужой хэш отклонён, lib не создан"; else bad "load_modules: подмену не отклонил (rc=$rc)"; fi
 
+# 12. verify и rollback на копии «установленной» раскладки
+(
+    H="$tmp/inst"; D="$H/.local/share/remnawave"; B="$H/.local/bin/rw-scripts"
+    export HOME="$H"; unset XDG_DATA_HOME
+    mkdir -p "$H/.local/bin" "$D"
+    layout() {
+        cp scripts.sh "$B"; chmod +x "$B"
+        rm -rf "$D/lib" "$D/lang"; cp -r lib lang "$D/"
+        cp version.txt countries.csv uninstall.sh SHA256SUMS "$D/"
+    }
+    chk() { [ "$2" = "$3" ] || { echo "  $1: получено [$2], ожидалось [$3]"; exit 1; }; }
+    layout
+    "$B" verify >/dev/null; chk "verify чистая установка" "$?" 0
+    echo "# tamper" >> "$D/lib/pkg.sh"
+    "$B" verify 2>&1 | grep -q 'lib/pkg.sh'; chk "verify называет изменённый файл" "$?" 0
+    "$B" verify >/dev/null; chk "verify: файл изменён" "$?" 1
+    layout; rm "$D/SHA256SUMS"
+    "$B" verify >/dev/null; chk "verify без SHA256SUMS" "$?" 2
+    cp SHA256SUMS "$D/"
+    "$B" rollback --yes >/dev/null; chk "rollback без копии" "$?" 1
+    mkdir -p "$D/previous"
+    cp "$B" "$D/previous/scripts.sh"; cp -r "$D/lib" "$D/previous/lib"; cp -r "$D/lang" "$D/previous/lang"
+    printf '1.0.0' > "$D/previous/version.txt"
+    "$B" rollback --yes >/dev/null; chk "rollback" "$?" 0
+    chk "версия после отката" "$("$B" version)" "1.0.0"
+    "$B" rollback --yes >/dev/null; chk "откат отката" "$?" 0
+    chk "версия возвращена" "$("$B" version)" "$(cat version.txt)"
+    echo x >> "$D/previous/lib/pkg.sh"; cp SHA256SUMS "$D/previous/SHA256SUMS"
+    "$B" rollback --yes >/dev/null; chk "повреждённая копия отклонена" "$?" 1
+); rc=$?
+if [ $rc -eq 0 ]; then ok "verify и rollback"; else bad "verify и rollback"; fi
+
 # 10. юнит-тесты на bats (если установлен)
 if command -v bats >/dev/null 2>&1; then
     if bats tests/bats; then ok "bats tests/bats"; else bad "bats tests/bats"; fi

@@ -2,7 +2,7 @@
 
 🇬🇧 [English version](README-ENG.md)
 
-![версия](https://img.shields.io/badge/версия-1.8.0-blue)
+![версия](https://img.shields.io/badge/версия-1.9.0-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -312,6 +312,8 @@ rw-scripts
 rw-scripts clean              # полная очистка системы, без вопросов
 rw-scripts doctor [--online]  # диагностика: зависимости, права, модули, словарь, доступность репозитория
 rw-scripts version            # версия
+rw-scripts verify [--online]  # сверка установленных файлов с SHA256SUMS
+rw-scripts rollback [--yes]   # вернуться на версию до последнего обновления
 ```
 
 ---
@@ -400,7 +402,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.8.0
+**Версия:** 1.9.0
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```

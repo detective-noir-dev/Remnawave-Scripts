@@ -25,6 +25,18 @@ tr_text() {
         SUB_UPDATE)       echo "🔄 Check for updates" ;;
         SUB_APT_UPDATE)   echo "📦 Update system packages" ;;
         SUB_DELETE)       echo "🗑️  Uninstall rw-scripts" ;;
+        SUB_ROLLBACK)     echo "↩️  Roll back last update" ;;
+        SUB_VERIFY)       echo "🔍 Verify installed files" ;;
+        ROLLBACK_NONE)    echo "No previous version saved yet (it appears after the next update)." ;;
+        ROLLBACK_TARGET)  echo "Previous version:" ;;
+        ROLLBACK_ASK)     echo "Roll back to the previous version? (y/n)" ;;
+        ROLLBACK_BAD)     echo "The saved copy does not match its checksums - rollback cancelled." ;;
+        ROLLBACK_FAIL)    echo "Rollback failed." ;;
+        ROLLBACK_DONE)    echo "Rolled back to version" ;;
+        VERIFY_TITLE)     echo "Integrity check:" ;;
+        VERIFY_NO_SUMS)   echo "No saved SHA256SUMS (it is stored on install/update). Try: rw-scripts verify --online" ;;
+        VERIFY_OK)        echo "All files match SHA256SUMS" ;;
+        VERIFY_BAD)       echo "Some files differ from SHA256SUMS (corrupted or modified). Reinstall with install.sh." ;;
         
         # === NAVIGATION ===
         MENU_BACK)        echo "⬅️  Back" ;;

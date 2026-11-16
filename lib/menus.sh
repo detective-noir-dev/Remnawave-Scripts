@@ -18,9 +18,7 @@ submenu_server() {
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_ZAPRET)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_HY2_SUBMENU)"
         echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_WARP)"
-        echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
-        echo
         read -rp "> " choice
 
         case $choice in
@@ -41,28 +39,26 @@ submenu_maintenance() {
         print_submenu_header "$(tr_text GROUP_SETTINGS)"
 
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_UPDATE)"
-        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_APT_UPDATE)"
-        echo -e "  ${DIM}──────────────────────────────${NC}"
-        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_CLEANER)"
-        echo -e "     ${DIM}$(tr_text HINT_CLEANER)${NC}"
-        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_MEMORY)"
-        echo -e "     ${DIM}$(tr_text HINT_MEMORY)${NC}"
-        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SCANNER)"
-        echo -e "     ${DIM}$(tr_text HINT_SCANNER)${NC}"
-        echo -e "  ${DIM}──────────────────────────────${NC}"
-        echo -e "  ${RED}6)${NC} $(tr_text SUB_DELETE)"
-        echo
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_ROLLBACK)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_VERIFY)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_APT_UPDATE)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_CLEANER)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_MEMORY)"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text GROUP_SCANNER)"
+        echo -e "  ${RED}8)${NC} $(tr_text SUB_DELETE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
-        echo
         read -rp "> " choice
 
         case $choice in
             1) show_banner; check_update ;;
-            2) show_banner; apt_update_upgrade ;;
-            3) submenu_cleaner ;;
-            4) submenu_memory ;;
-            5) submenu_scanner ;;
-            6) show_banner; delete_self ;;
+            2) show_banner; rollback_update && exec "$SCRIPT_PATH"
+               read -rp "$(tr_text PRESS_ENTER)" ;;
+            3) show_banner; verify_install; read -rp "$(tr_text PRESS_ENTER)" ;;
+            4) show_banner; apt_update_upgrade ;;
+            5) submenu_cleaner ;;
+            6) submenu_memory ;;
+            7) submenu_scanner ;;
+            8) show_banner; delete_self ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
@@ -95,10 +91,10 @@ show_dashboard() {
         if command -v systemd-detect-virt >/dev/null 2>&1; then
             local _vt; _vt=$(systemd-detect-virt 2>/dev/null || echo "unknown")
             case "$_vt" in
-                kvm|qemu)  _DASH_VIRT="KVM (Честное железо)" ;;
-                lxc)       _DASH_VIRT="Container (LXC)" ;;
-                openvz)    _DASH_VIRT="Container (OpenVZ)" ;;
-                none)      _DASH_VIRT="Физический сервер" ;;
+                kvm|qemu)  _DASH_VIRT="KVM" ;;
+                lxc)       _DASH_VIRT="LXC" ;;
+                openvz)    _DASH_VIRT="OpenVZ" ;;
+                none)      _DASH_VIRT="bare metal" ;;
                 *)         _DASH_VIRT="${_vt}" ;;
             esac
         else
@@ -152,6 +148,8 @@ show_dashboard() {
     # ── Прогресс-бар: _pbar <pct> [width=20] ──
     _pbar() {
         local pct=${1:-0} w=${2:-20}
+        [[ "$pct" =~ ^[0-9]+$ ]] || pct=0
+        [ "$pct" -gt 100 ] && pct=100
         local filled=$(( pct * w / 100 ))
         local empty=$(( w - filled ))
         local col i
@@ -166,36 +164,20 @@ show_dashboard() {
         echo -e "$b"
     }
 
-    local cpu_bar ram_bar disk_bar
-    cpu_bar=$(_pbar "$cpu_pct")
-    ram_bar=$(_pbar "$ram_pct")
-    disk_bar=$(_pbar "$disk_pct")
-
     # ── Отрисовка ──
-    echo
-    echo -e "  ${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${BOLD}${CYAN}      🚀  REMNAWAVE-SCRIPTS${NC}                 ${GREEN}v${VERSION}${NC}"
-    echo -e "  ${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo
+    # компактный дашборд: заголовок + 2 строки о системе + 3 строки с барами
+    local cpu_bar_s ram_bar_s disk_bar_s
+    cpu_bar_s=$(_pbar "$cpu_pct" 12)
+    ram_bar_s=$(_pbar "$ram_pct" 12)
+    disk_bar_s=$(_pbar "$disk_pct" 12)
 
-    echo -e "  ${DIM}─── [ СИСТЕМА ] ──────────────────────────────────────────${NC}"
-    echo -e "  ${CYAN}ОС / Ядро      ${NC}: $os_name ${DIM}($kernel)${NC}"
-    echo -e "  ${CYAN}Аптайм         ${NC}: $uptime_str ${DIM}(Сессий: $users_count)${NC}"
-    echo -e "  ${CYAN}Виртуалка      ${NC}: $_DASH_VIRT"
-    echo -e "  ${CYAN}IP Адрес       ${NC}: ${YELLOW}${_DASH_EXT_IP}${NC} ${DIM}(ping 8.8.8.8: ${_DASH_PING})${NC}"
-    echo
-
-    echo -e "  ${DIM}─── [ ЖЕЛЕЗО ] ───────────────────────────────────────────${NC}"
-    echo -e "  ${CYAN}CPU            ${NC}: ${cpu_model:0:40} ${DIM}[${cpu_cores} vCPU]${NC}"
-    echo -e "  ${CYAN}Загрузка CPU   ${NC}: ${cpu_bar} ${BOLD}${cpu_pct}%${NC}"
-    echo -e "  ${CYAN}Память (RAM)   ${NC}: ${ram_bar} ${BOLD}${ram_pct}%${NC} ${DIM}(${ram_used_g}G / ${ram_total_g}G)${NC}"
-    echo -e "  ${CYAN}Диск (${disk_type})    ${NC}: ${disk_bar} ${BOLD}${disk_pct}%${NC} ${DIM}(${disk_used} / ${disk_total})${NC}"
-    echo
-
-    echo -e "  ${DIM}─── [ СТАТУС ] ───────────────────────────────────────────${NC}"
-    echo -e "  ${CYAN}rw-scripts     ${NC}: ${GREEN}v${VERSION}${NC}"
-    echo -e "  ${CYAN}Язык           ${NC}: $lang_display"
-    echo
+    echo -e "  ${BOLD}${CYAN}🚀 REMNAWAVE-SCRIPTS${NC} ${GREEN}v${VERSION}${NC} ${DIM}· ${lang_display}${NC}"
+    echo -e "  ${DIM}──────────────────────────────────────────${NC}"
+    echo -e "  ${os_name} ${DIM}(${kernel}) · ${_DASH_VIRT} · up ${uptime_str}${NC}"
+    echo -e "  ${YELLOW}${_DASH_EXT_IP}${NC} ${DIM}· ping ${_DASH_PING}${NC}"
+    echo -e "  ${CYAN}CPU ${NC}${cpu_bar_s} ${BOLD}$(printf '%3s' "$cpu_pct")%${NC} ${DIM}${cpu_cores} vCPU${NC}"
+    echo -e "  ${CYAN}RAM ${NC}${ram_bar_s} ${BOLD}$(printf '%3s' "$ram_pct")%${NC} ${DIM}${ram_used_g}G / ${ram_total_g}G${NC}"
+    echo -e "  ${CYAN}${disk_type:0:3} ${NC}${disk_bar_s} ${BOLD}$(printf '%3s' "$disk_pct")%${NC} ${DIM}${disk_used} / ${disk_total}${NC}"
 }
 
 show_main_menu() {
@@ -208,28 +190,14 @@ show_main_menu() {
             _UPDATE_CHECKED=1
         fi
 
-        echo -e "  ${DIM}─────────────────────────────────────────${NC}"
-        echo -e "  ${BOLD}${CYAN}  $(tr_text MAIN_TITLE)${NC}"
-        echo -e "  ${DIM}─────────────────────────────────────────${NC}"
-        echo
-
-        echo -e "  ${YELLOW}1)${NC} ${BOLD}$(tr_text GROUP_ID_FLAGS)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_ID_FLAGS)${NC}"
-        echo -e "  ${YELLOW}2)${NC} ${BOLD}$(tr_text GROUP_MONITOR)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_MONITOR)${NC}"
-        echo -e "  ${YELLOW}3)${NC} ${BOLD}$(tr_text GROUP_PORTS)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_PORTS)${NC}"
-        echo -e "  ${YELLOW}4)${NC} ${BOLD}$(tr_text GROUP_SETTINGS)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_SETTINGS)${NC}"
-        echo -e "  ${YELLOW}5)${NC} ${BOLD}$(tr_text GROUP_SERVER)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_SERVER)${NC}"
-        echo -e "  ${YELLOW}6)${NC} ${BOLD}$(tr_text GROUP_THIRDPARTY)${NC}"
-        echo -e "     ${DIM}$(tr_text HINT_THIRDPARTY)${NC}"
-        echo
-        echo -e "  ${DIM}─────────────────────────────────────────${NC}"
-        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_EXIT)${NC}"
-        echo
-        echo -e "  ${DIM}$(tr_text PROMPT_GROUP)${NC}"
+        echo -e "  ${DIM}──────────────────────────────────────────${NC}"
+        echo -e "  ${YELLOW}1)${NC} $(tr_text GROUP_ID_FLAGS)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text GROUP_MONITOR)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_PORTS)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SERVER)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_THIRDPARTY)"
+        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
 
         read -rp "  > " choice
 

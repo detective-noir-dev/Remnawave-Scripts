@@ -2,7 +2,7 @@
 
 🇷🇺 [Русская версия](README.md) (main document)
 
-![version](https://img.shields.io/badge/version-1.8.0-blue)
+![version](https://img.shields.io/badge/version-1.9.0-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -312,6 +312,8 @@ For cron, CI and bug reports:
 rw-scripts clean              # full system cleanup, no prompts
 rw-scripts doctor [--online]  # diagnostics: dependencies, privileges, modules, dictionary, repo reachability
 rw-scripts version            # print version
+rw-scripts verify [--online]  # check installed files against SHA256SUMS
+rw-scripts rollback [--yes]   # go back to the version before the last update
 ```
 
 ---
@@ -400,7 +402,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Release Date:** June 2026
 **License:** MIT
 ```

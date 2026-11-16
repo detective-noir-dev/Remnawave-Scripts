@@ -25,6 +25,18 @@ tr_text() {
         SUB_UPDATE)       echo "🔄 Проверить обновления" ;;
         SUB_APT_UPDATE)   echo "📦 Обновить системные пакеты" ;;
         SUB_DELETE)       echo "🗑️  Удалить rw-scripts" ;;
+        SUB_ROLLBACK)     echo "↩️  Откатить последнее обновление" ;;
+        SUB_VERIFY)       echo "🔍 Проверить целостность файлов" ;;
+        ROLLBACK_NONE)    echo "Предыдущей версии пока нет (она сохраняется при следующем обновлении)." ;;
+        ROLLBACK_TARGET)  echo "Предыдущая версия:" ;;
+        ROLLBACK_ASK)     echo "Вернуться на предыдущую версию? (y/n)" ;;
+        ROLLBACK_BAD)     echo "Сохранённая копия не совпала с контрольными суммами — откат отменён." ;;
+        ROLLBACK_FAIL)    echo "Не удалось выполнить откат." ;;
+        ROLLBACK_DONE)    echo "Выполнен откат до версии" ;;
+        VERIFY_TITLE)     echo "Проверка целостности:" ;;
+        VERIFY_NO_SUMS)   echo "Нет сохранённого SHA256SUMS (он записывается при установке и обновлении). Попробуйте: rw-scripts verify --online" ;;
+        VERIFY_OK)        echo "Все файлы совпадают с SHA256SUMS" ;;
+        VERIFY_BAD)       echo "Часть файлов отличается от SHA256SUMS (повреждены или изменены). Переустановите через install.sh." ;;
         
         # === НАВИГАЦИЯ ===
         MENU_BACK)        echo "⬅️  Назад" ;;

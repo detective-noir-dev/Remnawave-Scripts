@@ -2,12 +2,12 @@
 aliases: ["Удаление скрипта"]
 tags: [rw-func]
 тип: действие
-строка: 76
+строка: 212
 файл: lib/maintenance.sh
 ---
 # Удаление скрипта
 
-`delete_self` · `lib/maintenance.sh` L76
+`delete_self` · `lib/maintenance.sh` L212
 
 Спрашивает подтверждение и запускает `$DATA_DIR/uninstall.sh` (тот спрашивает ещё раз). Завершает работу (`exit 0`) только если `rw-scripts` действительно удалён; при отмене возвращается в меню.
 

@@ -147,6 +147,18 @@ download_verified() {
     mv "$dest.part" "$dest"
 }
 
+# копия установленной версии для отката (становится "previous" только после успешной установки)
+rm -rf "$DATA_DIR/previous.new"
+if [ -f "$INSTALL_DIR/$SCRIPT_NAME" ] && [ -s "$DATA_DIR/lib/pkg.sh" ]; then
+    mkdir -p "$DATA_DIR/previous.new"
+    cp "$INSTALL_DIR/$SCRIPT_NAME" "$DATA_DIR/previous.new/scripts.sh"
+    cp -r "$DATA_DIR/lib" "$DATA_DIR/previous.new/lib"
+    [ -d "$DATA_DIR/lang" ] && cp -r "$DATA_DIR/lang" "$DATA_DIR/previous.new/lang"
+    for f in version.txt SHA256SUMS; do
+        [ -f "$DATA_DIR/$f" ] && cp "$DATA_DIR/$f" "$DATA_DIR/previous.new/$f"
+    done
+fi
+
 mkdir -p "$DATA_DIR/lang"
 download_verified lang/ru.sh "$DATA_DIR/lang/ru.sh"
 download_verified lang/en.sh "$DATA_DIR/lang/en.sh"
@@ -165,12 +177,19 @@ while read -r lib_name; do
 done <<<"$LIB_NAMES"
 rm -rf "${DATA_DIR:?}/lib"; mv "$DATA_DIR/lib.new" "$DATA_DIR/lib"
 
-# version.txt (обновляем "боевой" файл)
-mv "$DATA_DIR/version.txt.new" "$DATA_DIR/version.txt"
+# version.txt: ставим проверенную копию (версия из начала скрипта получена без проверки и нужна только для вывода)
+rm -f "$DATA_DIR/version.txt.new"
+download_verified version.txt "$DATA_DIR/version.txt"
 
 # rw-scripts binary ставим последним
 download_verified scripts.sh "$INSTALL_DIR/$SCRIPT_NAME"
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
+
+# SHA256SUMS нужен для "rw-scripts verify"; прежняя версия остаётся для "rw-scripts rollback"
+printf '%s\n' "$SUMS" > "$DATA_DIR/SHA256SUMS"
+if [ -d "$DATA_DIR/previous.new" ]; then
+    rm -rf "${DATA_DIR:?}/previous"; mv "$DATA_DIR/previous.new" "$DATA_DIR/previous"
+fi
 
 # === PATH CONFIG ===
 PATH_ADDED=0

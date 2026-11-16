@@ -2,12 +2,12 @@
 aliases: ["Меню 4 · Maintenance"]
 tags: [rw-menu]
 тип: меню
-строка: 38
+строка: 36
 файл: lib/menus.sh
 ---
 # Меню 4 · Maintenance
 
-`submenu_maintenance` · `lib/menus.sh` L38
+`submenu_maintenance` · `lib/menus.sh` L36
 
 Подменю обслуживания: 1 обновить скрипт, 2 обновить пакеты, 3 очистка, 4 память/swap, 5 сканер Reality, 6 удалить скрипт. 0 — назад.
 

@@ -23,16 +23,7 @@ if [ "${EUID:-$(id -u)}" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 # ====== БАННЕР ======
 show_banner() {
     clear
-    echo -e "${GREEN}"
-    if command -v figlet >/dev/null 2>&1; then
-        figlet -f small "RW-Scripts"
-        echo -e "          Remnawave-Scripts v$VERSION"
-    else
-        echo "==========================================="
-        echo "  🚀 Remnawave-Scripts (v$VERSION)"
-        echo "==========================================="
-    fi
-    echo -e "${NC}"
+    echo -e "${BOLD}${GREEN}🚀 Remnawave-Scripts${NC} ${DIM}v$VERSION${NC}"
 }
 
 # ====== ТИХАЯ ПРОВЕРКА ОБНОВЛЕНИЙ ======
@@ -129,10 +120,7 @@ load_lang
 # ====== ЗАГОЛОВОК ПОДМЕНЮ ======
 print_submenu_header() {
     local title="$1"
-    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║${NC} ${BOLD}${MAGENTA}$title${NC}"
-    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
-    echo
+    echo -e "${CYAN}──${NC} ${BOLD}${MAGENTA}$title${NC} ${CYAN}──────────────────────${NC}"
 }
 
 # ====== МОДУЛИ ======
@@ -182,7 +170,15 @@ load_modules || exit 1
 #   rw-scripts clean           — полная уборка
 #   rw-scripts doctor [--online] — диагностика окружения
 #   rw-scripts version         — версия
+#   rw-scripts verify [--online] — сверка установленных файлов с SHA256SUMS
+#   rw-scripts rollback [--yes]  — вернуть версию до последнего обновления
 case "${1:-}" in
+    verify|--verify)
+        verify_install "${2:-}"
+        exit $? ;;
+    rollback|--rollback)
+        rollback_update "${2:-}"
+        exit $? ;;
     version|--version|-V)
         echo "$VERSION"
         exit 0 ;;
