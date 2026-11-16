@@ -61,433 +61,67 @@ LANG_FILE="$CONFIG_DIR/lang.conf"
 LANG_SET="en"
 [ -f "$LANG_FILE" ] && LANG_SET=$(<"$LANG_FILE")
 
-# ====== СЛОВАРЬ ======
-tr_text() {
-    case "$LANG_SET" in
-        "ru")
-            case "$1" in
-                # === ГЛАВНОЕ МЕНЮ - ГРУППЫ ===
-                MAIN_TITLE)       echo "🏠 Главное меню" ;;
-                GROUP_ID_FLAGS)   echo "🆔 Short ID & Флаги стран" ;;
-                GROUP_MONITOR)    echo "📊 Монитор ресурсов" ;;
-                GROUP_PORTS)      echo "🔐 Сеть и порты" ;;
-                GROUP_SETTINGS)   echo "⚙️  Обслуживание" ;;
-                
-                # === ПОДМЕНЮ: Short ID & Flags ===
-                SUB_GEN_IDS)      echo "🎲 Сгенерировать shorts_id" ;;
-                SUB_FLAG)         echo "🏳️  Получить emoji-флаг страны" ;;
-                
-                # === ПОДМЕНЮ: Resource Monitor ===
-                SUB_MEMORY)       echo "💾 Показать свободную память" ;;
-                SUB_HTOP)         echo "📈 Запустить htop" ;;
-                SUB_SYSINFO)      echo "🖥️  Системная информация" ;;
-                
-                # === ПОДМЕНЮ: Network & Ports ===
-                SUB_PORTS)        echo "🔒 Управление портами" ;;
-                
-                # === ПОДМЕНЮ: Maintenance ===
-                SUB_UPDATE)       echo "🔄 Проверить обновления" ;;
-                SUB_APT_UPDATE)   echo "📦 Обновить системные пакеты" ;;
-                SUB_DELETE)       echo "🗑️  Удалить rw-scripts" ;;
-                
-                # === НАВИГАЦИЯ ===
-                MENU_BACK)        echo "⬅️  Назад" ;;
-                MENU_EXIT)        echo "🚪 Выйти" ;;
-                PROMPT_CHOICE)    echo "Выберите пункт:" ;;
-                PROMPT_GROUP)     echo "Выберите группу:" ;;
-                
-                # === СООБЩЕНИЯ ===
-                MSG_EXIT)         echo "Выход... Пока 👋" ;;
-                MSG_BACK)         echo "Возврат в главное меню..." ;;
-                ERR_CHOICE)       echo "Неверный выбор, попробуй ещё раз 😅" ;;
-                IDS_HOW_MANY)     echo "Сколько идентификаторов сгенерировать?" ;;
-                ERR_NUMBER)       echo "Ошибка: введите корректное число!" ;;
-                ERR_GT_ZERO)      echo "Ошибка: количество должно быть больше нуля!" ;;
-                IDS_DONE)         echo "ID сгенерированы! Вот твой список:" ;;
-                ERR_IDS)          echo "Произошла ошибка во время генерации." ;;
-                COUNTRY_PROMPT)   echo "Введите название страны (на русском или английском, можно часть, 0 = выход):" ;;
-                NOTHING_FOUND)    echo "Ничего не найдено по запросу" ;;
-                RESULTS)          echo "Результаты поиска:" ;;
-                PROMPT_NUM)       echo "Выберите номер (или 0 для нового поиска):" ;;
-                ERR_NUM)          echo "Введите корректный номер!" ;;
-                ERR_NOT_FOUND)    echo "Нет варианта с таким номером." ;;
-                YOU_SELECTED)     echo "Вы выбрали:" ;;
-                CHECK_CURR)       echo "Текущая версия:" ;;
-                CHECK_LATEST)     echo "Последняя версия:" ;;
-                UPDATE_AVAIL)     echo "Есть новая версия! Хотите обновиться? (y/n)" ;;
-                UPDATE_DONE)      echo "Скрипт обновлён до версии" ;;
-                UPDATE_RESTART)   echo "Перезапуск..." ;;
-                UPDATE_FAIL)      echo "Не удалось проверить обновления." ;;
-                NO_UPDATES)       echo "У вас уже последняя версия." ;;
-                CONFIRM_DEL)      echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
-                CANCEL_DEL)       echo "Отменено" ;;
-                PRESS_ENTER)      echo "Нажмите Enter для продолжения..." ;;
-                APT_UPDATING)     echo "Обновление списка пакетов..." ;;
-                APT_UPGRADING)    echo "Установка обновлений..." ;;
-                APT_DONE)         echo "Все пакеты обновлены!" ;;
-                APT_NOT_FOUND)    echo "apt не найден. Эта функция только для Debian/Ubuntu." ;;
-                APT_CONFIRM)      echo "Обновить системные пакеты? Это может занять время. (y/n)" ;;
-                APT_UPDATE_OK)    echo "Список пакетов обновлён!" ;;
-                APT_UPDATE_FAIL)  echo "Ошибка при обновлении списка пакетов." ;;
-                APT_UPGRADE_FAIL) echo "Ошибка при установке обновлений." ;;
-                # === ПОДМЕНЮ: Server Setup ===
-                GROUP_SERVER)         echo "🖥️  Настройка сервера" ;;
-                SUB_SSH_PORT)         echo "🔑 Сменить SSH порт" ;;
-                SUB_HY2_INSTALL)      echo "⚡ Установить Hysteria2" ;;
-                SUB_HY2_REMOVE)       echo "🗑️  Удалить Hysteria2" ;;
-                SUB_HY2_CONFIG)       echo "📝 Редактировать конфиг Hysteria2" ;;
-                SUB_HY2_MANAGE)       echo "⚙️  Управление сервисом Hysteria2" ;;
-                SUB_HY2_LOGS)         echo "📋 Логи Hysteria2" ;;
-                SSH_ENTER_PORT)       echo "Введите новый SSH порт (1024-65535):" ;;
-                SSH_INVALID_PORT)     echo "Ошибка: введите порт от 1024 до 65535!" ;;
-                SSH_CONFIRM)          echo "Сменить SSH порт на" ;;
-                SSH_CHANGED)          echo "SSH порт успешно изменён! Новый порт:" ;;
-                SSH_RESTART)          echo "Перезапускаю SSH сервис..." ;;
-                SSH_FAIL)             echo "Ошибка при смене порта!" ;;
-                SSH_WARN)             echo "⚠️  ВНИМАНИЕ: Не закрывайте текущую SSH сессию!" ;;
-                SSH_WARN2)            echo "Сначала откройте новое подключение на новом порту и проверьте что всё работает." ;;
-                HY2_INSTALLING)       echo "Устанавливаю Hysteria2..." ;;
-                HY2_INSTALLED)        echo "Hysteria2 успешно установлен!" ;;
-                HY2_REMOVING)         echo "Удаляю Hysteria2..." ;;
-                HY2_REMOVED)          echo "Hysteria2 успешно удалён!" ;;
-                HY2_NOT_FOUND)        echo "Hysteria2 не найден в системе." ;;
-                HY2_CONFIRM_REMOVE)   echo "Вы уверены, что хотите удалить Hysteria2? (y/n)" ;;
-                HY2_DOMAIN_PROMPT)    echo "Введите ваш домен (например: example.com):" ;;
-                HY2_PORT_PROMPT)      echo "Введите порт для Hysteria2 (по умолчанию 443):" ;;
-                HY2_CONFIG_SAVED)     echo "Конфиг сохранён. Перезапустите сервис для применения изменений." ;;
-                HY2_SVC_MENU)         echo "Управление сервисом Hysteria2" ;;
-                HY2_SVC_ENABLE)       echo "▶️  Включить автозапуск и запустить" ;;
-                HY2_SVC_RESTART)      echo "🔄 Перезапустить сервис" ;;
-                HY2_SVC_STATUS)       echo "📊 Статус сервиса" ;;
-                HY2_SVC_STOP)         echo "⏹️  Остановить сервис" ;;
-                SUB_HY2_VERSION)      echo "🔍 Проверить версию Hysteria2" ;;
-                SUB_HY2_UPDATE)       echo "⬆️  Обновить Hysteria2" ;;
-                HY2_VERSION_CURR)     echo "Установленная версия:" ;;
-                HY2_VERSION_LATEST)   echo "Последняя версия:" ;;
-                HY2_UP_TO_DATE)       echo "У вас уже последняя версия Hysteria2!" ;;
-                HY2_UPDATE_AVAIL)     echo "Доступно обновление! Обновить сейчас? (y/n)" ;;
-                HY2_UPDATING)         echo "Обновляю Hysteria2..." ;;
-                HY2_UPDATED)          echo "Hysteria2 успешно обновлён!" ;;
-                HY2_UPDATE_FAIL)      echo "Ошибка при обновлении Hysteria2." ;;
-                SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
-                SUB_HY2_REMNA)        echo "🔧 Настроить Hysteria2 для ноды (Remnanode)" ;;
-                HY2_GROUP_MIHOMO)     echo "── Для ядра Mihomo (отдельный сервер Hysteria2) ──" ;;
-                HY2_GROUP_NODE)       echo "── Для ноды Remnawave (Xray-инбаунд) ──" ;;
-                HY2R_NO_COMPOSE)      echo "Не найден /opt/remnanode/docker-compose.yml. Remnanode установлен?" ;;
-                HY2R_DOMAIN_PROMPT)   echo "Введите домен (сертификат Let's Encrypt уже должен быть выпущен):" ;;
-                HY2R_DOMAIN_INVALID)  echo "Неверный домен." ;;
-                HY2R_NO_CERT)         echo "Сертификат не найден:" ;;
-                HY2R_PORT_PROMPT)     echo "Введите UDP-порт для Hysteria2 (по умолчанию 443):" ;;
-                HY2R_NO_VOLUMES)      echo "В docker-compose.yml нет секции 'volumes:'. Добавьте монтирования вручную." ;;
-                HY2R_COMPOSE_DONE)    echo "docker-compose.yml обновлён (бэкап: docker-compose.yml.bak)." ;;
-                HY2R_HOOK_DONE)       echo "Хук продления сертификата создан." ;;
-                HY2R_RESTART_CONFIRM) echo "Перезапустить Remnanode сейчас (docker compose down && up -d)? (y/N)" ;;
-                HY2R_RESTART_FAIL)    echo "Не удалось перезапустить Remnanode." ;;
-                HY2R_DONE)            echo "Hysteria2 для Remnanode подготовлен!" ;;
-                HY2R_XRAY_HINT)       echo "Укажите эти пути к сертификату в Xray-инбаунде (панель Remnawave):" ;;
-                HY2R_ALREADY)         echo "Hysteria2 для Remnanode уже настроен." ;;
-                HY2R_RECONFIGURE)     echo "Настроить заново? (y/N)" ;;
-                SUB_ZAPRET)           echo "🛡️  Установка zapret" ;;
-                ZAPRET_INSTALLING)    echo "Устанавливаю zapret..." ;;
-                ZAPRET_DONE)          echo "Zapret успешно установлен!" ;;
-                ZAPRET_FAIL)          echo "Ошибка при установке zapret." ;;
-                SUB_WARP)             echo "☁️  Cloudflare WARP" ;;
-                SUB_WARP_INSTALL)     echo "📥 Установка WARP" ;;
-                SUB_WARP_STATUS)      echo "📋 Статус WARP" ;;
-                SUB_WARP_DISCONNECT)  echo "🛑 Отключить WARP" ;;
-                SUB_WARP_CONNECT)     echo "🟢 Включить WARP" ;;
-                SUB_WARP_UNINSTALL)   echo "🗑️  Удалить WARP" ;;
-                WARP_NOT_INSTALLED)   echo "WARP не установлен. Сначала установите его." ;;
-                WARP_STATUS_OK)       echo "WARP подключён" ;;
-                WARP_STATUS_BAD)      echo "WARP НЕ подключён" ;;
-                WARP_ALREADY_OFF)     echo "WARP уже отключён." ;;
-                WARP_ALREADY_ON)      echo "WARP уже подключён." ;;
-                WARP_DISCONNECTED)    echo "WARP отключён." ;;
-                WARP_CONNECTED)       echo "WARP подключён." ;;
-                WARP_UNINSTALL_CONFIRM) echo "Полностью удалить Cloudflare WARP? (y/N)" ;;
-                WARP_UNINSTALLING)    echo "Удаляю WARP..." ;;
-                WARP_UNINSTALLED)     echo "WARP удалён." ;;
-                WARP_CANCELLED)       echo "Отменено." ;;
-                WARP_PORT_PROMPT)     echo "Введите порт для WARP прокси (по умолчанию 40000):" ;;
-                WARP_PORT_INVALID)    echo "Неверный порт, допустимо 1-65535." ;;
-                WARP_ROOT_REQUIRED)   echo "Для установки WARP нужны права root." ;;
-                WARP_OS_UNSUPPORTED)  echo "Поддерживаются только Ubuntu и Debian." ;;
-                WARP_INSTALLING)      echo "Устанавливаю Cloudflare WARP..." ;;
-                WARP_REPO_FAIL)       echo "Не удалось добавить репозиторий Cloudflare." ;;
-                WARP_PKG_FAIL)        echo "Не удалось установить пакет cloudflare-warp." ;;
-                WARP_CONFIG_FAIL)     echo "Не удалось настроить WARP (регистрация/порт/режим)." ;;
-                WARP_CONNECT_FAIL)    echo "Не удалось подключиться к WARP." ;;
-                WARP_DONE)            echo "WARP установлен и подключён!" ;;
-                WARP_PORT_LABEL)      echo "Порт прокси" ;;
-                WARP_IP_LABEL)        echo "Внешний IP" ;;
-                WARP_COUNTRY_LABEL)   echo "Страна" ;;
-                WARP_CMDS)            echo "Команды управления" ;;
-                # === ПОДМЕНЮ: Сторонние скрипты ===
-                GROUP_THIRDPARTY)     echo "🔧 Сторонние скрипты" ;;
-                SUB_EGAMES_RW)        echo "🌐 Remnawave (EGames)" ;;
-                SUB_RESHALA)          echo "🤖 Reshala (Remnawave)" ;;
-                EGAMES_INSTALLING)    echo "Устанавливаю Remnawave от EGames..." ;;
-                EGAMES_DONE)          echo "Remnawave от EGames успешно установлен!" ;;
-                EGAMES_FAIL)          echo "Ошибка установки Remnawave от EGames." ;;
-                RESHALA_INSTALLING)   echo "Устанавливаю Reshala..." ;;
-                RESHALA_DONE)         echo "Reshala успешно установлен!" ;;
-                RESHALA_FAIL)         echo "Ошибка установки Reshala." ;;
-                BASHRC_RELOAD)        echo "⚠️  Перезапустите терминал или выполните: source ~/.bashrc" ;;
-                SUB_MULTITEST)        echo "🧪 Multitest" ;;
-                MULTITEST_INSTALLING) echo "Устанавливаю Multitest..." ;;
-                MULTITEST_DONE)       echo "Multitest успешно установлен!" ;;
-                MULTITEST_FAIL)       echo "Ошибка установки Multitest." ;;
-                # === ОЧИСТКА СИСТЕМЫ ===
-                GROUP_CLEANER)        echo "🧹 Очистка системы" ;;
-                CLEAN_ALL)            echo "✨ Полная уборка (всё сразу)" ;;
-                CLEAN_APT)            echo "📦 Очистить APT и кэш пакетов" ;;
-                CLEAN_JOURNAL)        echo "📚 Очистить системные логи (journald)" ;;
-                CLEAN_DOCKER)         echo "🐳 Очистить мусор Docker (prune)" ;;
-                CLEAN_TMP)            echo "🗑️  Очистить /tmp и кэш пользователя" ;;
-                CLEAN_SNAP)           echo "🧩 Очистить старые Snap-пакеты" ;;
-                CLEAN_DISK_ANALY)     echo "🔍 Анализатор диска" ;;
-                CLEAN_NO_DOCKER)      echo "Docker не установлен." ;;
-                CLEAN_NO_SNAP)        echo "Snap не установлен." ;;
-                # === ПАМЯТЬ И SWAP ===
-                GROUP_MEMORY)         echo "🧠 Управление памятью и Swap" ;;
-                MEM_HYBRID)           echo "🌪️  Гибридный режим (ZRAM + Swap) [РЕКОМЕНДУЕТСЯ]" ;;
-                MEM_ZRAM_ONLY)        echo "🧩 Только ZRAM (турбо-сжатие)" ;;
-                MEM_SWAP_ONLY)        echo "💽 Только Disk Swap" ;;
-                MEM_REMOVE_ALL)       echo "🗑️  Отключить ZRAM/Swap полностью" ;;
-                MEM_SHOW_STATUS)      echo "📊 Подробный статус памяти" ;;
-                MEM_INSTRUCTIONS)     echo "📖 Инструкция (лимиты Docker)" ;;
-                MEM_ZRAM_PERCENT)     echo "Введите процент сжатия (10-100, по умолчанию 60):" ;;
-                MEM_SWAP_SIZE)        echo "Введите размер в GB (например, 2):" ;;
-                # === REALITY SCANNER ===
-                GROUP_SCANNER)        echo "🔍 Reality TLS Scanner" ;;
-                SCAN_SINGLE)          echo "🔬 Одиночное сканирование (OSINT)" ;;
-                SCAN_MASS)            echo "🕵️  Массовый пробив по списку" ;;
-                SCAN_TARGET)          echo "Введите цель (IP или домен):" ;;
-                SCAN_PORT)            echo "Порт(ы) через запятую (Enter = 443):" ;;
-                # === ПОДСКАЗКИ ГЛАВНОГО МЕНЮ ===
-                HINT_ID_FLAGS)    echo "└ Генерация shorts_id, флаги и названия стран" ;;
-                HINT_MONITOR)     echo "└ Свободная память, htop, системная информация" ;;
-                HINT_PORTS)       echo "└ Открыть/закрыть порты, UFW / FirewallD / iptables" ;;
-                HINT_SETTINGS)    echo "└ Обновление, APT, очистка, память, Scanner, удаление" ;;
-                HINT_SERVER)      echo "└ Смена SSH порта, Zapret, Hysteria2, Cloudflare WARP" ;;
-                HINT_THIRDPARTY)  echo "└ EGames Remnawave, Reshala, Multitest" ;;
-                HINT_CLEANER)     echo "└ APT, Docker, journald, /tmp, Snap, анализатор диска" ;;
-                HINT_MEMORY)      echo "└ ZRAM, Disk Swap, гибридный режим, лимиты Docker" ;;
-                HINT_SCANNER)     echo "└ SNI для VLESS+Reality, OSINT, массовый пробив" ;;
-            esac ;;
-        "en" | *)
-            case "$1" in
-                # === MAIN MENU - GROUPS ===
-                MAIN_TITLE)       echo "🏠 Main Menu" ;;
-                GROUP_ID_FLAGS)   echo "🆔 Short ID & Country Flags" ;;
-                GROUP_MONITOR)    echo "📊 Resource Monitor" ;;
-                GROUP_PORTS)      echo "🔐 Network & Ports" ;;
-                GROUP_SETTINGS)   echo "⚙️  Maintenance" ;;
-                
-                # === SUBMENU: Short ID & Flags ===
-                SUB_GEN_IDS)      echo "🎲 Generate shorts_id" ;;
-                SUB_FLAG)         echo "🏳️  Get country emoji flag" ;;
-                
-                # === SUBMENU: Resource Monitor ===
-                SUB_MEMORY)       echo "💾 Show free memory" ;;
-                SUB_HTOP)         echo "📈 Launch htop" ;;
-                SUB_SYSINFO)      echo "🖥️  System information" ;;
-                
-                # === SUBMENU: Network & Ports ===
-                SUB_PORTS)        echo "🔒 Port management" ;;
-                
-                # === SUBMENU: Maintenance ===
-                SUB_UPDATE)       echo "🔄 Check for updates" ;;
-                SUB_APT_UPDATE)   echo "📦 Update system packages" ;;
-                SUB_DELETE)       echo "🗑️  Uninstall rw-scripts" ;;
-                
-                # === NAVIGATION ===
-                MENU_BACK)        echo "⬅️  Back" ;;
-                MENU_EXIT)        echo "🚪 Exit" ;;
-                PROMPT_CHOICE)    echo "Choose an option:" ;;
-                PROMPT_GROUP)     echo "Choose a group:" ;;
-                
-                # === MESSAGES ===
-                MSG_EXIT)         echo "Exiting... Bye 👋" ;;
-                MSG_BACK)         echo "Returning to main menu..." ;;
-                ERR_CHOICE)       echo "Invalid choice, try again 😅" ;;
-                IDS_HOW_MANY)     echo "How many IDs to generate?" ;;
-                ERR_NUMBER)       echo "Error: enter a valid number!" ;;
-                ERR_GT_ZERO)      echo "Error: number must be greater than zero!" ;;
-                IDS_DONE)         echo "IDs generated! Here is your list:" ;;
-                ERR_IDS)          echo "An error occurred during generation." ;;
-                COUNTRY_PROMPT)   echo "Enter country name (English or Russian, part allowed, 0 = exit):" ;;
-                NOTHING_FOUND)    echo "Nothing found for query" ;;
-                RESULTS)          echo "Search results:" ;;
-                PROMPT_NUM)       echo "Choose number (or 0 for new search):" ;;
-                ERR_NUM)          echo "Enter a valid number!" ;;
-                ERR_NOT_FOUND)    echo "No option with that number found." ;;
-                YOU_SELECTED)     echo "You selected:" ;;
-                CHECK_CURR)       echo "Current version:" ;;
-                CHECK_LATEST)     echo "Latest version:" ;;
-                UPDATE_AVAIL)     echo "New version available! Update? (y/n)" ;;
-                UPDATE_DONE)      echo "Script updated to version" ;;
-                UPDATE_RESTART)   echo "Restarting..." ;;
-                UPDATE_FAIL)      echo "Failed to check for updates." ;;
-                NO_UPDATES)       echo "You already have the latest version." ;;
-                CONFIRM_DEL)      echo "Are you sure you want to uninstall rw-scripts? (y/n)" ;;
-                CANCEL_DEL)       echo "Canceled" ;;
-                PRESS_ENTER)      echo "Press Enter to continue..." ;;
-                APT_UPDATING)     echo "Updating package lists..." ;;
-                APT_UPGRADING)    echo "Installing updates..." ;;
-                APT_DONE)         echo "All packages updated!" ;;
-                APT_NOT_FOUND)    echo "apt not found. This feature is for Debian/Ubuntu only." ;;
-                APT_CONFIRM)      echo "Update system packages? This may take a while. (y/n)" ;;
-                APT_UPDATE_OK)    echo "Package lists updated!" ;;
-                APT_UPDATE_FAIL)  echo "Failed to update package lists." ;;
-                APT_UPGRADE_FAIL) echo "Failed to install updates." ;;
-                # === SUBMENU: Server Setup ===
-                GROUP_SERVER)         echo "🖥️  Server Setup" ;;
-                SUB_SSH_PORT)         echo "🔑 Change SSH port" ;;
-                SUB_HY2_INSTALL)      echo "⚡ Install Hysteria2" ;;
-                SUB_HY2_REMOVE)       echo "🗑️  Remove Hysteria2" ;;
-                SUB_HY2_CONFIG)       echo "📝 Edit Hysteria2 config" ;;
-                SUB_HY2_MANAGE)       echo "⚙️  Manage Hysteria2 service" ;;
-                SUB_HY2_LOGS)         echo "📋 Hysteria2 logs" ;;
-                SSH_ENTER_PORT)       echo "Enter new SSH port (1024-65535):" ;;
-                SSH_INVALID_PORT)     echo "Error: enter a port from 1024 to 65535!" ;;
-                SSH_CONFIRM)          echo "Change SSH port to" ;;
-                SSH_CHANGED)          echo "SSH port changed successfully! New port:" ;;
-                SSH_RESTART)          echo "Restarting SSH service..." ;;
-                SSH_FAIL)             echo "Error changing port!" ;;
-                SSH_WARN)             echo "⚠️  WARNING: Do NOT close your current SSH session!" ;;
-                SSH_WARN2)            echo "Open a new connection on the new port first and verify it works." ;;
-                HY2_INSTALLING)       echo "Installing Hysteria2..." ;;
-                HY2_INSTALLED)        echo "Hysteria2 installed successfully!" ;;
-                HY2_REMOVING)         echo "Removing Hysteria2..." ;;
-                HY2_REMOVED)          echo "Hysteria2 removed successfully!" ;;
-                HY2_NOT_FOUND)        echo "Hysteria2 not found on this system." ;;
-                HY2_CONFIRM_REMOVE)   echo "Are you sure you want to remove Hysteria2? (y/n)" ;;
-                HY2_DOMAIN_PROMPT)    echo "Enter your domain (e.g. example.com):" ;;
-                HY2_PORT_PROMPT)      echo "Enter port for Hysteria2 (default 443):" ;;
-                HY2_CONFIG_SAVED)     echo "Config saved. Restart the service to apply changes." ;;
-                HY2_SVC_MENU)         echo "Hysteria2 service management" ;;
-                HY2_SVC_ENABLE)       echo "▶️  Enable autostart and start" ;;
-                HY2_SVC_RESTART)      echo "🔄 Restart service" ;;
-                HY2_SVC_STATUS)       echo "📊 Service status" ;;
-                HY2_SVC_STOP)         echo "⏹️  Stop service" ;;
-                SUB_HY2_VERSION)      echo "🔍 Check Hysteria2 version" ;;
-                SUB_HY2_UPDATE)       echo "⬆️  Update Hysteria2" ;;
-                HY2_VERSION_CURR)     echo "Installed version:" ;;
-                HY2_VERSION_LATEST)   echo "Latest version:" ;;
-                HY2_UP_TO_DATE)       echo "You already have the latest Hysteria2!" ;;
-                HY2_UPDATE_AVAIL)     echo "Update available! Update now? (y/n)" ;;
-                HY2_UPDATING)         echo "Updating Hysteria2..." ;;
-                HY2_UPDATED)          echo "Hysteria2 updated successfully!" ;;
-                HY2_UPDATE_FAIL)      echo "Failed to update Hysteria2." ;;
-                SUB_HY2_SUBMENU)      echo "⚡ Hysteria2" ;;
-                SUB_HY2_REMNA)        echo "🔧 Configure Hysteria2 for node (Remnanode)" ;;
-                HY2_GROUP_MIHOMO)     echo "── For Mihomo core (standalone Hysteria2 server) ──" ;;
-                HY2_GROUP_NODE)       echo "── For Remnawave node (Xray inbound) ──" ;;
-                HY2R_NO_COMPOSE)      echo "File /opt/remnanode/docker-compose.yml not found. Is Remnanode installed?" ;;
-                HY2R_DOMAIN_PROMPT)   echo "Enter your domain (Let's Encrypt certificate must already exist):" ;;
-                HY2R_DOMAIN_INVALID)  echo "Invalid domain." ;;
-                HY2R_NO_CERT)         echo "Certificate not found:" ;;
-                HY2R_PORT_PROMPT)     echo "Enter UDP port for Hysteria2 (default 443):" ;;
-                HY2R_NO_VOLUMES)      echo "No 'volumes:' section in docker-compose.yml. Add the mounts manually." ;;
-                HY2R_COMPOSE_DONE)    echo "docker-compose.yml updated (backup: docker-compose.yml.bak)." ;;
-                HY2R_HOOK_DONE)       echo "Certificate renewal hook created." ;;
-                HY2R_RESTART_CONFIRM) echo "Restart Remnanode now (docker compose down && up -d)? (y/N)" ;;
-                HY2R_RESTART_FAIL)    echo "Failed to restart Remnanode." ;;
-                HY2R_DONE)            echo "Hysteria2 prepared for Remnanode!" ;;
-                HY2R_XRAY_HINT)       echo "Use these certificate paths in the Xray inbound (Remnawave panel):" ;;
-                HY2R_ALREADY)         echo "Hysteria2 for Remnanode is already configured." ;;
-                HY2R_RECONFIGURE)     echo "Reconfigure anyway? (y/N)" ;;
-                SUB_ZAPRET)           echo "🛡️  Install zapret" ;;
-                ZAPRET_INSTALLING)    echo "Installing zapret..." ;;
-                ZAPRET_DONE)          echo "Zapret installed successfully!" ;;
-                ZAPRET_FAIL)          echo "Failed to install zapret." ;;
-                SUB_WARP)             echo "☁️  Cloudflare WARP" ;;
-                SUB_WARP_INSTALL)     echo "📥 Install WARP" ;;
-                SUB_WARP_STATUS)      echo "📋 WARP status" ;;
-                SUB_WARP_DISCONNECT)  echo "🛑 Disable WARP" ;;
-                SUB_WARP_CONNECT)     echo "🟢 Enable WARP" ;;
-                SUB_WARP_UNINSTALL)   echo "🗑️  Uninstall WARP" ;;
-                WARP_NOT_INSTALLED)   echo "WARP is not installed. Install it first." ;;
-                WARP_STATUS_OK)       echo "WARP is connected" ;;
-                WARP_STATUS_BAD)      echo "WARP is NOT connected" ;;
-                WARP_ALREADY_OFF)     echo "WARP is already disconnected." ;;
-                WARP_ALREADY_ON)      echo "WARP is already connected." ;;
-                WARP_DISCONNECTED)    echo "WARP disconnected." ;;
-                WARP_CONNECTED)       echo "WARP connected." ;;
-                WARP_UNINSTALL_CONFIRM) echo "Remove Cloudflare WARP completely? (y/N)" ;;
-                WARP_UNINSTALLING)    echo "Removing WARP..." ;;
-                WARP_UNINSTALLED)     echo "WARP removed." ;;
-                WARP_CANCELLED)       echo "Cancelled." ;;
-                WARP_PORT_PROMPT)     echo "Enter WARP proxy port (default 40000):" ;;
-                WARP_PORT_INVALID)    echo "Invalid port, must be 1-65535." ;;
-                WARP_ROOT_REQUIRED)   echo "Root privileges are required to install WARP." ;;
-                WARP_OS_UNSUPPORTED)  echo "Only Ubuntu and Debian are supported." ;;
-                WARP_INSTALLING)      echo "Installing Cloudflare WARP..." ;;
-                WARP_REPO_FAIL)       echo "Failed to add Cloudflare repository." ;;
-                WARP_PKG_FAIL)        echo "Failed to install cloudflare-warp package." ;;
-                WARP_CONFIG_FAIL)     echo "Failed to configure WARP (registration/port/mode)." ;;
-                WARP_CONNECT_FAIL)    echo "Failed to connect to WARP." ;;
-                WARP_DONE)            echo "WARP installed and connected!" ;;
-                WARP_PORT_LABEL)      echo "Proxy port" ;;
-                WARP_IP_LABEL)        echo "External IP" ;;
-                WARP_COUNTRY_LABEL)   echo "Country" ;;
-                WARP_CMDS)            echo "Management commands" ;;
-                # === SUBMENU: Third-party Scripts ===
-                GROUP_THIRDPARTY)     echo "🔧 Third-party Scripts" ;;
-                SUB_EGAMES_RW)        echo "🌐 Remnawave (EGames)" ;;
-                SUB_RESHALA)          echo "🤖 Reshala (Remnawave)" ;;
-                EGAMES_INSTALLING)    echo "Installing Remnawave by EGames..." ;;
-                EGAMES_DONE)          echo "Remnawave by EGames installed successfully!" ;;
-                EGAMES_FAIL)          echo "Failed to install Remnawave by EGames." ;;
-                RESHALA_INSTALLING)   echo "Installing Reshala..." ;;
-                RESHALA_DONE)         echo "Reshala installed successfully!" ;;
-                RESHALA_FAIL)         echo "Failed to install Reshala." ;;
-                BASHRC_RELOAD)        echo "⚠️  Restart your terminal or run: source ~/.bashrc" ;;
-                SUB_MULTITEST)        echo "🧪 Multitest" ;;
-                MULTITEST_INSTALLING) echo "Installing Multitest..." ;;
-                MULTITEST_DONE)       echo "Multitest installed successfully!" ;;
-                MULTITEST_FAIL)       echo "Failed to install Multitest." ;;
-                # === SYSTEM CLEANER ===
-                GROUP_CLEANER)        echo "🧹 System Cleaner" ;;
-                CLEAN_ALL)            echo "✨ Full cleanup (everything)" ;;
-                CLEAN_APT)            echo "📦 Clean APT cache" ;;
-                CLEAN_JOURNAL)        echo "📚 Clean system logs (journald)" ;;
-                CLEAN_DOCKER)         echo "🐳 Clean Docker garbage (prune)" ;;
-                CLEAN_TMP)            echo "🗑️  Clean /tmp and user cache" ;;
-                CLEAN_SNAP)           echo "🧩 Clean old Snap packages" ;;
-                CLEAN_DISK_ANALY)     echo "🔍 Disk analyzer" ;;
-                CLEAN_NO_DOCKER)      echo "Docker is not installed." ;;
-                CLEAN_NO_SNAP)        echo "Snap is not installed." ;;
-                # === MEMORY & SWAP ===
-                GROUP_MEMORY)         echo "🧠 Memory & Swap Manager" ;;
-                MEM_HYBRID)           echo "🌪️  Hybrid mode (ZRAM + Swap) [RECOMMENDED]" ;;
-                MEM_ZRAM_ONLY)        echo "🧩 ZRAM only (turbo compression)" ;;
-                MEM_SWAP_ONLY)        echo "💽 Disk Swap only" ;;
-                MEM_REMOVE_ALL)       echo "🗑️  Disable ZRAM/Swap completely" ;;
-                MEM_SHOW_STATUS)      echo "📊 Detailed memory status" ;;
-                MEM_INSTRUCTIONS)     echo "📖 Guide (Docker memory limits)" ;;
-                MEM_ZRAM_PERCENT)     echo "Enter compression percent (10-100, default 60):" ;;
-                MEM_SWAP_SIZE)        echo "Enter size in GB (e.g. 2):" ;;
-                # === REALITY SCANNER ===
-                GROUP_SCANNER)        echo "🔍 Reality TLS Scanner" ;;
-                SCAN_SINGLE)          echo "🔬 Single scan (OSINT)" ;;
-                SCAN_MASS)            echo "🕵️  Mass scan from list" ;;
-                SCAN_TARGET)          echo "Enter target (IP or domain):" ;;
-                SCAN_PORT)            echo "Port(s) comma-separated (Enter = 443):" ;;
-                # === MAIN MENU HINTS ===
-                HINT_ID_FLAGS)    echo "└ Generate shorts_id, country flags and names" ;;
-                HINT_MONITOR)     echo "└ Free memory, htop, system information" ;;
-                HINT_PORTS)       echo "└ Open/close ports, UFW / FirewallD / iptables" ;;
-                HINT_SETTINGS)    echo "└ Updates, APT, cleaner, memory, Scanner, uninstall" ;;
-                HINT_SERVER)      echo "└ SSH port, Zapret, Hysteria2, Cloudflare WARP" ;;
-                HINT_THIRDPARTY)  echo "└ EGames Remnawave, Reshala, Multitest" ;;
-                HINT_CLEANER)     echo "└ APT, Docker, journald, /tmp, Snap, disk analyzer" ;;
-                HINT_MEMORY)      echo "└ ZRAM, Disk Swap, hybrid mode, Docker limits" ;;
-                HINT_SCANNER)     echo "└ SNI for VLESS+Reality, OSINT, mass scan" ;;
-            esac ;;
-    esac
+# ====== ПРОВЕРКА ЦЕЛОСТНОСТИ ======
+# SHA256SUMS лежит в репозитории рядом с файлами. Скачанное сверяем с ним до установки,
+# чтобы битая или подменённая загрузка не запустилась с правами root.
+_sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | cut -d' ' -f1
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | cut -d' ' -f1
+    else
+        return 1
+    fi
 }
+
+# fetch_verified NAME DEST SUMS — качает $REPO_URL/NAME в DEST, только если SHA256 совпал с SUMS
+# коды возврата: 0 ок, 1 сеть, 2 нет записи в SHA256SUMS или нет sha256sum, 3 хэш не совпал
+fetch_verified() {
+    local name="$1" dest="$2" sums="$3" expected actual
+    expected=$(awk -v n="$name" '{ f=$2; sub(/^\*/, "", f) } f == n { print $1; exit }' <<<"$sums")
+    [ -n "$expected" ] || return 2
+    curl -fsSL -o "$dest.part" "$REPO_URL/$name" || { rm -f "$dest.part"; return 1; }
+    actual=$(_sha256_of "$dest.part") || { rm -f "$dest.part"; return 2; }
+    if [ "$actual" != "$expected" ]; then
+        rm -f "$dest.part"
+        return 3
+    fi
+    mv "$dest.part" "$dest"
+}
+
+# ====== СЛОВАРЬ ======
+# Тексты интерфейса лежат в lang/ru.sh и lang/en.sh, каждый файл определяет tr_text().
+LANG_DIR="$DATA_DIR/lang"
+tr_text() { echo "$1"; }   # запасной вариант, пока словарь не загружен
+
+load_lang() {
+    local code="en" f sums repo_dir
+    [ "$LANG_SET" = "ru" ] && code="ru"
+
+    # запуск из клонированного репозитория
+    repo_dir=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
+    if [ -s "$repo_dir/lang/$code.sh" ]; then
+        # shellcheck disable=SC1090
+        source "$repo_dir/lang/$code.sh"
+        return 0
+    fi
+
+    f="$LANG_DIR/$code.sh"
+    if [ ! -s "$f" ]; then
+        # старый установщик/обновлятор не знал про lang/: докачиваем словарь с проверкой хэша
+        mkdir -p "$LANG_DIR"
+        sums=$(curl -fsSL --connect-timeout 5 -m 15 "$REPO_URL/SHA256SUMS" 2>/dev/null)
+        fetch_verified "lang/$code.sh" "$f" "$sums" >/dev/null 2>&1
+    fi
+    if [ -s "$f" ]; then
+        # shellcheck disable=SC1090
+        source "$f"
+        return 0
+    fi
+    echo "⚠️  Dictionary $f not found, run the installer again." >&2
+    return 1
+}
+load_lang
 
 # ====== ЗАГОЛОВОК ПОДМЕНЮ ======
 print_submenu_header() {
@@ -1187,25 +821,45 @@ check_update() {
     read -r ans
     [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 0; }
     
-    local tmp_script="$SCRIPT_PATH.tmp"
-    local tmp_version="$DATA_DIR/version.txt.tmp"
+    # всё качаем в staging и сверяем с SHA256SUMS; ставим только если проверены все файлы
+    local stage="$DATA_DIR/.update.$$" sums name rc=0 msg
+    local files=(scripts.sh lang/ru.sh lang/en.sh version.txt)
+    mkdir -p "$stage/lang"
 
     echo -e "${BLUE}⏳ Downloading...${NC}"
     loading_bar & pid=$!
-    
-    if ! curl -fsSL -o "$tmp_script" "$REPO_URL/scripts.sh" || \
-       ! curl -fsSL -o "$tmp_version" "$REPO_URL/version.txt"; then
-        kill $pid >/dev/null 2>&1; tput cnorm
-        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "
-        rm -f "$tmp_script" "$tmp_version"
+
+    sums=$(curl -fsSL "$REPO_URL/SHA256SUMS" 2>/dev/null)
+    if [ -z "$sums" ]; then
+        rc=2
+    else
+        for name in "${files[@]}"; do
+            fetch_verified "$name" "$stage/$name" "$sums" || { rc=$?; break; }
+        done
+    fi
+
+    kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
+
+    if [ "$rc" -ne 0 ]; then
+        case "$rc" in
+            1) msg=$(tr_text UPDATE_FAIL) ;;
+            3) msg=$(tr_text UPDATE_BAD_HASH) ;;
+            *) msg=$(tr_text UPDATE_NO_HASH) ;;
+        esac
+        echo -e "\r${RED}${msg}${NC}          "
+        rm -rf "$stage"
+        read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
-    
-    kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
-    
-    mv "$tmp_script" "$SCRIPT_PATH"; chmod +x "$SCRIPT_PATH"
-    mv "$tmp_version" "$DATA_DIR/version.txt"
-    
+
+    # скрипт заменяем последним: если что-то оборвётся раньше, старая версия остаётся рабочей
+    mkdir -p "$LANG_DIR"
+    mv "$stage/lang/ru.sh" "$stage/lang/en.sh" "$LANG_DIR/"
+    mv "$stage/version.txt" "$DATA_DIR/version.txt"
+    chmod +x "$stage/scripts.sh"
+    mv "$stage/scripts.sh" "$SCRIPT_PATH"
+    rm -rf "$stage"
+
     echo -e "\r${GREEN}$(tr_text UPDATE_DONE) $latest${NC}     "
     echo -e "${YELLOW}$(tr_text UPDATE_RESTART)${NC}"
     exec "$SCRIPT_PATH"
@@ -2755,7 +2409,7 @@ submenu_cleaner() {
     while true; do
         show_banner
         print_submenu_header "$(tr_text GROUP_CLEANER)"
-        echo -e "  ${DIM}Свободно: ${GREEN}$(_clean_human $(_clean_get_free))${NC}"
+        echo -e "  ${DIM}Свободно: ${GREEN}$(_clean_human "$(_clean_get_free)")${NC}"
         echo
         echo -e "  ${YELLOW}1)${NC} $(tr_text CLEAN_ALL)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text CLEAN_APT)"
@@ -3025,7 +2679,7 @@ _scan_install() {
         cd "$src" || return 1
         go build -o "$SCANNER_BIN" && chmod +x "$SCANNER_BIN"
         rm -rf "$src"
-        cd - >/dev/null
+        cd - >/dev/null || true
         [ -f "$SCANNER_BIN" ] \
             && echo -e "${GREEN}✅ RealiTLScanner установлен!${NC}" \
             || { echo -e "${RED}❌ Ошибка компиляции.${NC}"; return 1; }
@@ -3132,7 +2786,7 @@ _scan_single() {
         $found || echo -e "  ${YELLOW}⚠️ Нет ответа от ${target}:${port}${NC}"
     done
     trap - INT
-    cd - >/dev/null
+    cd - >/dev/null || true
 
     local cnt; cnt=$(( $(wc -l < "$out" 2>/dev/null) - 1 ))
     [ "$cnt" -gt 0 ] && echo && _scan_analyze "$out"
@@ -3194,7 +2848,7 @@ _scan_mass() {
     trap - INT
 
     echo -e "\r\033[K${GREEN}✅ Готово! (${done_cnt} целей просканировано)${NC}"
-    cd - >/dev/null
+    cd - >/dev/null || true
     echo
     _scan_analyze "$out"
     echo
@@ -3227,7 +2881,7 @@ _scan_manage_list() {
             1) read -rp "IP или домен: " t
                [ -n "$t" ] && echo "$t" >> "$SCANNER_LIST" \
                && echo -e "${GREEN}✅ Добавлено: $t${NC}" && sleep 1 ;;
-            2) > "$SCANNER_LIST"; echo -e "${GREEN}✅ Список очищен.${NC}"; sleep 1 ;;
+            2) : > "$SCANNER_LIST"; echo -e "${GREEN}✅ Список очищен.${NC}"; sleep 1 ;;
             3) command -v nano >/dev/null 2>&1 && nano "$SCANNER_LIST" \
                || { echo -e "${RED}nano не установлен.${NC}"; sleep 1; } ;;
             0) return ;;
@@ -3369,7 +3023,7 @@ case "${1:-}" in
         else
             echo -e "${YELLOW}ℹ️  Мусора не найдено.${NC}"
         fi
-        echo "Свободно: $(_clean_human $(_clean_get_free))"
+        echo "Свободно: $(_clean_human "$(_clean_get_free)")"
         exit 0 ;;
 esac
 show_main_menu

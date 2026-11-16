@@ -5,3 +5,6 @@
 *.sh text eol=lf
 *.csv text eol=lf
 version.txt text eol=lf
+
+SHA256SUMS text eol=lf
+*.yml text eol=lf

@@ -111,28 +111,58 @@ fi
 
 # === СКАЧИВАНИЕ ОСНОВНЫХ ФАЙЛОВ ===
 
-# rw-scripts binary
-if ! curl -fsSL -o "$INSTALL_DIR/$SCRIPT_NAME" "$REPO_URL/scripts.sh"; then
-    echo -e "\e[31m❌ Failed to download main script (scripts.sh)\e[0m"
-    exit 1
-fi
-chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
+# Все файлы сверяем по SHA256SUMS из репозитория: битая или подменённая загрузка не ставится
+sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | cut -d' ' -f1
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | cut -d' ' -f1
+    else
+        return 1
+    fi
+}
 
-# uninstall.sh
-if ! curl -fsSL -o "$DATA_DIR/uninstall.sh" "$REPO_URL/uninstall.sh"; then
-    echo -e "\e[31m❌ Failed to download uninstall.sh\e[0m"
+SUMS=$(curl -fsSL "$REPO_URL/SHA256SUMS")
+if [ -z "$SUMS" ]; then
+    echo -e "\e[31m❌ Failed to download SHA256SUMS\e[0m"
     exit 1
 fi
+
+# download_verified NAME DEST — скачать файл и сверить SHA256 до установки
+download_verified() {
+    local name="$1" dest="$2" expected actual
+    expected=$(awk -v n="$name" '{ f=$2; sub(/^\*/, "", f) } f == n { print $1; exit }' <<<"$SUMS")
+    if [ -z "$expected" ]; then
+        echo -e "\e[31m❌ $name is not listed in SHA256SUMS\e[0m"; exit 1
+    fi
+    if ! curl -fsSL -o "$dest.part" "$REPO_URL/$name"; then
+        rm -f "$dest.part"
+        echo -e "\e[31m❌ Failed to download $name\e[0m"; exit 1
+    fi
+    if ! actual=$(sha256_of "$dest.part"); then
+        rm -f "$dest.part"
+        echo -e "\e[31m❌ sha256sum/shasum not found, cannot verify $name\e[0m"; exit 1
+    fi
+    if [ "$actual" != "$expected" ]; then
+        rm -f "$dest.part"
+        echo -e "\e[31m❌ Checksum mismatch for $name. If a release was just published, retry in a few minutes.\e[0m"; exit 1
+    fi
+    mv "$dest.part" "$dest"
+}
+
+mkdir -p "$DATA_DIR/lang"
+download_verified lang/ru.sh "$DATA_DIR/lang/ru.sh"
+download_verified lang/en.sh "$DATA_DIR/lang/en.sh"
+download_verified uninstall.sh "$DATA_DIR/uninstall.sh"
 chmod +x "$DATA_DIR/uninstall.sh"
+download_verified countries.csv "$DATA_DIR/countries.csv"
 
 # version.txt (обновляем "боевой" файл)
 mv "$DATA_DIR/version.txt.new" "$DATA_DIR/version.txt"
 
-# countries.csv
-if ! curl -fsSL -o "$DATA_DIR/countries.csv" "$REPO_URL/countries.csv"; then
-    echo -e "\e[31m❌ Failed to download countries.csv\e[0m"
-    exit 1
-fi
+# rw-scripts binary ставим последним
+download_verified scripts.sh "$INSTALL_DIR/$SCRIPT_NAME"
+chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
 
 # === PATH CONFIG ===
 PATH_ADDED=0

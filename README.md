@@ -1,6 +1,6 @@
 # Remnawave-Scripts (Русская версия)
 
-![версия](https://img.shields.io/badge/версия-1.6.15-blue)
+![версия](https://img.shields.io/badge/версия-1.7.0-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -379,7 +379,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.6.15
+**Версия:** 1.7.0
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```
