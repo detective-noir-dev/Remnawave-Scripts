@@ -27,7 +27,7 @@ svc_summary() {
         name="${pair%%:*}"
         # shellcheck disable=SC2086
         st=$(_svc_state ${pair#*:}) || continue
-        if [ "$st" = "active" ]; then out+="${GREEN}✔${NC} $name  "; else out+="${RED}✖${NC} $name  "; fi
+        if [ "$st" = "active" ]; then out+="${BOLD}${GREEN}✔${NC} $name  "; else out+="${BOLD}${RED}✖${NC} $name  "; fi
     done
     [ -n "$out" ] && echo -e "${out%  }"
     return 0

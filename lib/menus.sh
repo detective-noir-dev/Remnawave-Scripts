@@ -39,25 +39,25 @@ submenu_maintenance() {
         print_submenu_header "$(tr_text GROUP_SETTINGS)"
 
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_UPDATE)"
-        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_ROLLBACK)"
-        echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_VERIFY)"
-        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_APT_UPDATE)"
-        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_CLEANER)"
-        echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_MEMORY)"
-        echo -e "  ${YELLOW}7)${NC} $(tr_text GROUP_SCANNER)"
+        echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_APT_UPDATE)"
+        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_CLEANER)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_MEMORY)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SCANNER)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_ROLLBACK)"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_VERIFY)"
         echo -e "  ${RED}8)${NC} $(tr_text SUB_DELETE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         read -rp "> " choice
 
         case $choice in
             1) show_banner; check_update ;;
-            2) show_banner; rollback_update && exec "$SCRIPT_PATH"
+            2) show_banner; apt_update_upgrade ;;
+            3) submenu_cleaner ;;
+            4) submenu_memory ;;
+            5) submenu_scanner ;;
+            6) show_banner; rollback_update && exec "$SCRIPT_PATH"
                read -rp "$(tr_text PRESS_ENTER)" ;;
-            3) show_banner; verify_install; read -rp "$(tr_text PRESS_ENTER)" ;;
-            4) show_banner; apt_update_upgrade ;;
-            5) submenu_cleaner ;;
-            6) submenu_memory ;;
-            7) submenu_scanner ;;
+            7) show_banner; verify_install; read -rp "$(tr_text PRESS_ENTER)" ;;
             8) show_banner; delete_self ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
@@ -145,41 +145,50 @@ show_dashboard() {
     # Язык
     [ "$LANG_SET" = "ru" ] && lang_display="Русский" || lang_display="English"
 
-    # ── Прогресс-бар: _pbar <pct> [width=20] ──
+    # ── Прогресс-бар: _pbar <pct> [ширина]; заполненная часть цветная по порогам, пустая приглушена ──
+    _pcol() {
+        local pct=${1:-0}
+        if   [ "$pct" -ge 90 ]; then echo -n "$RED"
+        elif [ "$pct" -ge 70 ]; then echo -n "$YELLOW"
+        else                          echo -n "$GREEN"
+        fi
+    }
     _pbar() {
-        local pct=${1:-0} w=${2:-20}
+        local pct=${1:-0} w=${2:-12} filled i b=""
         [[ "$pct" =~ ^[0-9]+$ ]] || pct=0
         [ "$pct" -gt 100 ] && pct=100
-        local filled=$(( pct * w / 100 ))
-        local empty=$(( w - filled ))
-        local col i
-        if   [ "$pct" -ge 90 ]; then col=$RED
-        elif [ "$pct" -ge 70 ]; then col=$YELLOW
-        else                          col=$GREEN
-        fi
-        local b="${col}["
-        for ((i=0; i<filled; i++)); do b+="▓"; done
-        for ((i=0; i<empty;  i++)); do b+="░"; done
-        b+="]${NC}"
+        filled=$(( pct * w / 100 ))
+        b+="$(_pcol "$pct")"
+        for ((i=0; i<filled; i++)); do b+="█"; done
+        b+="${NC}${DIM}"
+        for ((i=filled; i<w; i++)); do b+="░"; done
+        b+="${NC}"
         echo -e "$b"
+    }
+    # строка бара: _dash_bar МЕТКА ПРОЦЕНТ ПОДПИСЬ
+    _dash_bar() {
+        echo -e "  ${CYAN}${BOLD}$(printf '%-5s' "$1")${NC}$(_pbar "$2") $(_pcol "$2")${BOLD}$(printf '%3s' "$2")%${NC}  ${DIM}$3${NC}"
     }
 
     # ── Отрисовка ──
-    # компактный дашборд: заголовок + 2 строки о системе + 3 строки с барами
-    local cpu_bar_s ram_bar_s disk_bar_s
-    cpu_bar_s=$(_pbar "$cpu_pct" 12)
-    ram_bar_s=$(_pbar "$ram_pct" 12)
-    disk_bar_s=$(_pbar "$disk_pct" 12)
+    local rule_h rule_l os_short up_short
+    rule_h="${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    rule_l="${DIM}──────────────────────────────────────────────${NC}"
+    os_short="${os_name// GNU\/Linux/}"
+    up_short=$(echo "$uptime_str" | sed -E 's/ years?/y/;s/ weeks?/w/;s/ days?/d/;s/ hours?/h/;s/ minutes?/m/;s/,//g')
 
-    echo -e "  ${BOLD}${CYAN}🚀 REMNAWAVE-SCRIPTS${NC} ${GREEN}v${VERSION}${NC} ${DIM}· ${lang_display}${NC}"
-    echo -e "  ${DIM}──────────────────────────────────────────${NC}"
-    echo -e "  ${os_name} ${DIM}(${kernel}) · ${_DASH_VIRT} · up ${uptime_str}${NC}"
-    echo -e "  ${YELLOW}${_DASH_EXT_IP}${NC} ${DIM}· ping ${_DASH_PING}${NC}"
+    echo -e "  $rule_h"
+    echo -e "  ${BOLD}${CYAN}🚀 REMNAWAVE-SCRIPTS${NC}  ${GREEN}v${VERSION}${NC} ${DIM}· ${lang_display}${NC}"
+    echo -e "  $rule_h"
+    echo -e "  ${DIM}SYS${NC}  ${os_short} ${DIM}· ${_DASH_VIRT} · kernel ${kernel}${NC}"
+    echo -e "  ${DIM}NET${NC}  ${YELLOW}${_DASH_EXT_IP}${NC} ${DIM}· ping ${_DASH_PING} · up ${up_short}${NC}"
     local _svc; _svc=$(svc_summary)
-    [ -n "$_svc" ] && echo -e "  ${DIM}svc${NC} ${_svc}"
-    echo -e "  ${CYAN}CPU ${NC}${cpu_bar_s} ${BOLD}$(printf '%3s' "$cpu_pct")%${NC} ${DIM}${cpu_cores} vCPU${NC}"
-    echo -e "  ${CYAN}RAM ${NC}${ram_bar_s} ${BOLD}$(printf '%3s' "$ram_pct")%${NC} ${DIM}${ram_used_g}G / ${ram_total_g}G${NC}"
-    echo -e "  ${CYAN}${disk_type:0:3} ${NC}${disk_bar_s} ${BOLD}$(printf '%3s' "$disk_pct")%${NC} ${DIM}${disk_used} / ${disk_total}${NC}"
+    [ -n "$_svc" ] && echo -e "  ${DIM}SVC${NC}  ${_svc}"
+    echo -e "  $rule_l"
+    _dash_bar "CPU" "$cpu_pct" "${cpu_cores} vCPU"
+    _dash_bar "RAM" "$ram_pct" "${ram_used_g}G / ${ram_total_g}G"
+    _dash_bar "${disk_type:0:4}" "$disk_pct" "${disk_used} / ${disk_total}"
+    echo -e "  $rule_h"
 }
 
 show_main_menu() {
@@ -192,14 +201,15 @@ show_main_menu() {
             _UPDATE_CHECKED=1
         fi
 
-        echo -e "  ${DIM}──────────────────────────────────────────${NC}"
-        echo -e "  ${YELLOW}1)${NC} $(tr_text GROUP_ID_FLAGS)"
-        echo -e "  ${YELLOW}2)${NC} $(tr_text GROUP_MONITOR)"
-        echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_PORTS)"
-        echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_SETTINGS)"
-        echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SERVER)"
-        echo -e "  ${YELLOW}6)${NC} $(tr_text GROUP_THIRDPARTY)"
-        echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_EXIT)"
+        _mi() { echo -e "  ${DIM}[${NC}${BOLD}${YELLOW}$1${NC}${DIM}]${NC} $2"; }
+        _mi 1 "$(tr_text GROUP_ID_FLAGS)"
+        _mi 2 "$(tr_text GROUP_MONITOR)"
+        _mi 3 "$(tr_text GROUP_PORTS)"
+        _mi 4 "$(tr_text GROUP_SETTINGS)"
+        _mi 5 "$(tr_text GROUP_SERVER)"
+        _mi 6 "$(tr_text GROUP_THIRDPARTY)"
+        echo -e "  ${DIM}[0] $(tr_text MENU_EXIT)${NC}"
+        echo -e "  ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
         read -rp "  > " choice
 

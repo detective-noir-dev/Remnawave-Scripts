@@ -2,7 +2,7 @@
 
 🇬🇧 [English version](README-ENG.md)
 
-![версия](https://img.shields.io/badge/версия-1.10.0-blue)
+![версия](https://img.shields.io/badge/версия-1.10.1-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -411,7 +411,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.10.0
+**Версия:** 1.10.1
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```
