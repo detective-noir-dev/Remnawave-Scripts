@@ -7,13 +7,13 @@ _mem_swap_status() {
     local has_zram; has_zram=$(lsblk 2>/dev/null | grep -i zram)
     local has_file; has_file=$(swapon --show --noheadings 2>/dev/null | grep -i swapfile)
     if [ -n "$has_zram" ] && [ -n "$has_file" ]; then
-        echo -e "${GREEN}[ГИБРИД: ZRAM + Disk Swap]${NC}"
+        echo -e "$(tr_text L_MEMORY_001)"
     elif [ -n "$has_zram" ]; then
         echo -e "${GREEN}[ZRAM: ${swp} MB]${NC}"
     elif [ -n "$swp" ] && [ "$swp" != "0" ]; then
         echo -e "${YELLOW}[Disk Swap: ${swp} MB]${NC}"
     else
-        echo -e "${RED}[ВЫКЛЮЧЕН]${NC}"
+        echo -e "$(tr_text L_MEMORY_002)"
     fi
 }
 
@@ -28,22 +28,22 @@ _mem_show_status() {
     st=$(free -m 2>/dev/null | awk '/^Swap:/{print $2}')
     su=$(free -m 2>/dev/null | awk '/^Swap:/{print $3}')
     sf=$(free -m 2>/dev/null | awk '/^Swap:/{print $4}')
-    echo -e "  ${CYAN}💻 Оперативная память (RAM):${NC}"
-    echo -e "    └─ Всего:        ${GREEN}${mt} MB${NC}"
-    echo -e "    └─ Используется: ${YELLOW}${mu} MB${NC}"
-    echo -e "    └─ Кэш/Буферы:  ${BLUE}${mc} MB${NC}"
-    echo -e "    └─ Свободно:     ${GREEN}${ma} MB${NC}"
+    echo -e "$(tr_text L_MEMORY_003)"
+    echo -e "$(tr_text L_MEMORY_004 "${mt}")"
+    echo -e "$(tr_text L_MEMORY_005 "${mu}")"
+    echo -e "$(tr_text L_MEMORY_006 "${mc}")"
+    echo -e "$(tr_text L_MEMORY_007 "${ma}")"
     echo
-    echo -e "  ${CYAN}💽 Файл подкачки (ZRAM / Swap):${NC}"
+    echo -e "$(tr_text L_MEMORY_008)"
     if [ "${st:-0}" = "0" ]; then
-        echo -e "    └─ ${RED}ВЫКЛЮЧЕН (рекомендуется включить ZRAM!)${NC}"
+        echo -e "$(tr_text L_MEMORY_009)"
     else
         lsblk 2>/dev/null | grep -q zram \
-            && echo -e "    └─ Тип: ${GREEN}ZRAM (сжатие в ОЗУ)${NC}" \
-            || echo -e "    └─ Тип: ${YELLOW}Disk Swap${NC}"
-        echo -e "    └─ Выделено:     ${GREEN}${st} MB${NC}"
-        echo -e "    └─ Используется: ${RED}${su} MB${NC}"
-        echo -e "    └─ Свободно:     ${GREEN}${sf} MB${NC}"
+            && echo -e "$(tr_text L_MEMORY_010)" \
+            || echo -e "$(tr_text L_MEMORY_011)"
+        echo -e "$(tr_text L_MEMORY_012 "${st}")"
+        echo -e "$(tr_text L_MEMORY_013 "${su}")"
+        echo -e "$(tr_text L_MEMORY_014 "${sf}")"
     fi
     echo
     read -rp "$(tr_text PRESS_ENTER)"
@@ -53,13 +53,13 @@ _mem_show_instructions() {
     show_banner
     print_submenu_header "$(tr_text MEM_INSTRUCTIONS)"
     echo -e "  ${CYAN}${BOLD}ZRAM vs Disk Swap:${NC}"
-    echo -e "  ${GREEN}ZRAM${NC} — сжатие в ОЗУ, скорость = RAM. Идеален для VPN."
-    echo -e "       Обязателен для серверов 1-2 ГБ!"
-    echo -e "  ${YELLOW}Disk Swap${NC} — в 10-50× медленнее ZRAM. Только если ОЗУ < 512 МБ."
+    echo -e "$(tr_text L_MEMORY_015)"
+    echo -e "$(tr_text L_MEMORY_016)"
+    echo -e "$(tr_text L_MEMORY_017)"
     echo
-    echo -e "  ${CYAN}${BOLD}Лимиты памяти в docker-compose.yml (блок remnanode):${NC}"
+    echo -e "$(tr_text L_MEMORY_018)"
     echo
-    echo -e "  ${BOLD}▶ Сервер 1 ГБ RAM:${NC}"
+    echo -e "$(tr_text L_MEMORY_019)"
     echo -e "${CYAN}    environment:
       - NODE_OPTIONS=--max-old-space-size=256
     deploy:
@@ -67,7 +67,7 @@ _mem_show_instructions() {
         limits:
           memory: 768M${NC}"
     echo
-    echo -e "  ${BOLD}▶ Сервер 2 ГБ RAM:${NC}"
+    echo -e "$(tr_text L_MEMORY_020)"
     echo -e "${CYAN}    environment:
       - NODE_OPTIONS=--max-old-space-size=512
     deploy:
@@ -75,7 +75,7 @@ _mem_show_instructions() {
         limits:
           memory: 1536M${NC}"
     echo
-    echo -e "  ${BOLD}▶ Сервер 4+ ГБ RAM:${NC}"
+    echo -e "$(tr_text L_MEMORY_021)"
     echo -e "${CYAN}    environment:
       - NODE_OPTIONS=--max-old-space-size=1024
     deploy:
@@ -83,69 +83,72 @@ _mem_show_instructions() {
         limits:
           memory: 3072M${NC}"
     echo
-    echo -e "  ${YELLOW}После изменений: docker compose down && docker compose up -d${NC}"
+    echo -e "$(tr_text L_MEMORY_022)"
     echo
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
-_mem_install_hybrid() {
-    echo -e "${BLUE}Настройка гибридной памяти (ZRAM 50% + Disk Swap 2GB)...${NC}"
+# _mem_setup_zram ПРОЦЕНТ — пакет, конфиг и запуск zramswap; любая ошибка видна по коду возврата
+_mem_setup_zram() {
+    local pct=$1
     _pkg_install zram-tools bc
-    printf "ALGO=lz4\nPERCENT=50\nPRIORITY=100\n" | $SUDO tee /etc/default/zramswap >/dev/null
-    $SUDO systemctl restart zramswap >/dev/null 2>&1
-    $SUDO systemctl enable zramswap >/dev/null 2>&1
+    printf "ALGO=lz4\nPERCENT=%s\nPRIORITY=100\n" "$pct" | $SUDO tee /etc/default/zramswap >/dev/null \
+        && $SUDO systemctl restart zramswap \
+        && $SUDO systemctl enable zramswap
+}
+
+# _mem_make_swapfile ГБ [fstab-опции] [приоритет swapon] — создаёт /swapfile, включает и прописывает в fstab
+_mem_make_swapfile() {
+    local sz=$1 fstab_opts=${2:-sw} prio=${3:-}
+    { $SUDO fallocate -l "${sz}G" /swapfile 2>/dev/null \
+        || $SUDO dd if=/dev/zero of=/swapfile bs=1M count=$(( sz * 1024 )) status=none; } \
+        && $SUDO chmod 600 /swapfile \
+        && $SUDO mkswap /swapfile \
+        && { { [ -n "$prio" ] && $SUDO swapon -p "$prio" /swapfile 2>/dev/null; } || $SUDO swapon /swapfile; } \
+        && { grep -qE '^/swapfile\s' /etc/fstab \
+            || echo "/swapfile none swap $fstab_opts 0 0" | $SUDO tee -a /etc/fstab >/dev/null; }
+}
+
+_mem_install_hybrid() {
+    echo -e "$(tr_text L_MEMORY_023)"
+    run_step "$(tr_text MEM_STEP_ZRAM)" _mem_setup_zram 50 || return 1
     if [ ! -f /swapfile ]; then
-        echo -e "${BLUE}Создание Disk Swap 2GB (резервная страховка)...${NC}"
-        $SUDO fallocate -l 2G /swapfile 2>/dev/null \
-            || $SUDO dd if=/dev/zero of=/swapfile bs=1M count=2048 status=none
-        $SUDO chmod 600 /swapfile
-        $SUDO mkswap /swapfile >/dev/null 2>&1
-        $SUDO swapon -p -2 /swapfile 2>/dev/null || $SUDO swapon /swapfile
-        grep -qE '^/swapfile\s' /etc/fstab \
-            || echo '/swapfile none swap sw,pri=-2 0 0' | $SUDO tee -a /etc/fstab >/dev/null
+        echo -e "$(tr_text L_MEMORY_024)"
+        run_step "$(tr_text MEM_STEP_SWAP)" _mem_make_swapfile 2 "sw,pri=-2" -2 || return 1
     fi
-    echo -e "${GREEN}✅ Гибридная память: ZRAM (prio 100) + Swap (prio -2).${NC}"
+    echo -e "$(tr_text L_MEMORY_025)"
 }
 
 _mem_install_zram() {
     local pct=$1
-    echo -e "${BLUE}Установка ZRAM (${pct}%)...${NC}"
+    echo -e "$(tr_text L_MEMORY_026 "${pct}")"
     $SUDO swapoff -a 2>/dev/null || true
     $SUDO rm -f /swapfile 2>/dev/null
     $SUDO sed -i '/^\/swapfile/d' /etc/fstab 2>/dev/null
-    _pkg_install zram-tools bc
-    printf "ALGO=lz4\nPERCENT=%s\nPRIORITY=100\n" "$pct" | $SUDO tee /etc/default/zramswap >/dev/null
-    $SUDO systemctl restart zramswap >/dev/null 2>&1
-    $SUDO systemctl enable zramswap >/dev/null 2>&1
-    echo -e "${GREEN}✅ ZRAM ${pct}% активирован!${NC}"
+    run_step "$(tr_text MEM_STEP_ZRAM)" _mem_setup_zram "$pct" || return 1
+    echo -e "$(tr_text L_MEMORY_027 "${pct}")"
 }
 
 _mem_install_swap() {
     local sz=$1
-    echo -e "${BLUE}Создание Disk Swap ${sz}GB...${NC}"
+    echo -e "$(tr_text L_MEMORY_028 "${sz}")"
     $SUDO systemctl stop zramswap 2>/dev/null || true
     $SUDO apt-get remove --purge zram-tools -y >/dev/null 2>&1 || true
     $SUDO swapoff -a 2>/dev/null || true
     $SUDO rm -f /swapfile 2>/dev/null
-    $SUDO fallocate -l "${sz}G" /swapfile \
-        || $SUDO dd if=/dev/zero of=/swapfile bs=1M count=$(( sz * 1024 )) status=none
-    $SUDO chmod 600 /swapfile
-    $SUDO mkswap /swapfile >/dev/null 2>&1
-    $SUDO swapon /swapfile
-    grep -qE '^/swapfile\s' /etc/fstab \
-        || echo '/swapfile none swap sw 0 0' | $SUDO tee -a /etc/fstab >/dev/null
-    echo -e "${GREEN}✅ Disk Swap ${sz}GB создан!${NC}"
+    run_step "$(tr_text MEM_STEP_SWAP)" _mem_make_swapfile "$sz" sw || return 1
+    echo -e "$(tr_text L_MEMORY_029 "${sz}")"
 }
 
 _mem_remove_all() {
-    echo -e "${BLUE}Удаление ZRAM и Disk Swap...${NC}"
+    echo -e "$(tr_text L_MEMORY_030)"
     $SUDO systemctl stop zramswap 2>/dev/null || true
     $SUDO systemctl disable zramswap 2>/dev/null || true
     $SUDO apt-get remove --purge zram-tools -y >/dev/null 2>&1 || true
     $SUDO swapoff -a 2>/dev/null || true
     $SUDO rm -f /swapfile 2>/dev/null
     $SUDO sed -i '/^\/swapfile/d' /etc/fstab 2>/dev/null
-    echo -e "${GREEN}✅ ZRAM и Swap полностью удалены.${NC}"
+    echo -e "$(tr_text L_MEMORY_031)"
 }
 
 submenu_memory() {
@@ -165,7 +168,7 @@ submenu_memory() {
         echo -e "  ${DIM}RAM: ${GREEN}${ram_gb} GB (${ram_mb} MB)${NC}  |  Swap: $(_mem_swap_status)"
         echo
         echo -e "  ${YELLOW}1)${NC} $(tr_text MEM_HYBRID)"
-        echo -e "     ${DIM}└ Рекомендовано: ZRAM ${rec_zram}% + Swap ${rec_swap}GB${NC}"
+        echo -e "$(tr_text L_MEMORY_032 "${rec_zram}" "${rec_swap}")"
         echo -e "  ${YELLOW}2)${NC} $(tr_text MEM_ZRAM_ONLY)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text MEM_SWAP_ONLY)"
         echo -e "  ${DIM}──────────────────────────────${NC}"

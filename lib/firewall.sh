@@ -25,12 +25,12 @@ ensure_jq() {
         return 0
     fi
     
-    echo -e "${YELLOW}⚙️  'jq' не установлен. Устанавливаю...${NC}"
+    echo -e "$(tr_text L_FIREWALL_001)"
     loading_bar & pid=$!
     
     if ! pkg_mgr >/dev/null; then
         kill $pid >/dev/null 2>&1; tput cnorm
-        echo -e "\r${RED}❌ Не удалось определить пакетный менеджер.${NC}"
+        echo -e "$(tr_text L_FIREWALL_002)"
         return 1
     fi
     pkg_install jq &>/dev/null
@@ -38,10 +38,10 @@ ensure_jq() {
     kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
     
     if command -v jq >/dev/null 2>&1; then
-        echo -e "\r✅ jq успешно установлен!                    "
+        echo -e "$(tr_text L_FIREWALL_003)"
         return 0
     else
-        echo -e "\r${RED}❌ Не удалось установить jq.${NC}"
+        echo -e "$(tr_text L_FIREWALL_004)"
         return 1
     fi
 }
@@ -152,41 +152,41 @@ open_port() {
     local firewall=$(detect_firewall)
     
     if [ "$firewall" = "none" ]; then
-        echo -e "${RED}❌ Firewall не обнаружен.${NC}"
+        echo -e "$(tr_text L_FIREWALL_005)"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
     echo -e "${CYAN}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║     🔓 Открыть порт / Open Port      ║${NC}"
+    echo -e "$(tr_text L_FIREWALL_006)"
     echo -e "${CYAN}╚═══════════════════════════════════════╝${NC}"
     echo
-    read -rp "Введите номер порта (1-65535): " port
+    read -rp "$(tr_text L_FIREWALL_007)" port
     
     if ! [[ "$port" =~ ^[0-9]+$ ]] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
-        echo -e "${RED}❌ Неверный номер порта${NC}"
+        echo -e "$(tr_text L_FIREWALL_008)"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
     echo
-    echo "Выберите протокол:"
+    echo "$(tr_text L_FIREWALL_009)"
     echo -e "${YELLOW}1)${NC} TCP"
     echo -e "${YELLOW}2)${NC} UDP"
-    echo -e "${YELLOW}3)${NC} TCP и UDP"
+    echo -e "$(tr_text L_FIREWALL_010)"
     read -rp "> " proto_choice
     
     case $proto_choice in
         1) protocol="tcp" ;;
         2) protocol="udp" ;;
         3) protocol="both" ;;
-        *) echo -e "${RED}❌ Неверный выбор${NC}"; return 1 ;;
+        *) echo -e "$(tr_text L_FIREWALL_011)"; return 1 ;;
     esac
     
-    read -rp "Описание порта: " description
+    read -rp "$(tr_text L_FIREWALL_012)" description
     [ -z "$description" ] && description="No description"
     
-    echo -e "${BLUE}⏳ Открываю порт $port ($protocol)...${NC}"
+    echo -e "$(tr_text L_FIREWALL_013 "$port" "$protocol")"
     
     case $firewall in
         ufw)
@@ -226,7 +226,7 @@ open_port() {
             ;;
     esac
     
-    echo -e "${GREEN}✅ Порт $port ($protocol) открыт!${NC}"
+    echo -e "$(tr_text L_FIREWALL_014 "$port" "$protocol")"
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
@@ -234,7 +234,7 @@ close_port() {
     local firewall=$(detect_firewall)
     
     if [ "$firewall" = "none" ]; then
-        echo -e "${RED}❌ Firewall не обнаружен.${NC}"
+        echo -e "$(tr_text L_FIREWALL_005)"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
@@ -244,20 +244,20 @@ close_port() {
     list_ports
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
-        echo -e "${YELLOW}Нет открытых портов.${NC}"
+        echo -e "$(tr_text L_FIREWALL_015)"
         read -rp "$(tr_text PRESS_ENTER)"
         return 0
     fi
     
     echo
-    read -rp "Введите номер порта: " port
+    read -rp "$(tr_text L_FIREWALL_016)" port
     
     if ! [[ "$port" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}❌ Неверный номер порта${NC}"
+        echo -e "$(tr_text L_FIREWALL_008)"
         return 1
     fi
     
-    echo "Протокол: 1) TCP  2) UDP  3) Оба"
+    echo "$(tr_text L_FIREWALL_017)"
     read -rp "> " proto_choice
     
     case $proto_choice in
@@ -304,7 +304,7 @@ close_port() {
             ;;
     esac
     
-    echo -e "${GREEN}✅ Порт $port закрыт!${NC}"
+    echo -e "$(tr_text L_FIREWALL_018 "$port")"
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
@@ -319,8 +319,8 @@ edit_port() {
     fi
     
     echo
-    read -rp "Номер порта: " port
-    echo "Протокол: 1) TCP  2) UDP"
+    read -rp "$(tr_text L_FIREWALL_019)" port
+    echo "$(tr_text L_FIREWALL_020)"
     read -rp "> " proto_choice
     
     case $proto_choice in
@@ -333,32 +333,32 @@ edit_port() {
     local exists=$(jq -r --arg p "$port" --arg pr "$protocol" '.[] | select(.port == $p and .protocol == $pr) | .description' "$PORTS_FILE")
     
     if [ -z "$exists" ]; then
-        echo -e "${RED}❌ Порт не найден.${NC}"
+        echo -e "$(tr_text L_FIREWALL_021)"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
     
-    echo -e "${BLUE}Текущее описание:${NC} $exists"
-    read -rp "Новое описание: " new_description
+    echo -e "$(tr_text L_FIREWALL_022 "$exists")"
+    read -rp "$(tr_text L_FIREWALL_023)" new_description
     
     [ -n "$new_description" ] && edit_port_description "$port" "$protocol" "$new_description"
-    echo -e "${GREEN}✅ Обновлено!${NC}"
+    echo -e "$(tr_text L_FIREWALL_024)"
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
 list_ports() {
     echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║           📋 Открытые порты / Open Ports                 ║${NC}"
+    echo -e "$(tr_text L_FIREWALL_025)"
     echo -e "${CYAN}╚═══════════════════════════════════════════════════════════╝${NC}"
     
     init_ports_file
     
     # Синхронизируем порты с firewall
-    echo -e "${DIM}🔄 Синхронизация с firewall...${NC}"
+    echo -e "$(tr_text L_FIREWALL_026)"
     sync_ports_with_firewall
     
     if [ ! -s "$PORTS_FILE" ] || [ "$(cat "$PORTS_FILE")" = "[]" ]; then
-        echo -e "${YELLOW}📭 Нет открытых портов${NC}"
+        echo -e "$(tr_text L_FIREWALL_027)"
         return
     fi
     
@@ -388,14 +388,14 @@ list_ports() {
     local script_count=$(jq '[.[] | select(.source != "system")] | length' "$PORTS_FILE")
     local system_count=$(jq '[.[] | select(.source == "system")] | length' "$PORTS_FILE")
     
-    echo -e "${CYAN}📊 Всего: $total | Через скрипт: $script_count | Системные: $system_count${NC}"
+    echo -e "$(tr_text L_FIREWALL_028 "$total" "$script_count" "$system_count")"
 }
 
 show_firewall_status() {
     local firewall=$(detect_firewall)
     
     echo -e "${CYAN}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║    🛡️  Статус Firewall              ║${NC}"
+    echo -e "$(tr_text L_FIREWALL_029)"
     echo -e "${CYAN}╚═══════════════════════════════════════╝${NC}"
     echo
     
@@ -414,7 +414,7 @@ show_firewall_status() {
             $SUDO iptables -L -n -v --line-numbers
             ;;
         none)
-            echo -e "${RED}❌ Firewall не обнаружен${NC}"
+            echo -e "$(tr_text L_FIREWALL_030)"
             ;;
     esac
     
@@ -428,11 +428,11 @@ port_management() {
         show_banner
         print_submenu_header "$(tr_text SUB_PORTS)"
         
-        echo -e "  ${YELLOW}1)${NC} 🔓 Открыть порт"
-        echo -e "  ${YELLOW}2)${NC} 🔒 Закрыть порт"
-        echo -e "  ${YELLOW}3)${NC} ✏️  Редактировать описание"
-        echo -e "  ${YELLOW}4)${NC} 📋 Список портов"
-        echo -e "  ${YELLOW}5)${NC} 🛡️  Статус firewall"
+        echo -e "$(tr_text L_FIREWALL_031)"
+        echo -e "$(tr_text L_FIREWALL_032)"
+        echo -e "$(tr_text L_FIREWALL_033)"
+        echo -e "$(tr_text L_FIREWALL_034)"
+        echo -e "$(tr_text L_FIREWALL_035)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
@@ -453,4 +453,41 @@ port_management() {
 # ====== ПОДМЕНЮ 3: Network & Ports ======
 submenu_network() {
     port_management
+}
+
+# port_apply open|close ПОРТ tcp|udp|both [описание] — без вопросов, для rw-scripts ports и скриптов.
+# Коды: 0 ок, 1 ошибка файрвола, 2 файрвол не найден, 3 неверный порт или протокол.
+port_apply() {
+    local action="${1:-}" port="${2:-}" proto="${3:-}" desc="${4:-via CLI}" fw p protos
+    fw=$(detect_firewall)
+    [ "$fw" != "none" ] || return 2
+    [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1 ] && [ "$port" -le 65535 ] || return 3
+    case "$proto" in
+        tcp|udp) protos="$proto" ;;
+        both)    protos="tcp udp" ;;
+        *)       return 3 ;;
+    esac
+    case "$action" in open|close) ;; *) return 3 ;; esac
+
+    for p in $protos; do
+        case "$fw:$action" in
+            ufw:open)          $SUDO ufw allow "$port/$p" >/dev/null ;;
+            ufw:close)         $SUDO ufw delete allow "$port/$p" >/dev/null ;;
+            firewalld:open)    $SUDO firewall-cmd --permanent --add-port="$port/$p" >/dev/null ;;
+            firewalld:close)   $SUDO firewall-cmd --permanent --remove-port="$port/$p" >/dev/null ;;
+            iptables:open)     $SUDO iptables -A INPUT -p "$p" --dport "$port" -j ACCEPT ;;
+            iptables:close)    $SUDO iptables -D INPUT -p "$p" --dport "$port" -j ACCEPT ;;
+        esac || return 1
+        if [ "$action" = "open" ]; then
+            add_port_to_json "$port" "$p" "$desc"
+        else
+            remove_port_from_json "$port" "$p"
+        fi
+    done
+
+    [ "$fw" = "firewalld" ] && { $SUDO firewall-cmd --reload >/dev/null || return 1; }
+    if [ "$fw" = "iptables" ] && command -v netfilter-persistent >/dev/null 2>&1; then
+        $SUDO netfilter-persistent save >/dev/null 2>&1
+    fi
+    return 0
 }

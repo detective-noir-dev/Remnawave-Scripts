@@ -2,12 +2,12 @@
 aliases: ["Меню 6 · Сторонние скрипты"]
 tags: [rw-menu]
 тип: меню
-строка: 109
+строка: 104
 файл: lib/thirdparty.sh
 ---
 # Меню 6 · Сторонние скрипты
 
-`submenu_thirdparty` · `lib/thirdparty.sh` L109
+`submenu_thirdparty` · `lib/thirdparty.sh` L104
 
 Подменю: 1 Remnawave от eGames, 2 Reshala, 3 Multitest. 0 — назад.
 

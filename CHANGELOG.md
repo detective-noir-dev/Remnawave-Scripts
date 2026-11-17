@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.10.0
+
+### Языки
+- Весь видимый текст вынесен в словари `lang/ru.sh` и `lang/en.sh` (около 195 строк в очистке, WARP, Hysteria2, сканере, памяти, портах и др.). Английский интерфейс больше не содержит русских фраз. Тест в `tests/run.sh` не пропускает русский текст вне `lang/`.
+- Язык хранится в `~/.config/remnawave/config` (`lang=ru`); `lang.conf` остаётся для откатов на старые версии. Сменить язык: `rw-scripts config set lang en`.
+
+### Командная строка
+- `rw-scripts status`: версия и состояние ssh, ufw, docker, hysteria2, warp, fail2ban.
+- `rw-scripts ports [list|open PORT[/tcp|/udp] [описание]|close PORT[/proto]]`, `rw-scripts warp status|connect|disconnect`, `rw-scripts hy2 status|start|stop|restart|enable|logs|version`, `rw-scripts log [N]`, `rw-scripts config [list|get|set]`, `rw-scripts help`.
+- Автодополнение: `rw-scripts completion bash|zsh`; установщик ставит bash-вариант сам.
+- Настройка `color=auto|always|never` и переменная `NO_COLOR`; при выводе не в терминал (cron, пайпы) цвета отключаются сами.
+
+### Дашборд
+- Строка сервисов: `svc ✔ ssh  ✔ docker  ✖ hy2`, только установленные.
+
+### Надёжность и безопасность
+- Сторонние скрипты (Hysteria2, eGames, Reshala, Zapret, multitest) запускаются через `run_remote_script`: скачивание во временный файл, показ размера и SHA256, подтверждение (`v` — просмотр), копия в `~/.local/share/remnawave/third-party/`. Вместо `bash <(curl …)` и `curl | bash`.
+- `run_step`: ✅/❌ по реальному коду возврата команды. Установка ZRAM и swap переведена на него: раньше «успех» печатался независимо от результата.
+- Журнал действий `~/.local/share/remnawave/actions.log` (с ротацией); смотреть: `rw-scripts log`.
+- Новые модули проверяются под `set -u`.
+
 ## 1.9.0
 
 ### Обновления

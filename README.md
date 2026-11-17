@@ -2,7 +2,7 @@
 
 🇬🇧 [English version](README-ENG.md)
 
-![версия](https://img.shields.io/badge/версия-1.9.0-blue)
+![версия](https://img.shields.io/badge/версия-1.10.0-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -314,7 +314,16 @@ rw-scripts doctor [--online]  # диагностика: зависимости, 
 rw-scripts version            # версия
 rw-scripts verify [--online]  # сверка установленных файлов с SHA256SUMS
 rw-scripts rollback [--yes]   # вернуться на версию до последнего обновления
+rw-scripts status             # состояние сервисов: ssh, ufw, docker, hysteria2, warp, fail2ban
+rw-scripts ports              # открытые порты; ports open 443/tcp | ports close 443/tcp
+rw-scripts warp status        # или connect / disconnect
+rw-scripts hy2 restart        # или status / start / stop / enable / logs / version
+rw-scripts config set lang en # настройки: lang (ru|en), color (auto|always|never)
+rw-scripts log 20             # последние строки журнала действий
+rw-scripts completion bash    # автодополнение (bash или zsh); установщик ставит bash-вариант сам
 ```
+
+Сторонние скрипты (Hysteria2, eGames, Reshala, Zapret, multitest) перед запуском скачиваются во временный файл: скрипт показывает размер и SHA256 и спрашивает подтверждение (`v` — посмотреть содержимое). Копия остаётся в `~/.local/share/remnawave/third-party/`.
 
 ---
 
@@ -402,7 +411,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.9.0
+**Версия:** 1.10.0
 **Дата релиза:** Июнь 2026
 **Лицензия:** MIT
 ```

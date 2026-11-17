@@ -12,10 +12,10 @@ _scan_install() {
     # /opt принадлежит root: без прав создаём каталог через $SUDO и отдаём его текущему пользователю
     mkdir -p "$SCANNER_DIR/reports" 2>/dev/null \
         || { $SUDO mkdir -p "$SCANNER_DIR/reports" && $SUDO chown -R "$(id -u):$(id -g)" "$SCANNER_DIR"; } \
-        || { echo -e "${RED}❌ Не удалось создать $SCANNER_DIR${NC}"; return 1; }
+        || { echo -e "$(tr_text L_SCANNER_001 "$SCANNER_DIR")"; return 1; }
 
     if [ ! -f "$SCANNER_BIN" ]; then
-        echo -e "${YELLOW}Устанавливаю RealiTLScanner (нужен Go для компиляции)...${NC}"
+        echo -e "$(tr_text L_SCANNER_002)"
         _pkg_install git curl wget
 
         local go_arch="amd64"
@@ -23,11 +23,11 @@ _scan_install() {
         local go_ver
         go_ver=$(curl -4 -fsSL --connect-timeout 20 'https://go.dev/VERSION?m=text' 2>/dev/null | head -1)
         [[ "$go_ver" == go1.* ]] || go_ver="go1.22.6"
-        echo -e "${BLUE}Загрузка Go ${go_ver} (${go_arch})...${NC}"
+        echo -e "$(tr_text L_SCANNER_003 "${go_ver}" "${go_arch}")"
         curl -4 -sL --connect-timeout 120 \
             -o /tmp/go.tar.gz \
             "https://go.dev/dl/${go_ver}.linux-${go_arch}.tar.gz" || {
-            echo -e "${RED}❌ Не удалось загрузить Go.${NC}"; return 1; }
+            echo -e "$(tr_text L_SCANNER_004)"; return 1; }
         $SUDO rm -rf /usr/local/go
         $SUDO tar -C /usr/local -xzf /tmp/go.tar.gz
         rm /tmp/go.tar.gz
@@ -36,30 +36,30 @@ _scan_install() {
         local src="$SCANNER_DIR/src"
         rm -rf "$src"
         git clone https://github.com/xtls/RealiTLScanner.git "$src" || {
-            echo -e "${RED}❌ Не удалось клонировать репозиторий.${NC}"; return 1; }
-        echo -e "${CYAN}Компиляция...${NC}"
+            echo -e "$(tr_text L_SCANNER_005)"; return 1; }
+        echo -e "$(tr_text L_SCANNER_006)"
         cd "$src" || return 1
         go build -o "$SCANNER_BIN" && chmod +x "$SCANNER_BIN"
         rm -rf "$src"
         cd - >/dev/null || true
         [ -f "$SCANNER_BIN" ] \
-            && echo -e "${GREEN}✅ RealiTLScanner установлен!${NC}" \
-            || { echo -e "${RED}❌ Ошибка компиляции.${NC}"; return 1; }
+            && echo -e "$(tr_text L_SCANNER_007)" \
+            || { echo -e "$(tr_text L_SCANNER_008)"; return 1; }
     fi
 
     if [ ! -f "$SCANNER_GEO" ]; then
-        echo -e "${BLUE}Загрузка GeoIP базы...${NC}"
+        echo -e "$(tr_text L_SCANNER_009)"
         curl -sL --connect-timeout 30 \
             -o "$SCANNER_GEO" \
             "https://github.com/Loyalsoldier/geoip/releases/latest/download/Country.mmdb" \
-            || echo -e "${YELLOW}⚠️ Не удалось загрузить GeoIP базу.${NC}"
+            || echo -e "$(tr_text L_SCANNER_010)"
     fi
 }
 
 _scan_ensure() {
     if [ ! -f "$SCANNER_BIN" ]; then
-        echo -e "${YELLOW}Сканер не установлен.${NC}"
-        read -rp "Установить сейчас? (y/n): " ans
+        echo -e "$(tr_text L_SCANNER_011)"
+        read -rp "$(tr_text L_SCANNER_012)" ans
         [[ "$ans" =~ ^[YyДд]$ ]] || return 1
         _scan_install || return 1
     fi
@@ -71,8 +71,8 @@ _scan_analyze() {
     local file=$1
     [ ! -f "$file" ] && return
     local lines; lines=$(wc -l < "$file" 2>/dev/null)
-    [ "${lines:-0}" -le 1 ] && echo -e "${YELLOW}Результатов нет.${NC}" && return
-    echo -e "${GREEN}🏆 ТОП-10 лучших SNI:${NC}"
+    [ "${lines:-0}" -le 1 ] && echo -e "$(tr_text L_SCANNER_013)" && return
+    echo -e "$(tr_text L_SCANNER_014)"
     echo -e "${DIM}──────────────────────────────────────────${NC}"
     awk -F, 'NR>1{
         iss=tolower($4); w=9
@@ -88,7 +88,7 @@ _scan_analyze() {
             2|3) echo -e "  📍 ${GREEN}${dom}${NC}" ;;
             *) echo -e "  🔸 ${dom}" ;;
         esac
-        echo -e "     ${DIM}IP: ${ip}  Порт: ${YELLOW}${port}${NC}${DIM}  ГЕО: ${geo}  ${iss}${NC}"
+        echo -e "$(tr_text L_SCANNER_015 "${ip}" "${port}" "${geo}" "${iss}")"
     done
 }
 
@@ -96,7 +96,7 @@ _scan_single() {
     _scan_ensure || return
     show_banner
     print_submenu_header "$(tr_text SCAN_SINGLE)"
-    echo -e "  ${CYAN}Проверяет конкретный IP/домен на пригодность для Reality-маскировки.${NC}"
+    echo -e "$(tr_text L_SCANNER_016)"
     echo
     read -rp "$(tr_text SCAN_TARGET) " target
     [ -z "$target" ] && return
@@ -111,9 +111,9 @@ _scan_single() {
     cd "$SCANNER_DIR" || return
 
     IFS=',' read -ra _PORT_ARR <<< "${ports// /}"
-    trap 'echo -e "\n${YELLOW}Прерывание...${NC}"' INT
+    trap 'echo -e "\n${YELLOW}$(tr_text L_SCANNER_050)${NC}"' INT
     for port in "${_PORT_ARR[@]}"; do
-        echo -e "${BLUE}──── Порт ${port} ────${NC}"
+        echo -e "$(tr_text L_SCANNER_017 "${port}")"
         local tmp="$SCANNER_DIR/.tmp_${ts}.csv"
         local log
         log=$("$SCANNER_BIN" -addr "$scan_target" -port "$port" -timeout 5 -v -out "$tmp" 2>&1)
@@ -133,19 +133,19 @@ _scan_single() {
                 echo
                 echo -e "  🌐 IP:       ${ip:-?}"
                 [ "$feas" = "true" ] \
-                    && echo -e "  ${GREEN}✅ ПОДХОДИТ ДЛЯ REALITY${NC}" \
-                    || echo -e "  ${RED}❌ НЕ ПОДХОДИТ${NC}"
+                    && echo -e "$(tr_text L_SCANNER_018)" \
+                    || echo -e "$(tr_text L_SCANNER_019)"
                 echo -e "  🔒 TLS:      ${tls:-?}    ⚡ ALPN: ${alpn:-?}"
-                echo -e "  📍 Домен:    ${dom:-?}"
-                echo -e "  🏢 Издатель: ${iss:-?}    🌍 ГЕО: ${geo:-?}"
+                echo -e "$(tr_text L_SCANNER_020 "${dom:-?}")"
+                echo -e "$(tr_text L_SCANNER_021 "${iss:-?}" "${geo:-?}")"
                 echo
                 echo "${ip},${feas},${dom},${iss},${geo},${port}" >> "$out"
             elif [[ "$line" == *"TLS handshake failed"* || "$line" == *"Cannot dial"* ]]; then
                 found=true
-                echo -e "  ${RED}❌ Соединение не установлено (TLS/connect error).${NC}"
+                echo -e "$(tr_text L_SCANNER_022)"
             fi
         done <<< "$log"
-        $found || echo -e "  ${YELLOW}⚠️ Нет ответа от ${target}:${port}${NC}"
+        $found || echo -e "$(tr_text L_SCANNER_023 "${target}" "${port}")"
     done
     trap - INT
     cd - >/dev/null || true
@@ -153,7 +153,7 @@ _scan_single() {
     local cnt; cnt=$(( $(wc -l < "$out" 2>/dev/null) - 1 ))
     [ "$cnt" -gt 0 ] && echo && _scan_analyze "$out"
     echo
-    echo -e "${DIM}Отчёт: $out${NC}"
+    echo -e "$(tr_text L_SCANNER_024 "$out")"
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
@@ -163,15 +163,15 @@ _scan_mass() {
     if [ ! -s "$SCANNER_LIST" ]; then
         show_banner
         print_submenu_header "$(tr_text SCAN_MASS)"
-        echo -e "  ${YELLOW}Файл списка пуст: $SCANNER_LIST${NC}"
-        echo -e "  ${DIM}Добавьте цели через меню «Список целей».${NC}"
+        echo -e "$(tr_text L_SCANNER_025 "$SCANNER_LIST")"
+        echo -e "$(tr_text L_SCANNER_026)"
         echo
         read -rp "$(tr_text PRESS_ENTER)"; return
     fi
     show_banner
     print_submenu_header "$(tr_text SCAN_MASS)"
     local total; total=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null || echo 0)
-    echo -e "  ${CYAN}Целей в списке: ${YELLOW}$total${NC}"
+    echo -e "$(tr_text L_SCANNER_027 "$total")"
     echo
     read -rp "$(tr_text SCAN_PORT) " ports; ports=${ports:-443}
 
@@ -182,7 +182,7 @@ _scan_mass() {
 
     IFS=',' read -ra _PORT_ARR <<< "${ports// /}"
     local done_cnt=0
-    trap 'echo -e "\n${YELLOW}Прерывание — сохраняем...${NC}"; break' INT
+    trap 'echo -e "\n${YELLOW}$(tr_text L_SCANNER_051)${NC}"; break' INT
     while IFS= read -r raw; do
         [ -z "$raw" ] && continue
         local t="$raw"
@@ -209,43 +209,43 @@ _scan_mass() {
     done < "$SCANNER_LIST"
     trap - INT
 
-    echo -e "\r\033[K${GREEN}✅ Готово! (${done_cnt} целей просканировано)${NC}"
+    echo -e "$(tr_text L_SCANNER_028 "${done_cnt}")"
     cd - >/dev/null || true
     echo
     _scan_analyze "$out"
     echo
-    echo -e "${DIM}Отчёт: $out${NC}"
+    echo -e "$(tr_text L_SCANNER_024 "$out")"
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
 _scan_manage_list() {
     while true; do
         show_banner
-        print_submenu_header "📋 Список целей"
+        print_submenu_header "$(tr_text L_SCANNER_029)"
         touch "$SCANNER_LIST"
         local cnt; cnt=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null || echo 0)
-        echo -e "  ${DIM}$SCANNER_LIST (${cnt} целей)${NC}"
+        echo -e "$(tr_text L_SCANNER_030 "$SCANNER_LIST" "${cnt}")"
         echo
         if [ "$cnt" -gt 0 ]; then
             grep -n '.' "$SCANNER_LIST" 2>/dev/null | head -20 | \
                 while IFS=: read -r n line; do echo -e "  ${DIM}$n)${NC} $line"; done
-            [ "$cnt" -gt 20 ] && echo -e "  ${DIM}... и ещё $(( cnt - 20 )) записей${NC}"
+            [ "$cnt" -gt 20 ] && echo -e "$(tr_text L_SCANNER_031 "$(( cnt - 20 ))")"
             echo
         fi
-        echo -e "  ${YELLOW}1)${NC} ➕ Добавить цель (IP или домен)"
-        echo -e "  ${YELLOW}2)${NC} 🗑️  Очистить весь список"
-        echo -e "  ${YELLOW}3)${NC} ✏️  Открыть в nano"
+        echo -e "$(tr_text L_SCANNER_032)"
+        echo -e "$(tr_text L_SCANNER_033)"
+        echo -e "$(tr_text L_SCANNER_034)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
         read -rp "> " choice
         case $choice in
-            1) read -rp "IP или домен: " t
+            1) read -rp "$(tr_text L_SCANNER_035)" t
                [ -n "$t" ] && echo "$t" >> "$SCANNER_LIST" \
-               && echo -e "${GREEN}✅ Добавлено: $t${NC}" && sleep 1 ;;
-            2) : > "$SCANNER_LIST"; echo -e "${GREEN}✅ Список очищен.${NC}"; sleep 1 ;;
+               && echo -e "$(tr_text L_SCANNER_036 "$t")" && sleep 1 ;;
+            2) : > "$SCANNER_LIST"; echo -e "$(tr_text L_SCANNER_037)"; sleep 1 ;;
             3) command -v nano >/dev/null 2>&1 && nano "$SCANNER_LIST" \
-               || { echo -e "${RED}nano не установлен.${NC}"; sleep 1; } ;;
+               || { echo -e "$(tr_text L_SCANNER_038)"; sleep 1; } ;;
             0) return ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac
@@ -255,7 +255,7 @@ _scan_manage_list() {
 _scan_reports() {
     while true; do
         show_banner
-        print_submenu_header "📂 Отчёты сканера"
+        print_submenu_header "$(tr_text L_SCANNER_039)"
         local rdir="$SCANNER_DIR/reports"
         mkdir -p "$rdir"
         local i=1
@@ -264,14 +264,14 @@ _scan_reports() {
             local base; base=$(basename "$f")
             local sz; sz=$(du -sh "$f" | awk '{print $1}')
             local rlines; rlines=$(wc -l < "$f" 2>/dev/null)
-            echo -e "  ${YELLOW}$i)${NC} ${base} ${DIM}(${sz}, ${rlines} строк)${NC}"
+            echo -e "$(tr_text L_SCANNER_040 "$i" "${base}" "${sz}" "${rlines}")"
             _rfiles[$i]="$f"; ((i++))
         done < <(ls -t "$rdir"/*.csv 2>/dev/null)
-        [ ${#_rfiles[@]} -eq 0 ] && echo -e "  ${YELLOW}Отчётов нет.${NC}"
+        [ ${#_rfiles[@]} -eq 0 ] && echo -e "$(tr_text L_SCANNER_041)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "Номер для анализа (0 = назад): " sel
+        read -rp "$(tr_text L_SCANNER_042)" sel
         [ "$sel" = "0" ] || [ -z "$sel" ] && return
         if [[ "$sel" =~ ^[0-9]+$ ]] && [ -n "${_rfiles[$sel]:-}" ]; then
             show_banner
@@ -287,19 +287,19 @@ submenu_scanner() {
     while true; do
         show_banner
         print_submenu_header "$(tr_text GROUP_SCANNER)"
-        echo -e "  ${DIM}Поиск идеальных SNI-доменов для маскировки Reality/VLESS.${NC}"
+        echo -e "$(tr_text L_SCANNER_043)"
         local _sc_status
         [ -f "$SCANNER_BIN" ] \
-            && _sc_status="${GREEN}✅ Установлен${NC}" \
-            || _sc_status="${RED}❌ Не установлен${NC}"
-        echo -e "  ${DIM}Статус сканера: $_sc_status${NC}"
+            && _sc_status="$(tr_text L_SCANNER_044)" \
+            || _sc_status="$(tr_text L_SCANNER_045)"
+        echo -e "$(tr_text L_SCANNER_046 "$_sc_status")"
         echo
         echo -e "  ${YELLOW}1)${NC} $(tr_text SCAN_SINGLE)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text SCAN_MASS)"
-        echo -e "  ${YELLOW}3)${NC} 📋 Список целей"
-        echo -e "  ${YELLOW}4)${NC} 📂 Отчёты"
+        echo -e "$(tr_text L_SCANNER_047)"
+        echo -e "$(tr_text L_SCANNER_048)"
         echo -e "  ${DIM}──────────────────────────────${NC}"
-        echo -e "  ${YELLOW}5)${NC} 🔧 Установить / переустановить сканер"
+        echo -e "$(tr_text L_SCANNER_049)"
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo

@@ -2,12 +2,12 @@
 aliases: ["Multitest"]
 tags: [rw-func]
 тип: действие
-строка: 76
+строка: 72
 файл: lib/thirdparty.sh
 ---
 # Multitest
 
-`install_multitest` · `lib/thirdparty.sh` L76
+`install_multitest` · `lib/thirdparty.sh` L72
 
 Скачивает `multitest.sh` проекта saveksme/multitest в `/usr/local/bin/multitest`, делает исполняемым и сразу запускает.
 

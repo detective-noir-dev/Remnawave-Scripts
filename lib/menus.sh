@@ -175,6 +175,8 @@ show_dashboard() {
     echo -e "  ${DIM}──────────────────────────────────────────${NC}"
     echo -e "  ${os_name} ${DIM}(${kernel}) · ${_DASH_VIRT} · up ${uptime_str}${NC}"
     echo -e "  ${YELLOW}${_DASH_EXT_IP}${NC} ${DIM}· ping ${_DASH_PING}${NC}"
+    local _svc; _svc=$(svc_summary)
+    [ -n "$_svc" ] && echo -e "  ${DIM}svc${NC} ${_svc}"
     echo -e "  ${CYAN}CPU ${NC}${cpu_bar_s} ${BOLD}$(printf '%3s' "$cpu_pct")%${NC} ${DIM}${cpu_cores} vCPU${NC}"
     echo -e "  ${CYAN}RAM ${NC}${ram_bar_s} ${BOLD}$(printf '%3s' "$ram_pct")%${NC} ${DIM}${ram_used_g}G / ${ram_total_g}G${NC}"
     echo -e "  ${CYAN}${disk_type:0:3} ${NC}${disk_bar_s} ${BOLD}$(printf '%3s' "$disk_pct")%${NC} ${DIM}${disk_used} / ${disk_total}${NC}"

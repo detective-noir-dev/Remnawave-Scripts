@@ -16,6 +16,15 @@ use_module() {
     source "$ROOT/lib/$1.sh"
 }
 
+# use_core ФУНКЦИЯ...: подключает функции из scripts.sh (ядро нельзя source-ить целиком: оно запускает меню)
+use_core() {
+    local fn
+    for fn in "$@"; do
+        # shellcheck disable=SC1090
+        source <(sed -n "/^${fn}() {/,/^}/p" "$ROOT/scripts.sh")
+    done
+}
+
 make_tmp() {
     TEST_TMP="$(mktemp -d)"
 }

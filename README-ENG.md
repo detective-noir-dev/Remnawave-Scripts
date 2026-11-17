@@ -2,7 +2,7 @@
 
 🇷🇺 [Русская версия](README.md) (main document)
 
-![version](https://img.shields.io/badge/version-1.9.0-blue)
+![version](https://img.shields.io/badge/version-1.10.0-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -314,7 +314,16 @@ rw-scripts doctor [--online]  # diagnostics: dependencies, privileges, modules, 
 rw-scripts version            # print version
 rw-scripts verify [--online]  # check installed files against SHA256SUMS
 rw-scripts rollback [--yes]   # go back to the version before the last update
+rw-scripts status             # service state: ssh, ufw, docker, hysteria2, warp, fail2ban
+rw-scripts ports              # open ports; ports open 443/tcp | ports close 443/tcp
+rw-scripts warp status        # or connect / disconnect
+rw-scripts hy2 restart        # or status / start / stop / enable / logs / version
+rw-scripts config set lang en # settings: lang (ru|en), color (auto|always|never)
+rw-scripts log 20             # last lines of the action log
+rw-scripts completion bash    # shell completion (bash or zsh); the installer sets up bash itself
 ```
+
+Third-party scripts (Hysteria2, eGames, Reshala, Zapret, multitest) are first downloaded to a temporary file: the script shows its size and SHA256 and asks for confirmation (`v` to view the content). A copy is kept in `~/.local/share/remnawave/third-party/`.
 
 ---
 
@@ -402,7 +411,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Release Date:** June 2026
 **License:** MIT
 ```

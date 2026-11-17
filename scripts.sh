@@ -5,6 +5,15 @@ CONFIG_DIR="$HOME/.config/remnawave"
 SCRIPT_PATH="$HOME/.local/bin/rw-scripts"
 REPO_URL="https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main"
 PORTS_FILE="$DATA_DIR/ports.json"
+CONFIG_FILE="$CONFIG_DIR/config"
+LANG_FILE="$CONFIG_DIR/lang.conf"   # устарел: язык теперь в config; файл нужен откатам на старые версии
+
+# config_get ключ [по_умолчанию] — значение из $CONFIG_FILE (строки ключ=значение); запись: config_set в lib/common.sh
+config_get() {
+    local v=""
+    [ -f "$CONFIG_FILE" ] && v=$(sed -n "s/^$1=//p" "$CONFIG_FILE" | tail -n 1)
+    echo "${v:-${2:-}}"
+}
 
 # читаем версию
 if [ -s "$DATA_DIR/version.txt" ]; then
@@ -16,6 +25,12 @@ fi
 # Цвета
 RED='\e[31m'; YELLOW='\e[33m'; GREEN='\e[32m'; BLUE='\e[34m'; CYAN='\e[36m'; MAGENTA='\e[35m'; NC='\e[0m'
 BOLD='\e[1m'; DIM='\e[2m'
+
+# Цвета выключаются переменной NO_COLOR, настройкой color=never и (при color=auto, по умолчанию) выводом не в терминал: cron, пайпы
+_color_mode=$(config_get color auto)
+if [ -n "${NO_COLOR+x}" ] || [ "$_color_mode" = never ] || { [ "$_color_mode" != always ] && [ ! -t 1 ]; }; then
+    RED=''; YELLOW=''; GREEN=''; BLUE=''; CYAN=''; MAGENTA=''; NC=''; BOLD=''; DIM=''
+fi
 
 # sudo нужен только не-root пользователю (на VPS под root и в контейнерах его может не быть)
 if [ "${EUID:-$(id -u)}" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
@@ -44,16 +59,18 @@ loading_bar() {
     tput civis
     while :; do
         for frame in "${spin[@]}"; do
-            printf "\r[%s] Пожалуйста, подождите " "$frame"
+            printf "$(tr_text L_CORE_001)" "$frame"
             sleep $delay
         done
     done
 }
 
 # ====== ЯЗЫК ======
-LANG_FILE="$CONFIG_DIR/lang.conf"
-LANG_SET="en"
-[ -f "$LANG_FILE" ] && LANG_SET=$(<"$LANG_FILE")
+LANG_SET=$(config_get lang)
+if [ -z "$LANG_SET" ]; then
+    LANG_SET="en"
+    [ -f "$LANG_FILE" ] && LANG_SET=$(<"$LANG_FILE")   # установка, сделанная до появления config
+fi
 
 # ====== ПРОВЕРКА ЦЕЛОСТНОСТИ ======
 # SHA256SUMS лежит в репозитории рядом с файлами. Скачанное сверяем с ним до установки,
@@ -172,7 +189,11 @@ load_modules || exit 1
 #   rw-scripts version         — версия
 #   rw-scripts verify [--online] — сверка установленных файлов с SHA256SUMS
 #   rw-scripts rollback [--yes]  — вернуть версию до последнего обновления
+#   status, ports, warp, hy2, config, log, completion, help — см. lib/cli.sh (rw-scripts help)
 case "${1:-}" in
+    status|ports|warp|hy2|config|log|completion|help|--help|-h)
+        rw_cli "$@"
+        exit $? ;;
     verify|--verify)
         verify_install "${2:-}"
         exit $? ;;
@@ -192,11 +213,11 @@ case "${1:-}" in
         diff=$(( after - before ))
         echo
         if (( diff > 0 )); then
-            echo -e "${GREEN}✅ Освобождено: $(_clean_human $diff)${NC}"
+            echo -e "$(tr_text L_CORE_002 "$(_clean_human $diff)")"
         else
-            echo -e "${YELLOW}ℹ️  Мусора не найдено.${NC}"
+            echo -e "$(tr_text L_CORE_003)"
         fi
-        echo "Свободно: $(_clean_human "$(_clean_get_free)")"
+        echo "$(tr_text L_CORE_004 "$(_clean_human "$(_clean_get_free)")")"
         exit 0 ;;
 esac
 show_main_menu

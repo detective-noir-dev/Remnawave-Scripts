@@ -14,7 +14,7 @@ change_ssh_port() {
     current_port=$(grep -E "^Port " "$sshd_config" 2>/dev/null | awk '{print $2}' | head -1)
     [ -z "$current_port" ] && current_port="22"
 
-    echo -e "${BLUE}Текущий SSH порт / Current SSH port: ${YELLOW}${current_port}${NC}"
+    echo -e "$(tr_text L_SERVER_001 "${current_port}")"
     echo
     echo -e "${RED}$(tr_text SSH_WARN)${NC}"
     echo -e "${YELLOW}$(tr_text SSH_WARN2)${NC}"
@@ -52,16 +52,16 @@ change_ssh_port() {
     case $firewall in
         ufw)
             $SUDO ufw allow "$new_port"/tcp >/dev/null 2>&1
-            echo -e "${GREEN}✅ Порт $new_port открыт в UFW${NC}"
+            echo -e "$(tr_text L_SERVER_002 "$new_port")"
             ;;
         firewalld)
             $SUDO firewall-cmd --permanent --add-port="$new_port"/tcp >/dev/null 2>&1
             $SUDO firewall-cmd --reload >/dev/null 2>&1
-            echo -e "${GREEN}✅ Порт $new_port открыт в FirewallD${NC}"
+            echo -e "$(tr_text L_SERVER_003 "$new_port")"
             ;;
         iptables)
             $SUDO iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null
-            echo -e "${GREEN}✅ Порт $new_port открыт в iptables${NC}"
+            echo -e "$(tr_text L_SERVER_004 "$new_port")"
             ;;
     esac
 
@@ -71,7 +71,7 @@ change_ssh_port() {
         echo
         echo -e "${GREEN}✅ $(tr_text SSH_CHANGED) ${CYAN}${new_port}${NC}"
         echo
-        echo -e "${CYAN}Подключайтесь командой / Connect with:${NC}"
+        echo -e "$(tr_text L_SERVER_005)"
         echo -e "  ${YELLOW}ssh -p ${new_port} $(whoami)@<your_server_ip>${NC}"
     else
         echo -e "${RED}❌ $(tr_text SSH_FAIL)${NC}"
@@ -84,7 +84,7 @@ change_ssh_port() {
 install_zapret() {
     echo -e "${BLUE}🛡️  $(tr_text ZAPRET_INSTALLING)${NC}"
     echo
-    if curl -O https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r && sh z4r; then
+    if run_remote_script --sh https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r; then
         echo
         echo -e "${GREEN}✅ $(tr_text ZAPRET_DONE)${NC}"
     else

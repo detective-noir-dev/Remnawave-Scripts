@@ -12,7 +12,7 @@ install_egames_remnawave() {
     echo -e "${DIM}Script: eGamesAPI/remnawave-reverse-proxy${NC}"
     echo
 
-    bash <(curl -Ls https://raw.githubusercontent.com/eGamesAPI/remnawave-reverse-proxy/refs/heads/main/install_remnawave.sh)
+    run_remote_script https://raw.githubusercontent.com/eGamesAPI/remnawave-reverse-proxy/refs/heads/main/install_remnawave.sh
     local status=$?
 
     echo
@@ -41,12 +41,8 @@ install_reshala() {
     echo -e "${DIM}Script: DonMatteoVPN/Reshala-Remnawave-Bedolaga${NC}"
     echo
 
-    local tmp_install
-    tmp_install=$(mktemp /tmp/reshala_install_XXXXXX.sh)
-    wget -q -O "$tmp_install" https://raw.githubusercontent.com/DonMatteoVPN/Reshala-Remnawave-Bedolaga/main/install.sh \
-        && bash "$tmp_install"
+    run_remote_script https://raw.githubusercontent.com/DonMatteoVPN/Reshala-Remnawave-Bedolaga/main/install.sh
     local status=$?
-    rm -f "$tmp_install"
 
     echo
     if [ $status -eq 0 ]; then
@@ -57,12 +53,12 @@ install_reshala() {
         [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
         echo -e "${YELLOW}$(tr_text BASHRC_RELOAD)${NC}"
         echo
-        echo -e "${CYAN}Запуск reshala...${NC}"
+        echo -e "$(tr_text L_THIRDPARTY_001)"
         sleep 1
         if command -v reshala >/dev/null 2>&1; then
             reshala
         else
-            echo -e "${YELLOW}⚠️  'reshala' не найден в PATH. Откройте новый терминал и выполните: reshala${NC}"
+            echo -e "$(tr_text L_THIRDPARTY_002)"
         fi
     else
         echo -e "${RED}❌ $(tr_text RESHALA_FAIL)${NC}"
@@ -82,20 +78,19 @@ install_multitest() {
     echo -e "${DIM}Script: saveksme/multitest${NC}"
     echo
 
-    curl -sL https://raw.githubusercontent.com/saveksme/multitest/master/multitest.sh \
-        -o /usr/local/bin/multitest && chmod +x /usr/local/bin/multitest
+    install_remote_script https://raw.githubusercontent.com/saveksme/multitest/master/multitest.sh /usr/local/bin/multitest
     local status=$?
 
     echo
     if [ $status -eq 0 ]; then
         echo -e "${GREEN}✅ $(tr_text MULTITEST_DONE)${NC}"
         echo
-        echo -e "${CYAN}Запуск multitest...${NC}"
+        echo -e "$(tr_text L_THIRDPARTY_003)"
         sleep 1
         if [ -x /usr/local/bin/multitest ]; then
             /usr/local/bin/multitest
         else
-            echo -e "${YELLOW}⚠️  'multitest' не найден. Выполните: multitest${NC}"
+            echo -e "$(tr_text L_THIRDPARTY_004)"
         fi
     else
         echo -e "${RED}❌ $(tr_text MULTITEST_FAIL)${NC}"

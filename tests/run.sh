@@ -43,12 +43,22 @@ fetch_verified a.txt "$tmp/out" ""; rc=$?
 if [ $rc -eq 2 ]; then ok "fetch_verified: пустой SHA256SUMS отклонён"; else bad "fetch_verified: пустой SHA256SUMS (rc=$rc)"; fi
 
 # 6. каждая функция определена ровно один раз во всём коде (при нарезке на модули легко задвоить)
-dups=$(grep -hoE '^[A-Za-z_][A-Za-z_0-9]*\(\) *\{' scripts.sh lib/*.sh | sed 's/().*//' | sort | uniq -d)
+# strip_heredocs ФАЙЛ — текст файла без тел here-документов (в них бывают чужие скрипты, например автодополнение)
+strip_heredocs() {
+    awk '
+        inh { if ($0 == tag) inh = 0; next }
+        match($0, /<<-?[[:space:]]*\047?[A-Za-z_]+\047?/) && $0 !~ /<<</ {
+            t = substr($0, RSTART, RLENGTH); gsub(/<<-?[[:space:]]*|\047/, "", t); tag = t; inh = 1
+        }
+        { print }
+    ' "$1"
+}
+dups=$(for f in scripts.sh lib/*.sh; do strip_heredocs "$f"; done | grep -oE '^[A-Za-z_][A-Za-z_0-9]*\(\) *\{' | sed 's/().*//' | sort | uniq -d)
 if [ -z "$dups" ]; then ok "функции не дублируются между scripts.sh и lib/*.sh"; else bad "повторные определения: $(echo $dups)"; fi
 
 # 7. в модулях только определения: ничего не выполняется при подключении
 for f in lib/*.sh; do
-    bad_lines=$(awk '/^[A-Za-z_0-9]+\(\) *\{/ {infn=1} !infn && !/^#/ && !/^[[:space:]]*$/ && !/^[A-Z_][A-Z_0-9]*=/ {print FILENAME": "NR": "$0} /^\}/ {infn=0}' "$f")
+    bad_lines=$(strip_heredocs "$f" | awk -v F="$f" '/^[A-Za-z_0-9]+\(\) *\{/ {infn=1} !infn && !/^#/ && !/^[[:space:]]*$/ && !/^[A-Z_][A-Z_0-9]*=/ {print F": "NR": "$0} /^\}/ {infn=0}')
     if [ -z "$bad_lines" ]; then ok "$f: только функции и переменные"; else bad "$f: код вне функций:"; echo "$bad_lines"; fi
 done
 
@@ -123,6 +133,37 @@ if [ $rc -ne 0 ] && [ ! -e "$tmp/mdata2/lib" ]; then ok "load_modules: чужо�
     "$B" rollback --yes >/dev/null; chk "повреждённая копия отклонена" "$?" 1
 ); rc=$?
 if [ $rc -eq 0 ]; then ok "verify и rollback"; else bad "verify и rollback"; fi
+
+# 13. весь видимый текст живёт в lang/: кириллица в коде допустима только в комментариях,
+#     в ответах [YyДд] и в названии языка "Русский" (grep -P нет в busybox, поэтому ищем байты UTF-8)
+cyr=$(printf '[\320\321]')
+bad=$(for f in scripts.sh lib/*.sh; do LC_ALL=C grep -n "$cyr" "$f" | LC_ALL=C sed -e "s|^|$f:|"; done \
+    | LC_ALL=C grep -vE '^[^:]+:[0-9]+:[[:space:]]*#' \
+    | LC_ALL=C sed -e 's/[[:space:]]#[[:space:]].*$//' -e 's/\[YyДд\]//g' -e 's/"Русский"//g' \
+    | LC_ALL=C grep "$cyr")
+if [ -z "$bad" ]; then ok "нет русских строк вне lang/"; else bad "русский текст вне lang/ (вынесите в словарь через tr_text):"; echo "$bad" | cut -c1-140; fi
+
+# 14. новые модули работают под set -u (опечатка в имени переменной не должна тихо превращаться в пустую строку)
+mkdir -p "$tmp/u/data" "$tmp/u/cfg"
+if out=$(TMPU="$tmp/u" bash -u -c '
+    RED=; GREEN=; YELLOW=; BLUE=; CYAN=; MAGENTA=; NC=; BOLD=; DIM=; SUDO=
+    DATA_DIR=$TMPU/data; CONFIG_DIR=$TMPU/cfg; CONFIG_FILE=$CONFIG_DIR/config; LANG_FILE=$CONFIG_DIR/lang.conf
+    VERSION=t; LANG_SET=en; REPO_URL=file:///none
+    for fn in config_get _sha256_of; do source <(sed -n "/^${fn}() {/,/^}/p" scripts.sh); done
+    tr_text() { echo "$1"; }
+    for m in pkg common firewall cli; do source lib/$m.sh; done
+    config_set lang en; config_get lang >/dev/null
+    _log_action 0 smoke "detail"
+    run_step smoke true >/dev/null
+    pkg_mgr >/dev/null || true
+    svc_summary >/dev/null
+    cli_status >/dev/null
+    rw_cli config list >/dev/null
+    rw_cli log 5 >/dev/null
+    rw_completion bash >/dev/null; rw_completion zsh >/dev/null
+    port_apply open 70000 tcp; prc=$?   # 3 — неверный порт, 2 — нет файрвола (зависит от машины)
+    [ "$prc" -eq 3 ] || [ "$prc" -eq 2 ]
+' 2>&1); then ok "новые модули под set -u"; else bad "новые модули под set -u:"; echo "$out" | tail -5; fi
 
 # 10. юнит-тесты на bats (если установлен)
 if command -v bats >/dev/null 2>&1; then

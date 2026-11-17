@@ -106,6 +106,12 @@ if [ ! -f "$LANG_FILE" ]; then
     echo -e "\e[32mLanguage set to: $LANG_NAME\e[0m"
 fi
 
+# настройки живут в config (ключ=значение); lang.conf остаётся для откатов на старые версии
+CONFIG_FILE="$CONFIG_DIR/config"
+if [ -f "$LANG_FILE" ] && ! grep -q '^lang=' "$CONFIG_FILE" 2>/dev/null; then
+    printf 'lang=%s\n' "$(tr -d '\r\n' < "$LANG_FILE")" >> "$CONFIG_FILE"
+fi
+
 # === СКАЧИВАНИЕ ОСНОВНЫХ ФАЙЛОВ ===
 
 # Все файлы сверяем по SHA256SUMS из репозитория: битая или подменённая загрузка не ставится
@@ -184,6 +190,13 @@ download_verified version.txt "$DATA_DIR/version.txt"
 # rw-scripts binary ставим последним
 download_verified scripts.sh "$INSTALL_DIR/$SCRIPT_NAME"
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
+
+# автодополнение bash для подкоманд (bash-completion подхватывает этот каталог сам); для zsh: rw-scripts completion zsh
+COMP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions"
+if mkdir -p "$COMP_DIR" 2>/dev/null; then
+    "$INSTALL_DIR/$SCRIPT_NAME" completion bash > "$COMP_DIR/rw-scripts.new" 2>/dev/null \
+        && mv "$COMP_DIR/rw-scripts.new" "$COMP_DIR/rw-scripts" || rm -f "$COMP_DIR/rw-scripts.new"
+fi
 
 # SHA256SUMS нужен для "rw-scripts verify"; прежняя версия остаётся для "rw-scripts rollback"
 printf '%s\n' "$SUMS" > "$DATA_DIR/SHA256SUMS"

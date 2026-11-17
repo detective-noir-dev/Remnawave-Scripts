@@ -2,12 +2,12 @@
 aliases: ["Баннер"]
 tags: [rw-shared]
 тип: общий хелпер
-строка: 24
+строка: 39
 файл: scripts.sh
 ---
 # Баннер
 
-`show_banner` · `scripts.sh` L24
+`show_banner` · `scripts.sh` L39
 
 Очищает экран и рисует заголовок «RW-Scripts» (через `figlet -f small`, если он есть; иначе рамка из `=`) с версией `$VERSION`. Вызывается перед каждым экраном подменю.
 

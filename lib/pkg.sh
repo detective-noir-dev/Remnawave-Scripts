@@ -43,7 +43,7 @@ _pkg_install() {
     local pkg
     for pkg in "$@"; do
         if ! command -v "$pkg" >/dev/null 2>&1 && ! { command -v dpkg >/dev/null 2>&1 && dpkg -s "$pkg" >/dev/null 2>&1; }; then
-            echo -e "${BLUE}📦 Устанавливаю $pkg...${NC}"
+            echo -e "$(tr_text L_PKG_001 "$pkg")"
             pkg_install "$pkg" &>/dev/null || true
         fi
     done

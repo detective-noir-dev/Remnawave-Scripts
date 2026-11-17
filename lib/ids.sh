@@ -5,14 +5,14 @@
 # ====== ГЕНЕРАЦИЯ ID ======
 ensure_xxd() {
     if command -v xxd >/dev/null 2>&1; then return 0; fi
-    echo -e "${YELLOW}⚙️  Устанавливаю 'xxd'...${NC}"
+    echo -e "$(tr_text L_IDS_001)"
 
     pkg_install_any vim-xxd xxd >/dev/null 2>&1 || {
-        echo -e "${RED}❌ Не удалось установить xxd.${NC}"
+        echo -e "$(tr_text L_IDS_002)"
         return 1
     }
 
-    command -v xxd >/dev/null 2>&1 && echo -e "${GREEN}✅ xxd установлен!${NC}" || return 1
+    command -v xxd >/dev/null 2>&1 && echo -e "$(tr_text L_IDS_003)" || return 1
 }
 
 generate_ids() {
@@ -67,7 +67,7 @@ country_lookup() {
     fi
     total=$(echo "$matches" | wc -l)
     if [ "$total" -gt 10 ]; then
-        echo -e "${YELLOW}Найдено ${total}. Показать все? (y/n)${NC}"
+        echo -e "$(tr_text L_IDS_004 "${total}")"
         read ans
         [[ ! "$ans" =~ ^[YyДд]$ ]] && return
     fi

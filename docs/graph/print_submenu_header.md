@@ -2,12 +2,12 @@
 aliases: ["Рамка заголовка подменю"]
 tags: [rw-shared]
 тип: общий хелпер
-строка: 121
+строка: 138
 файл: scripts.sh
 ---
 # Рамка заголовка подменю
 
-`print_submenu_header` · `scripts.sh` L121
+`print_submenu_header` · `scripts.sh` L138
 
 Печатает цветную рамку с заголовком из `$1`.
 

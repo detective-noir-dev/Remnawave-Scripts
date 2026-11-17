@@ -13,20 +13,20 @@ install_hysteria2() {
     if command -v hysteria >/dev/null 2>&1 || [ -f /usr/local/bin/hysteria ]; then
         local ver
         ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        echo -e "${YELLOW}⚠️  Hysteria2 уже установлен / Already installed: ${GREEN}${ver}${NC}"
-        echo -e "${DIM}Команда bash <(curl -fsSL https://get.hy2.sh/) также обновит до последней версии.${NC}"
+        echo -e "$(tr_text L_HY2_001 "${ver}")"
+        echo -e "$(tr_text L_HY2_002)"
         echo
-        echo -e "${YELLOW}Запустить установщик заново? (y/n)${NC}"
+        echo -e "$(tr_text L_HY2_003)"
         read -r ans
         [[ ! "$ans" =~ ^[YyДд]$ ]] && { read -rp "$(tr_text PRESS_ENTER)"; return 0; }
         echo
     fi
 
     echo -e "${BLUE}$(tr_text HY2_INSTALLING)${NC}"
-    echo -e "${DIM}Команда: bash <(curl -fsSL https://get.hy2.sh/)${NC}"
+    echo -e "$(tr_text L_HY2_004)"
     echo
 
-    bash <(curl -fsSL https://get.hy2.sh/)
+    run_remote_script https://get.hy2.sh/
     local status=$?
 
     echo
@@ -34,11 +34,11 @@ install_hysteria2() {
         local new_ver
         new_ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
         echo -e "${GREEN}✅ $(tr_text HY2_INSTALLED)${NC}"
-        [ -n "$new_ver" ] && echo -e "${CYAN}Версия / Version: ${YELLOW}${new_ver}${NC}"
+        [ -n "$new_ver" ] && echo -e "$(tr_text L_HY2_005 "${new_ver}")"
         echo
-        echo -e "${CYAN}Следующий шаг:${NC} Настройте конфиг → пункт ${YELLOW}3) $(tr_text SUB_HY2_CONFIG)${NC}"
+        echo -e "$(tr_text L_HY2_006)"
     else
-        echo -e "${RED}❌ Ошибка установки / Installation failed.${NC}"
+        echo -e "$(tr_text L_HY2_007)"
     fi
 
     echo
@@ -69,14 +69,14 @@ remove_hysteria2() {
     echo -e "${BLUE}$(tr_text HY2_REMOVING)${NC}"
     echo
 
-    bash <(curl -fsSL https://get.hy2.sh/) --remove
+    run_remote_script https://get.hy2.sh/ --remove
     local status=$?
 
     echo
     if [ $status -eq 0 ]; then
         echo -e "${GREEN}✅ $(tr_text HY2_REMOVED)${NC}"
     else
-        echo -e "${RED}❌ Ошибка удаления / Removal failed.${NC}"
+        echo -e "$(tr_text L_HY2_008)"
     fi
 
     echo
@@ -93,7 +93,7 @@ edit_hysteria2_config() {
     echo
 
     if [ ! -f "$config_file" ]; then
-        echo -e "${YELLOW}⚠️  Конфиг не найден. Создаём базовый конфиг...${NC}"
+        echo -e "$(tr_text L_HY2_009)"
         echo
 
         echo -e "${BLUE}$(tr_text HY2_DOMAIN_PROMPT)${NC}"
@@ -115,7 +115,7 @@ tls:
   cert: /etc/hysteria/server.crt
   key: /etc/hysteria/server.key
 
-# Для автоматического TLS (ACME) раскомментируйте:
+# For automatic TLS (ACME) uncomment:
 # acme:
 #   domains:
 #     - ${hy2_domain}
@@ -132,14 +132,14 @@ masquerade:
     rewriteHost: true
 HYEOF
 
-        echo -e "${GREEN}✅ Базовый конфиг создан: ${CYAN}${config_file}${NC}"
-        echo -e "   ${BLUE}Домен / Domain: ${YELLOW}${hy2_domain}${NC}"
-        echo -e "   ${BLUE}Порт / Port:    ${YELLOW}${hy2_port}${NC}"
+        echo -e "$(tr_text L_HY2_010 "${config_file}")"
+        echo -e "$(tr_text L_HY2_011 "${hy2_domain}")"
+        echo -e "$(tr_text L_HY2_012 "${hy2_port}")"
         echo
         sleep 1
     fi
 
-    echo -e "${YELLOW}Открываю конфиг в редакторе / Opening config...${NC}"
+    echo -e "$(tr_text L_HY2_013)"
     sleep 1
 
     if command -v nano >/dev/null 2>&1; then
@@ -149,14 +149,14 @@ HYEOF
     elif command -v vi >/dev/null 2>&1; then
         $SUDO vi "$config_file"
     else
-        echo -e "${RED}❌ Редактор не найден. Установите nano: sudo apt install nano${NC}"
+        echo -e "$(tr_text L_HY2_014)"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
 
     echo
     echo -e "${GREEN}✅ $(tr_text HY2_CONFIG_SAVED)${NC}"
-    echo -e "${CYAN}Путь к конфигу / Config path: ${YELLOW}${config_file}${NC}"
+    echo -e "$(tr_text L_HY2_015 "${config_file}")"
     echo
     read -rp "$(tr_text PRESS_ENTER)"
 }
@@ -179,27 +179,27 @@ manage_hysteria2_service() {
         case $choice in
             1)
                 show_banner
-                echo -e "${BLUE}▶️  Включаю автозапуск и запускаю hysteria-server.service...${NC}"
+                echo -e "$(tr_text L_HY2_016)"
                 echo
                 $SUDO systemctl enable --now hysteria-server.service
                 echo
-                echo -e "${GREEN}✅ Сервис включён и запущен.${NC}"
+                echo -e "$(tr_text L_HY2_017)"
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
             2)
                 show_banner
-                echo -e "${BLUE}🔄 Перезапускаю hysteria-server.service...${NC}"
+                echo -e "$(tr_text L_HY2_018)"
                 echo
                 $SUDO systemctl restart hysteria-server.service
                 echo
-                echo -e "${GREEN}✅ Сервис перезапущен.${NC}"
+                echo -e "$(tr_text L_HY2_019)"
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
             3)
                 show_banner
-                echo -e "${CYAN}📊 Статус hysteria-server.service:${NC}"
+                echo -e "$(tr_text L_HY2_020)"
                 echo
                 $SUDO systemctl status hysteria-server.service --no-pager -l
                 echo
@@ -207,11 +207,11 @@ manage_hysteria2_service() {
                 ;;
             4)
                 show_banner
-                echo -e "${YELLOW}⏹️  Останавливаю hysteria-server.service...${NC}"
+                echo -e "$(tr_text L_HY2_021)"
                 echo
                 $SUDO systemctl stop hysteria-server.service
                 echo
-                echo -e "${YELLOW}✅ Сервис остановлен.${NC}"
+                echo -e "$(tr_text L_HY2_022)"
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
@@ -227,7 +227,7 @@ show_hysteria2_logs() {
     echo -e "${CYAN}║    📋 $(tr_text SUB_HY2_LOGS)${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
     echo
-    echo -e "${YELLOW}Нажмите Ctrl+C для выхода / Press Ctrl+C to exit${NC}"
+    echo -e "$(tr_text L_HY2_023)"
     echo
     sleep 1
     $SUDO journalctl --no-pager -e -u hysteria-server.service
@@ -260,13 +260,13 @@ check_hysteria2_version() {
     echo -e "${BLUE}$(tr_text HY2_VERSION_CURR)${NC} ${GREEN}${installed_ver}${NC}"
 
     # Последняя версия с GitHub
-    echo -e "${DIM}Проверяю последнюю версию...${NC}"
+    echo -e "$(tr_text L_HY2_024)"
     local latest_ver
     latest_ver=$(curl -fsSL "https://api.github.com/repos/apernet/hysteria/releases/latest" 2>/dev/null \
         | grep '"tag_name"' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 
     if [ -z "$latest_ver" ]; then
-        echo -e "${YELLOW}⚠️  Не удалось получить информацию о последней версии.${NC}"
+        echo -e "$(tr_text L_HY2_025)"
     else
         echo -e "${BLUE}$(tr_text HY2_VERSION_LATEST)${NC} ${CYAN}${latest_ver}${NC}"
         echo
@@ -274,7 +274,7 @@ check_hysteria2_version() {
             echo -e "${GREEN}✅ $(tr_text HY2_UP_TO_DATE)${NC}"
         else
             echo -e "${YELLOW}⚠️  $(tr_text HY2_UPDATE_AVAIL)${NC}"
-            echo -e "${DIM}   Используйте пункт '$(tr_text SUB_HY2_UPDATE)' для обновления.${NC}"
+            echo -e "$(tr_text L_HY2_026)"
         fi
     fi
 
@@ -291,7 +291,7 @@ update_hysteria2() {
 
     if ! command -v hysteria >/dev/null 2>&1 && [ ! -f /usr/local/bin/hysteria ]; then
         echo -e "${YELLOW}$(tr_text HY2_NOT_FOUND)${NC}"
-        echo -e "${DIM}Сначала установите Hysteria2 через пункт '$(tr_text SUB_HY2_INSTALL)'${NC}"
+        echo -e "$(tr_text L_HY2_027)"
         echo
         read -rp "$(tr_text PRESS_ENTER)"
         return 0
@@ -328,18 +328,18 @@ update_hysteria2() {
             return 0
         fi
     else
-        echo -e "${YELLOW}⚠️  Не удалось проверить последнюю версию. Всё равно обновить? (y/n)${NC}"
+        echo -e "$(tr_text L_HY2_028)"
         read -r ans
         [[ ! "$ans" =~ ^[YyДд]$ ]] && { read -rp "$(tr_text PRESS_ENTER)"; return 0; }
     fi
 
     echo
     echo -e "${BLUE}$(tr_text HY2_UPDATING)${NC}"
-    echo -e "${DIM}Команда: bash <(curl -fsSL https://get.hy2.sh/)${NC}"
+    echo -e "$(tr_text L_HY2_004)"
     echo
 
     # Официальный установщик — устанавливает или обновляет до последней версии
-    bash <(curl -fsSL https://get.hy2.sh/)
+    run_remote_script https://get.hy2.sh/
     local status=$?
 
     echo
@@ -347,9 +347,9 @@ update_hysteria2() {
         local new_ver
         new_ver=$(hysteria version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
         echo -e "${GREEN}✅ $(tr_text HY2_UPDATED)${NC}"
-        [ -n "$new_ver" ] && echo -e "${CYAN}Новая версия / New version: ${YELLOW}${new_ver}${NC}"
+        [ -n "$new_ver" ] && echo -e "$(tr_text L_HY2_029 "${new_ver}")"
         echo
-        echo -e "${DIM}Перезапустите сервис для применения: пункт 5 → 3 → 4 → 2${NC}"
+        echo -e "$(tr_text L_HY2_030)"
     else
         echo -e "${RED}❌ $(tr_text HY2_UPDATE_FAIL)${NC}"
     fi
@@ -482,7 +482,7 @@ setup_hysteria2_remnanode() {
     if _hy2r_open_udp "$port"; then
         echo -e "${GREEN}✅ UDP $port${NC}"
     else
-        echo -e "${YELLOW}⚠️  Firewall not detected / Файрвол не найден: open UDP $port manually${NC}"
+        echo -e "$(tr_text L_HY2_031 "$port")"
     fi
 
     # --- перезапуск ---
