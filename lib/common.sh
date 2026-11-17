@@ -99,7 +99,7 @@ _remote_fetch() {
 # run_remote_script [--sh] URL [аргументы скрипта...] — безопасная замена bash <(curl ...)
 run_remote_script() {
     local interp=bash rc url
-    [ "${1:-}" = "--sh" ] && { interp=sh; shift; }
+    [ "${1:-}" = "--sh" ] && { interp="sh"; shift; }
     url="$1"; shift
     _remote_fetch "$url" || return $?
     "$interp" "$REMOTE_TMP" "$@"
