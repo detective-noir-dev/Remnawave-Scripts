@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.10.2
+
+### Исправления
+- Настройка Hysteria2 для Remnanode (`setup_hysteria2_remnanode`): сертификаты вставлялись в секцию `volumes` первого сервиса в docker-compose.yml (обычно nginx) вместо `remnanode`. Теперь awk отслеживает имя текущего сервиса и добавляет монтирования только в блок `remnanode`.
+
 ## 1.10.1
 
 ### Интерфейс
