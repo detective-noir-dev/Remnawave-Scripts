@@ -453,8 +453,9 @@ setup_hysteria2_remnanode() {
         local tmp
         tmp=$(mktemp)
         awk -v items="$(printf '%s\n' "${want[@]}")" '
+            /^  [a-zA-Z_-]+:/ { svc = $1 }
             { print }
-            !done && /^[[:space:]]+volumes:[[:space:]]*$/ {
+            svc ~ /remnanode/ && !done && /^[[:space:]]+volumes:[[:space:]]*$/ {
                 match($0, /^[[:space:]]*/)
                 ind = substr($0, 1, RLENGTH) "  "
                 n = split(items, a, "\n")
