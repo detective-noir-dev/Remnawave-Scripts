@@ -41,8 +41,11 @@ submenu_maintenance() {
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_UPDATE)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_APT_UPDATE)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text GROUP_CLEANER)"
+        echo -e "      ${DIM}$(tr_text HINT_CLEANER)${NC}"
         echo -e "  ${YELLOW}4)${NC} $(tr_text GROUP_MEMORY)"
+        echo -e "      ${DIM}$(tr_text HINT_MEMORY)${NC}"
         echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SCANNER)"
+        echo -e "      ${DIM}$(tr_text HINT_SCANNER)${NC}"
         echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_ROLLBACK)"
         echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_VERIFY)"
         echo -e "  ${RED}8)${NC} $(tr_text SUB_DELETE)"
@@ -201,13 +204,16 @@ show_main_menu() {
             _UPDATE_CHECKED=1
         fi
 
-        _mi() { echo -e "  ${DIM}[${NC}${BOLD}${YELLOW}$1${NC}${DIM}]${NC} $2"; }
-        _mi 1 "$(tr_text GROUP_ID_FLAGS)"
-        _mi 2 "$(tr_text GROUP_MONITOR)"
-        _mi 3 "$(tr_text GROUP_PORTS)"
-        _mi 4 "$(tr_text GROUP_SETTINGS)"
-        _mi 5 "$(tr_text GROUP_SERVER)"
-        _mi 6 "$(tr_text GROUP_THIRDPARTY)"
+        _mi() {
+            echo -e "  ${DIM}[${NC}${BOLD}${YELLOW}$1${NC}${DIM}]${NC} $2"
+            [ -n "${3:-}" ] && echo -e "      ${DIM}$3${NC}"
+        }
+        _mi 1 "$(tr_text GROUP_ID_FLAGS)"   "$(tr_text HINT_ID_FLAGS)"
+        _mi 2 "$(tr_text GROUP_MONITOR)"    "$(tr_text HINT_MONITOR)"
+        _mi 3 "$(tr_text GROUP_PORTS)"      "$(tr_text HINT_PORTS)"
+        _mi 4 "$(tr_text GROUP_SETTINGS)"   "$(tr_text HINT_SETTINGS)"
+        _mi 5 "$(tr_text GROUP_SERVER)"     "$(tr_text HINT_SERVER)"
+        _mi 6 "$(tr_text GROUP_THIRDPARTY)" "$(tr_text HINT_THIRDPARTY)"
         echo -e "  ${DIM}[0] $(tr_text MENU_EXIT)${NC}"
         echo -e "  ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
