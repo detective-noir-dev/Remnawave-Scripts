@@ -2,7 +2,7 @@
 
 🇷🇺 [Русская версия](README.md) (main document)
 
-![version](https://img.shields.io/badge/version-1.10.3-blue)
+![version](https://img.shields.io/badge/version-1.11.0-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -44,6 +44,11 @@ It also includes a self-update system from GitHub and allows you to uninstall th
   - 📋 Status: connection, proxy port, external IP and country
   - 🛑 Disable and 🟢 enable without uninstalling
   - 🗑️ Full removal (package, repository, key) with confirmation
+- **🧦 SOCKS5 Proxy (Dante)** ⭐ NEW in v1.11.0
+  - ⚙️ Installation and auto-configuration with mandatory IP whitelist
+  - 🛡️ Automated firewall rules (UFW / FirewallD / iptables)
+  - 🔄 Safe IP updates and stale interface address detection
+  - 📋 Service management, logs, and status checks
 - **🔧 Third-party Scripts** ⭐ v1.4.1+
   - 🌐 Quick installation of Remnawave by EGames
   - 🤖 Installation of Reshala (Remnawave Bedolaga)
@@ -124,7 +129,7 @@ Or directly:
 | 2 | 📊 Resource Monitor | Free memory, htop, System info (neofetch) |
 | 3 | 🔐 Network & Ports | Port management submenu |
 | 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
-| 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2, Cloudflare WARP |
+| 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2, Cloudflare WARP, Dante SOCKS5 |
 | 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala, Multitest |
 | 7 | 🧹 System Cleaner | APT, journald, Docker, /tmp, Snap, disk analyzer |
 | 8 | 🧠 Memory & Swap | ZRAM, Disk Swap, hybrid mode, Docker guide |
@@ -184,6 +189,7 @@ Displays information about:
 2) 🛡️  Install Zapret
 3) ⚡ Hysteria2
 4) ☁️  Cloudflare WARP
+5) 🧦 SOCKS5 Proxy (Dante)
 0) ⬅️  Back
 ```
 
@@ -411,7 +417,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.10.3
+**Version:** 1.11.0
 **Release Date:** November 2026
 **License:** MIT
 ```

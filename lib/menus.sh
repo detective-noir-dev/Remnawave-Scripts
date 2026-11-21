@@ -18,6 +18,7 @@ submenu_server() {
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_ZAPRET)"
         echo -e "  ${YELLOW}3)${NC} $(tr_text SUB_HY2_SUBMENU)"
         echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_WARP)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_DANTE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         read -rp "> " choice
 
@@ -26,6 +27,7 @@ submenu_server() {
             2) show_banner; install_zapret ;;
             3) submenu_hysteria2 ;;
             4) submenu_warp ;;
+            5) submenu_dante ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac

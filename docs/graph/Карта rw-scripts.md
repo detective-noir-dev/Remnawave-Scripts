@@ -3,7 +3,7 @@ tags: [rw-hub]
 ---
 # Карта rw-scripts
 
-Граф структуры `scripts.sh` (v1.10.3). Одна заметка — одна функция; ссылки — это **дерево меню**, а не все вызовы подряд.
+Граф структуры `scripts.sh` (v1.11.0). Одна заметка — одна функция; ссылки — это **дерево меню**, а не все вызовы подряд.
 
 **Начни отсюда:** [[show_main_menu]]
 
@@ -24,5 +24,6 @@ tags: [rw-hub]
 2. [[submenu_monitor]] — мониторинг ресурсов
 3. [[submenu_network]] — порты и файрвол
 4. [[submenu_maintenance]] — обновление, очистка, память, сканер, удаление
-5. [[submenu_server]] — SSH, Zapret, Hysteria2, WARP
+5. [[submenu_server]] — SSH, Zapret, Hysteria2, WARP, **Dante SOCKS5**
+   - 5.5 [[submenu_dante]] — SOCKS5-прокси Dante (IP whitelist, фаервол, статус)
 6. [[submenu_thirdparty]] — сторонние скрипты

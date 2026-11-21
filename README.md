@@ -2,7 +2,7 @@
 
 🇬🇧 [English version](README-ENG.md)
 
-![версия](https://img.shields.io/badge/версия-1.10.3-blue)
+![версия](https://img.shields.io/badge/версия-1.11.0-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -44,6 +44,11 @@ Remnawave-Scripts — это кроссплатформенный Bash-скри�
   - 📋 Статус: подключение, порт прокси, внешний IP и страна
   - 🛑 Отключение и 🟢 включение без удаления
   - 🗑️ Полное удаление (пакет, репозиторий, ключ) с подтверждением
+- **🧦 SOCKS5-прокси (Dante)** ⭐ НОВОЕ в v1.11.0
+  - ⚙️ Установка и автоконфигурация с обязательным IP-whitelist
+  - 🛡️ Автоматическая настройка фаервола (UFW / FirewallD / iptables)
+  - 🔄 Безопасное обновление IP и автоопределение рассинхронизации адреса
+  - 📋 Управление сервисом, логи и статус проверки подключения
 - **🔧 Сторонние скрипты** ⭐ v1.4.1+
   - 🌐 Быстрая установка Remnawave от EGames
   - 🤖 Установка Reshala (Remnawave Bedolaga)
@@ -124,7 +129,7 @@ rw-scripts
 | 2 | 📊 Монитор ресурсов | Свободная память, htop, Системная информация (neofetch) |
 | 3 | 🔐 Сеть и порты | Подменю управления портами |
 | 4 | ⚙️ Обслуживание | Проверка обновлений, Обновление системных пакетов, Удаление |
-| 5 | 🖥️ Настройка сервера | SSH порт, Zapret, Hysteria2, Cloudflare WARP |
+| 5 | 🖥️ Настройка сервера | SSH порт, Zapret, Hysteria2, Cloudflare WARP, Dante SOCKS5 |
 | 6 | 🔧 Сторонние скрипты | Remnawave (EGames), Reshala, Multitest |
 | 7 | 🧹 Очистка системы | APT, journald, Docker, /tmp, Snap, анализатор диска |
 | 8 | 🧠 Память и Swap | ZRAM, Disk Swap, гибридный режим, инструкция Docker |
@@ -184,6 +189,7 @@ rw-scripts
 2) 🛡️  Установка zapret
 3) ⚡ Hysteria2
 4) ☁️  Cloudflare WARP
+5) 🧦 SOCKS5-прокси (Dante)
 0) ⬅️  Назад
 ```
 
@@ -411,7 +417,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.10.3
+**Версия:** 1.11.0
 **Дата релиза:** Ноябрь 2026
 **Лицензия:** MIT
 ```

@@ -18,7 +18,7 @@ _svc_state() {
 }
 
 # список «имя:юниты» для дашборда и status
-RW_SERVICES=("ssh:ssh sshd" "ufw:ufw" "docker:docker" "hy2:hysteria-server" "warp:warp-svc" "fail2ban:fail2ban")
+RW_SERVICES=("ssh:ssh sshd" "ufw:ufw" "docker:docker" "hy2:hysteria-server" "warp:warp-svc" "fail2ban:fail2ban" "dante:danted")
 
 # svc_summary — одна строка «✔ ssh  ✔ docker  ✖ hy2», только установленные сервисы
 svc_summary() {
