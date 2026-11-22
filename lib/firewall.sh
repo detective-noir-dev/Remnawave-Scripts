@@ -187,46 +187,12 @@ open_port() {
     [ -z "$description" ] && description="No description"
     
     echo -e "$(tr_text L_FIREWALL_013 "$port" "$protocol")"
-    
-    case $firewall in
-        ufw)
-            if [ "$protocol" = "both" ]; then
-                $SUDO ufw allow "$port"/tcp &>/dev/null
-                $SUDO ufw allow "$port"/udp &>/dev/null
-                add_port_to_json "$port" "tcp" "$description"
-                add_port_to_json "$port" "udp" "$description"
-            else
-                $SUDO ufw allow "$port"/"$protocol" &>/dev/null
-                add_port_to_json "$port" "$protocol" "$description"
-            fi
-            ;;
-        firewalld)
-            if [ "$protocol" = "both" ]; then
-                $SUDO firewall-cmd --permanent --add-port="$port"/tcp &>/dev/null
-                $SUDO firewall-cmd --permanent --add-port="$port"/udp &>/dev/null
-                add_port_to_json "$port" "tcp" "$description"
-                add_port_to_json "$port" "udp" "$description"
-            else
-                $SUDO firewall-cmd --permanent --add-port="$port"/"$protocol" &>/dev/null
-                add_port_to_json "$port" "$protocol" "$description"
-            fi
-            $SUDO firewall-cmd --reload &>/dev/null
-            ;;
-        iptables)
-            if [ "$protocol" = "both" ]; then
-                $SUDO iptables -A INPUT -p tcp --dport "$port" -j ACCEPT
-                $SUDO iptables -A INPUT -p udp --dport "$port" -j ACCEPT
-                add_port_to_json "$port" "tcp" "$description"
-                add_port_to_json "$port" "udp" "$description"
-            else
-                $SUDO iptables -A INPUT -p "$protocol" --dport "$port" -j ACCEPT
-                add_port_to_json "$port" "$protocol" "$description"
-            fi
-            command -v netfilter-persistent &>/dev/null && $SUDO netfilter-persistent save &>/dev/null
-            ;;
-    esac
-    
-    echo -e "$(tr_text L_FIREWALL_014 "$port" "$protocol")"
+
+    if port_apply open "$port" "$protocol" "$description"; then
+        echo -e "$(tr_text L_FIREWALL_014 "$port" "$protocol")"
+    else
+        echo -e "$(tr_text L_FIREWALL_036 "$port")"
+    fi
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
@@ -267,44 +233,11 @@ close_port() {
         *) return 1 ;;
     esac
     
-    case $firewall in
-        ufw)
-            if [ "$protocol" = "both" ]; then
-                $SUDO ufw delete allow "$port"/tcp &>/dev/null
-                $SUDO ufw delete allow "$port"/udp &>/dev/null
-                remove_port_from_json "$port" "tcp"
-                remove_port_from_json "$port" "udp"
-            else
-                $SUDO ufw delete allow "$port"/"$protocol" &>/dev/null
-                remove_port_from_json "$port" "$protocol"
-            fi
-            ;;
-        firewalld)
-            if [ "$protocol" = "both" ]; then
-                $SUDO firewall-cmd --permanent --remove-port="$port"/tcp &>/dev/null
-                $SUDO firewall-cmd --permanent --remove-port="$port"/udp &>/dev/null
-                remove_port_from_json "$port" "tcp"
-                remove_port_from_json "$port" "udp"
-            else
-                $SUDO firewall-cmd --permanent --remove-port="$port"/"$protocol" &>/dev/null
-                remove_port_from_json "$port" "$protocol"
-            fi
-            $SUDO firewall-cmd --reload &>/dev/null
-            ;;
-        iptables)
-            if [ "$protocol" = "both" ]; then
-                $SUDO iptables -D INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null
-                $SUDO iptables -D INPUT -p udp --dport "$port" -j ACCEPT 2>/dev/null
-                remove_port_from_json "$port" "tcp"
-                remove_port_from_json "$port" "udp"
-            else
-                $SUDO iptables -D INPUT -p "$protocol" --dport "$port" -j ACCEPT 2>/dev/null
-                remove_port_from_json "$port" "$protocol"
-            fi
-            ;;
-    esac
-    
-    echo -e "$(tr_text L_FIREWALL_018 "$port")"
+    if port_apply close "$port" "$protocol"; then
+        echo -e "$(tr_text L_FIREWALL_018 "$port")"
+    else
+        echo -e "$(tr_text L_FIREWALL_037 "$port")"
+    fi
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
@@ -468,6 +401,8 @@ port_apply() {
         *)       return 3 ;;
     esac
     case "$action" in open|close) ;; *) return 3 ;; esac
+    init_ports_file
+    ensure_jq || return 1
 
     for p in $protos; do
         case "$fw:$action" in
@@ -478,16 +413,19 @@ port_apply() {
             iptables:open)     $SUDO iptables -A INPUT -p "$p" --dport "$port" -j ACCEPT ;;
             iptables:close)    $SUDO iptables -D INPUT -p "$p" --dport "$port" -j ACCEPT ;;
         esac || return 1
-        if [ "$action" = "open" ]; then
-            add_port_to_json "$port" "$p" "$desc"
-        else
-            remove_port_from_json "$port" "$p"
-        fi
     done
 
     [ "$fw" = "firewalld" ] && { $SUDO firewall-cmd --reload >/dev/null || return 1; }
     if [ "$fw" = "iptables" ] && command -v netfilter-persistent >/dev/null 2>&1; then
-        $SUDO netfilter-persistent save >/dev/null 2>&1
+        $SUDO netfilter-persistent save >/dev/null || return 1
     fi
+
+    for p in $protos; do
+        if [ "$action" = "open" ]; then
+            add_port_to_json "$port" "$p" "$desc" || return 1
+        else
+            remove_port_from_json "$port" "$p" || return 1
+        fi
+    done
     return 0
 }

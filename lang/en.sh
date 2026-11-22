@@ -273,6 +273,9 @@ tr_text() {
         L_CLEANER_004)        echo "${BLUE}Cleaning /var/log and container logs...${NC}" ;;
         L_CLEANER_005)        echo "${GREEN}Logs cleaned.${NC}" ;;
         L_CLEANER_006)        echo "${BLUE}Cleaning Docker (system prune)...${NC}" ;;
+        L_CLEANER_052)        echo "Docker cleanup removes all unused images, containers, networks, and volumes." ;;
+        L_CLEANER_053)        echo "Continue? (y/n): " ;;
+        L_CLEANER_054)        echo "Docker cleanup was skipped because confirmation requires an interactive terminal." ;;
         L_CLEANER_007)        echo "${BLUE}Cleaning /tmp and user cache...${NC}" ;;
         L_CLEANER_008)        echo "${GREEN}Temporary files removed.${NC}" ;;
         L_CLEANER_009)        echo "${BLUE}Cleaning old Snap packages...${NC}" ;;
@@ -330,6 +333,13 @@ tr_text() {
         L_FIREWALL_033)       echo "  ${YELLOW}3)${NC} ✏️  Edit description" ;;
         L_FIREWALL_034)       echo "  ${YELLOW}4)${NC} 📋 List ports" ;;
         L_FIREWALL_035)       echo "  ${YELLOW}5)${NC} 🛡️  Firewall status" ;;
+        L_FIREWALL_036)       echo "${RED}❌ Failed to open port $2.${NC}" ;;
+        L_FIREWALL_037)       echo "${RED}❌ Failed to close port $2.${NC}" ;;
+        SSH_BACKUP_FAIL)      echo "Could not back up sshd_config; no changes were made." ;;
+        SSH_CONFIG_INVALID)   echo "The SSH configuration is invalid. The previous configuration was restored." ;;
+        SSH_FIREWALL_FAIL)    echo "The new SSH port could not be opened in the firewall. The previous configuration was restored." ;;
+        L_DANTE_FW_FAIL)      echo "Failed to update the firewall rule." ;;
+        WARP_UNINSTALL_FAIL)  echo "WARP could not be removed completely." ;;
         L_HY2_001)            echo "${YELLOW}⚠️  Hysteria2 is already installed: ${GREEN}$2${NC}" ;;
         L_HY2_002)            echo "${DIM}The command bash <(curl -fsSL https://get.hy2.sh/) also updates to the latest version.${NC}" ;;
         L_HY2_003)            echo "${YELLOW}Run the installer again? (y/n)${NC}" ;;
@@ -342,6 +352,7 @@ tr_text() {
         L_HY2_010)            echo "${GREEN}✅ Basic config created: ${CYAN}$2${NC}" ;;
         L_HY2_011)            echo "   ${BLUE}Domain: ${YELLOW}$2${NC}" ;;
         L_HY2_012)            echo "   ${BLUE}Port:   ${YELLOW}$2${NC}" ;;
+        L_HY2_052)            echo "   ${BLUE}Password: ${YELLOW}$2${NC}" ;;
         L_HY2_013)            echo "${YELLOW}Opening config in the editor...${NC}" ;;
         L_HY2_014)            echo "${RED}❌ No editor found. Install nano: sudo apt install nano${NC}" ;;
         L_HY2_015)            echo "${CYAN}Config path: ${YELLOW}$2${NC}" ;;

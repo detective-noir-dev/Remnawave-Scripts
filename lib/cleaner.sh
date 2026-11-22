@@ -64,6 +64,13 @@ _do_clean_docker() {
     if ! command -v docker >/dev/null 2>&1; then
         echo -e "${YELLOW}$(tr_text CLEAN_NO_DOCKER)${NC}"; return
     fi
+    echo -e "${YELLOW}$(tr_text L_CLEANER_052)${NC}"
+    if [ ! -t 0 ]; then
+        echo -e "${YELLOW}$(tr_text L_CLEANER_054)${NC}"
+        return 0
+    fi
+    read -rp "$(tr_text L_CLEANER_053)" ans
+    [[ "$ans" =~ ^[YyДд]$ ]] || return 0
     echo -e "$(tr_text L_CLEANER_006)"
     $SUDO docker system prune -a --volumes -f
     $SUDO docker builder prune -a -f 2>/dev/null || true

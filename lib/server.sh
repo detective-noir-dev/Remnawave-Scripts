@@ -37,43 +37,90 @@ change_ssh_port() {
         return 0
     fi
 
+    # Сохраняем резервную копию конфига
+    local sshd_backup="${sshd_config}.bak.$$" sshd_bin
+    $SUDO cp -a "$sshd_config" "$sshd_backup" 2>/dev/null || {
+        echo -e "${RED}❌ $(tr_text SSH_BACKUP_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    }
+
     # Меняем порт в конфиге
     if grep -qE "^Port " "$sshd_config" 2>/dev/null; then
-        $SUDO sed -i "s/^Port .*/Port $new_port/" "$sshd_config"
+        $SUDO sed -i "s/^Port .*/Port $new_port/" "$sshd_config" || {
+            $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
+            $SUDO rm -f "$sshd_backup"
+            echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        }
     elif grep -qE "^#Port " "$sshd_config" 2>/dev/null; then
-        $SUDO sed -i "s/^#Port .*/Port $new_port/" "$sshd_config"
+        $SUDO sed -i "s/^#Port .*/Port $new_port/" "$sshd_config" || {
+            $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
+            $SUDO rm -f "$sshd_backup"
+            echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        }
     else
-        echo "Port $new_port" | $SUDO tee -a "$sshd_config" > /dev/null
+        echo "Port $new_port" | $SUDO tee -a "$sshd_config" > /dev/null || {
+            $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
+            $SUDO rm -f "$sshd_backup"
+            echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        }
     fi
 
+    # Проверяем синтаксис конфига перед перезапуском
+    sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
+    if ! $SUDO "$sshd_bin" -t -f "$sshd_config" 2>/dev/null; then
+        echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+        $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
+        $SUDO rm -f "$sshd_backup"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
     # Открываем новый порт в firewall
     local firewall
+    local firewall_ok=1
     firewall=$(detect_firewall)
     case $firewall in
         ufw)
-            $SUDO ufw allow "$new_port"/tcp >/dev/null 2>&1
+            $SUDO ufw allow "$new_port"/tcp >/dev/null 2>&1 || firewall_ok=0
             echo -e "$(tr_text L_SERVER_002 "$new_port")"
             ;;
         firewalld)
-            $SUDO firewall-cmd --permanent --add-port="$new_port"/tcp >/dev/null 2>&1
-            $SUDO firewall-cmd --reload >/dev/null 2>&1
+            $SUDO firewall-cmd --permanent --add-port="$new_port"/tcp >/dev/null 2>&1 && \
+                $SUDO firewall-cmd --reload >/dev/null 2>&1 || firewall_ok=0
             echo -e "$(tr_text L_SERVER_003 "$new_port")"
             ;;
         iptables)
-            $SUDO iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null
+            $SUDO iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null || firewall_ok=0
             echo -e "$(tr_text L_SERVER_004 "$new_port")"
             ;;
     esac
+    if [ "$firewall_ok" -ne 1 ]; then
+        $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
+        $SUDO rm -f "$sshd_backup"
+        echo -e "${RED}❌ $(tr_text SSH_FIREWALL_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
 
     # Перезапускаем SSH
     echo -e "${BLUE}$(tr_text SSH_RESTART)${NC}"
     if $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null; then
+        $SUDO rm -f "$sshd_backup"
         echo
         echo -e "${GREEN}✅ $(tr_text SSH_CHANGED) ${CYAN}${new_port}${NC}"
         echo
         echo -e "$(tr_text L_SERVER_005)"
         echo -e "  ${YELLOW}ssh -p ${new_port} $(whoami)@<your_server_ip>${NC}"
     else
+        $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
+        $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null
+        $SUDO rm -f "$sshd_backup"
         echo -e "${RED}❌ $(tr_text SSH_FAIL)${NC}"
     fi
 

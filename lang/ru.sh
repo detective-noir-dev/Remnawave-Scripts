@@ -273,6 +273,9 @@ tr_text() {
         L_CLEANER_004)        echo "${BLUE}Очистка /var/log и логов контейнеров...${NC}" ;;
         L_CLEANER_005)        echo "${GREEN}Логи очищены.${NC}" ;;
         L_CLEANER_006)        echo "${BLUE}Очистка Docker (system prune)...${NC}" ;;
+        L_CLEANER_052)        echo "Очистка Docker удалит все неиспользуемые образы, контейнеры, сети и тома." ;;
+        L_CLEANER_053)        echo "Продолжить? (y/n): " ;;
+        L_CLEANER_054)        echo "Очистка Docker пропущена: для подтверждения нужен интерактивный терминал." ;;
         L_CLEANER_007)        echo "${BLUE}Очистка /tmp и кэша пользователя...${NC}" ;;
         L_CLEANER_008)        echo "${GREEN}Временные файлы удалены.${NC}" ;;
         L_CLEANER_009)        echo "${BLUE}Очистка старых Snap-пакетов...${NC}" ;;
@@ -330,6 +333,13 @@ tr_text() {
         L_FIREWALL_033)       echo "  ${YELLOW}3)${NC} ✏️  Редактировать описание" ;;
         L_FIREWALL_034)       echo "  ${YELLOW}4)${NC} 📋 Список портов" ;;
         L_FIREWALL_035)       echo "  ${YELLOW}5)${NC} 🛡️  Статус firewall" ;;
+        L_FIREWALL_036)       echo "${RED}❌ Не удалось открыть порт $2.${NC}" ;;
+        L_FIREWALL_037)       echo "${RED}❌ Не удалось закрыть порт $2.${NC}" ;;
+        SSH_BACKUP_FAIL)      echo "Не удалось создать резервную копию sshd_config; изменения не внесены." ;;
+        SSH_CONFIG_INVALID)   echo "Конфигурация SSH некорректна. Прежняя конфигурация восстановлена." ;;
+        SSH_FIREWALL_FAIL)    echo "Не удалось открыть новый порт SSH в файрволе. Прежняя конфигурация восстановлена." ;;
+        L_DANTE_FW_FAIL)      echo "Не удалось обновить правило файрвола." ;;
+        WARP_UNINSTALL_FAIL)  echo "Не удалось полностью удалить WARP." ;;
         L_HY2_001)            echo "${YELLOW}⚠️  Hysteria2 уже установлен: ${GREEN}$2${NC}" ;;
         L_HY2_002)            echo "${DIM}Команда bash <(curl -fsSL https://get.hy2.sh/) также обновит до последней версии.${NC}" ;;
         L_HY2_003)            echo "${YELLOW}Запустить установщик заново? (y/n)${NC}" ;;
@@ -342,6 +352,7 @@ tr_text() {
         L_HY2_010)            echo "${GREEN}✅ Базовый конфиг создан: ${CYAN}$2${NC}" ;;
         L_HY2_011)            echo "   ${BLUE}Домен: ${YELLOW}$2${NC}" ;;
         L_HY2_012)            echo "   ${BLUE}Порт:  ${YELLOW}$2${NC}" ;;
+        L_HY2_052)            echo "   ${BLUE}Пароль: ${YELLOW}$2${NC}" ;;
         L_HY2_013)            echo "${YELLOW}Открываю конфиг в редакторе...${NC}" ;;
         L_HY2_014)            echo "${RED}❌ Редактор не найден. Установите nano: sudo apt install nano${NC}" ;;
         L_HY2_015)            echo "${CYAN}Путь к конфигу: ${YELLOW}$2${NC}" ;;

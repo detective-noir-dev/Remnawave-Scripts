@@ -108,6 +108,10 @@ edit_hysteria2_config() {
 
         $SUDO mkdir -p /etc/hysteria
 
+        # Генерируем случайный пароль (32 hex-символа)
+        local hy2_password
+        hy2_password=$(head -c 16 /dev/urandom | xxd -p 2>/dev/null || tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 32)
+
         $SUDO tee "$config_file" > /dev/null <<HYEOF
 listen: :${hy2_port}
 
@@ -123,7 +127,7 @@ tls:
 
 auth:
   type: password
-  password: your_strong_password_here
+  password: ${hy2_password}
 
 masquerade:
   type: proxy
@@ -135,6 +139,7 @@ HYEOF
         echo -e "$(tr_text L_HY2_010 "${config_file}")"
         echo -e "$(tr_text L_HY2_011 "${hy2_domain}")"
         echo -e "$(tr_text L_HY2_012 "${hy2_port}")"
+        echo -e "$(tr_text L_HY2_052 "${hy2_password}")"
         echo
         sleep 1
     fi

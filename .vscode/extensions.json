@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "google.google-antigravity"
+        "google.google-antigravity",
+        "openai.chatgpt",
+        "moonshot-ai.kimi-code"
     ]
 }

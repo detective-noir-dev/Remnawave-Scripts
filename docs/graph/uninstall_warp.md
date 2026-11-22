@@ -9,7 +9,7 @@ tags: [rw-func]
 
 `uninstall_warp` · `lib/warp.sh` L190
 
-После подтверждения: отключается, `registration delete`, `apt-get purge cloudflare-warp`, `autoremove`, удаляет файл репозитория и ключ.
+После подтверждения: отключается, удаляет регистрацию и через `$SUDO` запускает `apt-get purge cloudflare-warp`, `autoremove`, удаляет файл репозитория и ключ. Успех показывается только при успешном завершении всех шагов.
 
 ## Откуда вызывается
 - [[submenu_warp]]

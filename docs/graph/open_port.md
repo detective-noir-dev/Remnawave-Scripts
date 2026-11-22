@@ -16,8 +16,8 @@ tags: [rw-func]
 2. ввод порта 1–65535
 3. протокол: 1 TCP / 2 UDP / 3 оба
 4. описание (по умолчанию «No description»)
-5. ufw: `allow`; firewalld: `--permanent --add-port` + `--reload`; iptables: `-A INPUT … ACCEPT` + `netfilter-persistent save`
-6. `add_port_to_json` для каждого протокола
+5. передаёт операцию в [[port_apply]]: ufw `allow`, firewalld `--permanent --add-port` + `--reload`, iptables `-A INPUT … ACCEPT` + `netfilter-persistent save`
+6. добавляет запись в `ports.json` только после успешного применения правила
 
 ## Использует (общие хелперы)
 `detect_firewall`
@@ -26,7 +26,7 @@ tags: [rw-func]
 `ufw`, `firewall-cmd`, `iptables`
 
 ## Вызывает
-- [[add_port_to_json]] — Запись порта в ports.json
+- [[port_apply]] — Применение правила без интерактивных запросов
 
 ## Откуда вызывается
 - [[port_management]]

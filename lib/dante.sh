@@ -66,31 +66,36 @@ _dante_ask_ips() {
 # ====== ФАЕРВОЛ: правило «только этому IP на этот порт» ======
 # _dante_fw add|del IP PORT
 _dante_fw() {
-    local act=$1 ip=$2 port=$3
+    local act=$1 ip=$2 port=$3 rule
     case "$(detect_firewall)" in
         ufw)
             if [ "$act" = add ]; then
                 $SUDO ufw allow from "$ip" to any port "$port" proto tcp >/dev/null 2>&1
             else
                 $SUDO ufw delete allow from "$ip" to any port "$port" proto tcp >/dev/null 2>&1
-            fi ;;
+            fi
+            return $?
+            ;;
         firewalld)
-            local rule="rule family=ipv4 source address=$ip port port=$port protocol=tcp accept"
+            rule="rule family=ipv4 source address=$ip port port=$port protocol=tcp accept"
             if [ "$act" = add ]; then
                 $SUDO firewall-cmd --permanent --add-rich-rule="$rule" >/dev/null 2>&1
             else
                 $SUDO firewall-cmd --permanent --remove-rich-rule="$rule" >/dev/null 2>&1
             fi
-            $SUDO firewall-cmd --reload >/dev/null 2>&1 ;;
+            [ $? -eq 0 ] && $SUDO firewall-cmd --reload >/dev/null 2>&1
+            return $?
+            ;;
         iptables)
             if [ "$act" = add ]; then
                 $SUDO iptables -A INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null
             else
                 $SUDO iptables -D INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null
-            fi ;;
+            fi
+            return $?
+            ;;
         *) return 0 ;;
     esac
-    return 0
 }
 
 # ====== КОНФИГ ======
@@ -172,14 +177,22 @@ _dante_install() {
     local old_port old_ip
     old_port=$(_dante_port)
     if [ -n "$old_port" ]; then
-        for old_ip in $(_dante_ips); do _dante_fw del "$old_ip" "$old_port"; done
+        for old_ip in $(_dante_ips); do
+            _dante_fw del "$old_ip" "$old_port" || {
+                echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
+                read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+        done
     fi
 
     _dante_write_conf "$port" "$iface" "${DANTE_IPS[@]}" || {
         read -rp "$(tr_text PRESS_ENTER)"; return 1; }
 
     local ip
-    for ip in "${DANTE_IPS[@]}"; do _dante_fw add "$ip" "$port"; done
+    for ip in "${DANTE_IPS[@]}"; do
+        _dante_fw add "$ip" "$port" || {
+            echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+    done
     run_step "$(tr_text L_DANTE_FW_LABEL)" true
 
     run_step "$(tr_text L_DANTE_ENABLE)" $SUDO systemctl enable danted
@@ -206,10 +219,18 @@ _dante_change_ips() {
         echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"; return 0; }
 
-    for old in $(_dante_ips); do _dante_fw del "$old" "$port"; done
+    for old in $(_dante_ips); do
+        _dante_fw del "$old" "$port" || {
+            echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+    done
     _dante_write_conf "$port" "$iface" "${DANTE_IPS[@]}" || {
         read -rp "$(tr_text PRESS_ENTER)"; return 1; }
-    for old in "${DANTE_IPS[@]}"; do _dante_fw add "$old" "$port"; done
+    for old in "${DANTE_IPS[@]}"; do
+        _dante_fw add "$old" "$port" || {
+            echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+    done
     run_step "$(tr_text L_DANTE_RESTART)" $SUDO systemctl restart danted
     echo
     read -rp "$(tr_text PRESS_ENTER)"
@@ -293,10 +314,16 @@ _dante_remove() {
 
     local port ip
     port=$(_dante_port)
-    [ -n "$port" ] && for ip in $(_dante_ips); do _dante_fw del "$ip" "$port"; done
+    if [ -n "$port" ]; then
+        for ip in $(_dante_ips); do
+            _dante_fw del "$ip" "$port" || {
+                echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
+                read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+        done
+    fi
     $SUDO systemctl disable --now danted >/dev/null 2>&1
     run_step "$(tr_text L_DANTE_REMOVING)" \
-        $SUDO apt-get purge -y dante-server
+        pkg_remove_any dante-server dante
     echo
     read -rp "$(tr_text PRESS_ENTER)"
 }

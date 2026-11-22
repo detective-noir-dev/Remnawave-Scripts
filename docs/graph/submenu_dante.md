@@ -26,13 +26,13 @@ tags: [rw-menu]
 | `_dante_conf_iface` | интерфейс из `DANTE_CONF` | `#rw-helper` |
 | `_dante_ips` | список IP из `client pass` блоков | `#rw-helper` |
 | `_dante_ask_ips` | интерактивный ввод IP → массив `DANTE_IPS` | `#rw-helper` |
-| `_dante_fw add\|del IP PORT` | правило фаервола (ufw/firewalld/iptables) | `#rw-helper` |
+| `_dante_fw add\|del IP PORT` | правило фаервола (ufw/firewalld/iptables), возвращает ошибку команды | `#rw-helper` |
 | `_dante_write_conf PORT IFACE IP…` | генерирует конфиг, проверяет `danted -Vf`, сохраняет `.bak` | `#rw-helper` |
 | `_dante_bind_state` | сравнивает listen-адрес с текущим IP интерфейса | `#rw-helper` |
 | `_dante_print_summary` | итоговый блок: порт, IP, команда проверки | `#rw-helper` |
 
 ## Использует (общие хелперы)
-`show_banner`, `print_submenu_header`, `run_step`, `pkg_install_any`,
+`show_banner`, `print_submenu_header`, `run_step`, `pkg_install_any`, `pkg_remove_any`,
 `detect_firewall`, `tr_text`, `$SUDO`, `$DANTE_CONF` (=/etc/danted.conf),
 `_DASH_EXT_IP` (кэш внешнего IP из menus.sh)
 

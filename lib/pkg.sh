@@ -38,6 +38,29 @@ pkg_install_any() {
     return 1
 }
 
+# pkg_remove ПАКЕТ... — удаляет пакеты через найденный менеджер
+pkg_remove() {
+    local m
+    m=$(pkg_mgr) || return 1
+    case "$m" in
+        apt-get) ${SUDO-} apt-get purge -y "$@" ;;
+        dnf|yum) ${SUDO-} "$m" remove -y "$@" ;;
+        pacman)  ${SUDO-} pacman -Rns --noconfirm "$@" ;;
+        zypper)  ${SUDO-} zypper remove -y "$@" ;;
+        apk)     ${SUDO-} apk del "$@" ;;
+        brew)    brew uninstall "$@" ;;
+    esac
+}
+
+# pkg_remove_any ПАКЕТ... — удаляет первое найденное имя пакета
+pkg_remove_any() {
+    local p
+    for p in "$@"; do
+        pkg_remove "$p" && return 0
+    done
+    return 1
+}
+
 # _pkg_install ИМЯ... — ставит только те, которых ещё нет ни как команды, ни как пакета dpkg
 _pkg_install() {
     local pkg

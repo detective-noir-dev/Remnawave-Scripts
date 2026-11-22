@@ -50,8 +50,17 @@ country_lookup() {
     read input
     [ "$input" = "0" ] && return
     key=$(echo "$input" | tr '[:upper:]' '[:lower:]')
-    COUNTRIES_FILE="$DATA_DIR/countries.csv"
-    if [ ! -f "$COUNTRIES_FILE" ]; then
+    # Ищем countries.csv: сначала в DATA_DIR (инсталляция), затем рядом со скриптом (запуск из клона)
+    local _ids_script_dir
+    _ids_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    COUNTRIES_FILE=""
+    for _ids_candidate in "$DATA_DIR/countries.csv" "$_ids_script_dir/countries.csv" "$_ids_script_dir/../countries.csv"; do
+        if [ -f "$_ids_candidate" ]; then
+            COUNTRIES_FILE="$_ids_candidate"
+            break
+        fi
+    done
+    if [ -z "$COUNTRIES_FILE" ]; then
         echo -e "${RED}countries.csv not found${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return

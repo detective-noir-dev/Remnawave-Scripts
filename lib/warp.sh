@@ -199,11 +199,13 @@ uninstall_warp() {
     echo -e "${BLUE}$(tr_text WARP_UNINSTALLING)${NC}"
     _warp_is_connected && warp-cli --accept-tos disconnect >/dev/null 2>&1
     warp-cli --accept-tos registration delete >/dev/null 2>&1
-    apt-get purge -y cloudflare-warp >/dev/null 2>&1
-    apt-get autoremove -y >/dev/null 2>&1
-    rm -f /etc/apt/sources.list.d/cloudflare-client.list /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-
-    echo -e "${GREEN}✅ $(tr_text WARP_UNINSTALLED)${NC}"
+    if $SUDO apt-get purge -y cloudflare-warp >/dev/null 2>&1 && \
+       $SUDO apt-get autoremove -y >/dev/null 2>&1 && \
+       $SUDO rm -f /etc/apt/sources.list.d/cloudflare-client.list /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg; then
+        echo -e "${GREEN}✅ $(tr_text WARP_UNINSTALLED)${NC}"
+    else
+        echo -e "${RED}❌ $(tr_text WARP_UNINSTALL_FAIL)${NC}"
+    fi
     echo
     read -rp "$(tr_text PRESS_ENTER)"
 }
