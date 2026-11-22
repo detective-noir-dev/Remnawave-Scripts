@@ -127,9 +127,7 @@ if [ -f "$INSTALL_DIR/$SCRIPT_NAME" ] && [ -s "$DATA_DIR/lib/pkg.sh" ]; then
     cp "$INSTALL_DIR/$SCRIPT_NAME" "$DATA_DIR/previous.new/scripts.sh"
     cp -r "$DATA_DIR/lib" "$DATA_DIR/previous.new/lib"
     [ -d "$DATA_DIR/lang" ] && cp -r "$DATA_DIR/lang" "$DATA_DIR/previous.new/lang"
-    for f in version.txt; do
-        [ -f "$DATA_DIR/$f" ] && cp "$DATA_DIR/$f" "$DATA_DIR/previous.new/$f"
-    done
+    [ -f "$DATA_DIR/version.txt" ] && cp "$DATA_DIR/version.txt" "$DATA_DIR/previous.new/version.txt"
 fi
 
 mkdir -p "$DATA_DIR/lang"
