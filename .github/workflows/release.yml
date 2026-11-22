@@ -1,6 +1,6 @@
 name: Release
 
-# Релиз выпускается тегом vX.Y.Z. Тег должен совпадать с version.txt, SHA256SUMS — с файлами.
+# Релиз выпускается тегом vX.Y.Z. Тег должен совпадать с version.txt.
 # Заметки берутся из раздела "## X.Y.Z" в CHANGELOG.md.
 on:
   push:
@@ -24,9 +24,6 @@ jobs:
             exit 1
           fi
 
-      - name: Checksums are up to date
-        run: bash tools/gen-checksums.sh --check
-
       - name: Tests
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq bats jq
@@ -42,5 +39,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" SHA256SUMS \
+          gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" --notes-file notes.md

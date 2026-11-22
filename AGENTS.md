@@ -26,7 +26,7 @@
 1. Изменить файлы
 2. Обновить `version.txt` (bump)
 3. Добавить запись в `CHANGELOG.md`
-4. `SHA256SUMS` пересчитывается pre-commit хуком автоматически
+4. контрольные суммы проекта не используются
 5. `git add` → `git commit` → `git tag -a vX.Y.Z` → `git push origin main` → `git push origin vX.Y.Z`
 6. `gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."`
 7. Обновить `Карта rw-scripts.md` с новой версией

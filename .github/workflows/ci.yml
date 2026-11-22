@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Tests (syntax, dictionaries, checksums, doctor, bats)
+      - name: Tests (syntax, dictionaries, doctor, bats)
         shell: bash
         run: bash tests/run.sh
 

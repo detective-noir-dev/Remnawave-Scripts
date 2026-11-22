@@ -47,7 +47,6 @@ Usage: rw-scripts [command]
   hy2 status|start|stop|restart|enable|logs|version
   clean                      full system cleanup
   doctor [--online]          environment diagnostics
-  verify [--online]          check installed files against SHA256SUMS
   rollback [--yes]           return to the version before the last update
   config [list|get KEY|set KEY VALUE]   settings: lang (ru|en), color (auto|always|never)
   log [N]                    last N lines of the action log (default 30)
@@ -151,7 +150,7 @@ cli_log() {
 
 # rw_completion bash|zsh — скрипт автодополнения для подкоманд
 rw_completion() {
-    local words="status ports warp hy2 clean doctor verify rollback config log completion version help"
+    local words="status ports warp hy2 clean doctor rollback config log completion version help"
     case "${1:-bash}" in
         bash)
             cat <<EOF
@@ -168,7 +167,7 @@ _rw_scripts() {
         hy2)    COMPREPLY=( \$(compgen -W "status start stop restart enable logs version" -- "\$cur") ) ;;
         config) COMPREPLY=( \$(compgen -W "list get set" -- "\$cur") ) ;;
         completion) COMPREPLY=( \$(compgen -W "bash zsh" -- "\$cur") ) ;;
-        doctor|verify) COMPREPLY=( \$(compgen -W "--online" -- "\$cur") ) ;;
+        doctor) COMPREPLY=( \$(compgen -W "--online" -- "\$cur") ) ;;
         rollback) COMPREPLY=( \$(compgen -W "--yes" -- "\$cur") ) ;;
     esac
 }
@@ -192,7 +191,7 @@ _rw_scripts() {
         hy2)    compadd status start stop restart enable logs version ;;
         config) compadd list get set ;;
         completion) compadd bash zsh ;;
-        doctor|verify) compadd -- --online ;;
+        doctor) compadd -- --online ;;
         rollback) compadd -- --yes ;;
     esac
 }

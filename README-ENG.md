@@ -2,7 +2,7 @@
 
 🇷🇺 [Русская версия](README.md) (main document)
 
-![version](https://img.shields.io/badge/version-1.11.1-blue)
+![version](https://img.shields.io/badge/version-1.11.2-blue)
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -318,7 +318,6 @@ For cron, CI and bug reports:
 rw-scripts clean              # full system cleanup, no prompts
 rw-scripts doctor [--online]  # diagnostics: dependencies, privileges, modules, dictionary, repo reachability
 rw-scripts version            # print version
-rw-scripts verify [--online]  # check installed files against SHA256SUMS
 rw-scripts rollback [--yes]   # go back to the version before the last update
 rw-scripts status             # service state: ssh, ufw, docker, hysteria2, warp, fail2ban
 rw-scripts ports              # open ports; ports open 443/tcp | ports close 443/tcp
@@ -344,14 +343,13 @@ Language is selected during the first installation and saved in `~/.config/remna
 
 ## 🛠️ Repository Structure
 
-- **scripts.sh** — core: settings, language, hash verification, module loading, entry point
 - **lib/** — modules sourced by scripts.sh, one file per topic:
   `pkg.sh` (package managers), `firewall.sh` (ports), `hy2.sh` (Hysteria2), `warp.sh` (WARP),
   `cleaner.sh`, `memory.sh`, `scanner.sh`, `maintenance.sh`, `server.sh`, `ids.sh`, `system.sh`,
   `thirdparty.sh`, `menus.sh` (main menu and dashboard), `doctor.sh` (diagnostics)
 - **lang/** — UI dictionaries (`ru.sh`, `en.sh`)
-- **SHA256SUMS** — hashes of every installed file; install and update are verified against it
-- **tests/**, **tools/**, **.githooks/** — tests (`bash tests/run.sh`, bats in `tests/bats`), hash generation, git hooks
+- **scripts.sh** — core: settings, language, module loading, entry point
+- **tests/**, **tools/**, **.githooks/** — tests (`bash tests/run.sh`, bats in `tests/bats`) and git hooks
 - **install.sh** — installer (copies to ~/.local/bin/rw-scripts)
 - **uninstall.sh** — uninstaller
 - **countries.csv** — country database (RU/EN + ISO)
@@ -417,7 +415,7 @@ If you like the project, give it a star on GitHub! 🌟
 
 ---
 
-**Version:** 1.11.1
+**Version:** 1.11.2
 **Release Date:** November 2026
 **License:** MIT
 ```

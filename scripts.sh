@@ -72,41 +72,13 @@ if [ -z "$LANG_SET" ]; then
     [ -f "$LANG_FILE" ] && LANG_SET=$(<"$LANG_FILE")   # установка, сделанная до появления config
 fi
 
-# ====== ПРОВЕРКА ЦЕЛОСТНОСТИ ======
-# SHA256SUMS лежит в репозитории рядом с файлами. Скачанное сверяем с ним до установки,
-# чтобы битая или подменённая загрузка не запустилась с правами root.
-_sha256_of() {
-    if command -v sha256sum >/dev/null 2>&1; then
-        sha256sum "$1" | cut -d' ' -f1
-    elif command -v shasum >/dev/null 2>&1; then
-        shasum -a 256 "$1" | cut -d' ' -f1
-    else
-        return 1
-    fi
-}
-
-# fetch_verified NAME DEST SUMS — качает $REPO_URL/NAME в DEST, только если SHA256 совпал с SUMS
-# коды возврата: 0 ок, 1 сеть, 2 нет записи в SHA256SUMS или нет sha256sum, 3 хэш не совпал
-fetch_verified() {
-    local name="$1" dest="$2" sums="$3" expected actual
-    expected=$(awk -v n="$name" '{ f=$2; sub(/^\*/, "", f) } f == n { print $1; exit }' <<<"$sums")
-    [ -n "$expected" ] || return 2
-    curl -fsSL -o "$dest.part" "$REPO_URL/$name" || { rm -f "$dest.part"; return 1; }
-    actual=$(_sha256_of "$dest.part") || { rm -f "$dest.part"; return 2; }
-    if [ "$actual" != "$expected" ]; then
-        rm -f "$dest.part"
-        return 3
-    fi
-    mv "$dest.part" "$dest"
-}
-
 # ====== СЛОВАРЬ ======
 # Тексты интерфейса лежат в lang/ru.sh и lang/en.sh, каждый файл определяет tr_text().
 LANG_DIR="$DATA_DIR/lang"
 tr_text() { echo "$1"; }   # запасной вариант, пока словарь не загружен
 
 load_lang() {
-    local code="en" f sums repo_dir
+    local code="en" f repo_dir
     [ "$LANG_SET" = "ru" ] && code="ru"
 
     # запуск из клонированного репозитория
@@ -119,10 +91,10 @@ load_lang() {
 
     f="$LANG_DIR/$code.sh"
     if [ ! -s "$f" ]; then
-        # старый установщик/обновлятор не знал про lang/: докачиваем словарь с проверкой хэша
+        # старый установщик/обновлятор не знал про lang/: докачиваем словарь
         mkdir -p "$LANG_DIR"
-        sums=$(curl -fsSL --connect-timeout 5 -m 15 "$REPO_URL/SHA256SUMS" 2>/dev/null)
-        fetch_verified "lang/$code.sh" "$f" "$sums" >/dev/null 2>&1
+        curl -fsSL --connect-timeout 5 -m 15 "$REPO_URL/lang/$code.sh" -o "$f.part" 2>/dev/null \
+            && mv "$f.part" "$f" || rm -f "$f.part"
     fi
     if [ -s "$f" ]; then
         # shellcheck disable=SC1090
@@ -145,13 +117,8 @@ print_submenu_header() {
 # в модулях только определения функций и начальные значения переменных.
 LIB_DIR="$DATA_DIR/lib"
 
-# _lib_names SUMS — имена lib/*.sh из SHA256SUMS: новый модуль подхватывается без правок кода
-_lib_names() {
-    awk '{ f=$2; sub(/^\*/, "", f) } f ~ /^lib\/[A-Za-z0-9_]+\.sh$/ { print f }' <<<"$1"
-}
-
 load_modules() {
-    local dir repo_dir sums name stage f
+    local dir repo_dir stage f
     # запуск из клонированного репозитория
     repo_dir=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
     if [ -s "$repo_dir/lib/pkg.sh" ]; then
@@ -159,14 +126,13 @@ load_modules() {
     else
         dir="$LIB_DIR"
         if [ ! -s "$dir/pkg.sh" ]; then
-            # старый установщик/обновлятор не знал про lib/: докачиваем модули с проверкой хэша
-            sums=$(curl -fsSL --connect-timeout 5 -m 15 "$REPO_URL/SHA256SUMS" 2>/dev/null)
+            # старый установщик/обновлятор не знал про lib/: докачиваем модули
             stage="$DATA_DIR/.lib.$$"
             mkdir -p "$stage/lib"
-            while read -r name; do
-                [ -n "$name" ] || continue
-                fetch_verified "$name" "$stage/$name" "$sums" >/dev/null 2>&1 || { rm -rf "$stage"; stage=""; break; }
-            done < <(_lib_names "$sums")
+            for f in pkg common firewall cli cleaner dante doctor hy2 ids maintenance memory menus scanner server system thirdparty warp; do
+                curl -fsSL --connect-timeout 5 -m 15 "$REPO_URL/lib/$f.sh" -o "$stage/lib/$f.sh" 2>/dev/null \
+                    || { rm -rf "$stage"; stage=""; break; }
+            done
             if [ -n "$stage" ] && [ -s "$stage/lib/pkg.sh" ]; then
                 rm -rf "$LIB_DIR"; mv "$stage/lib" "$LIB_DIR"; rm -rf "$stage"
             else
@@ -187,15 +153,11 @@ load_modules || exit 1
 #   rw-scripts clean           — полная уборка
 #   rw-scripts doctor [--online] — диагностика окружения
 #   rw-scripts version         — версия
-#   rw-scripts verify [--online] — сверка установленных файлов с SHA256SUMS
 #   rw-scripts rollback [--yes]  — вернуть версию до последнего обновления
 #   status, ports, warp, hy2, config, log, completion, help — см. lib/cli.sh (rw-scripts help)
 case "${1:-}" in
     status|ports|warp|hy2|config|log|completion|help|--help|-h)
         rw_cli "$@"
-        exit $? ;;
-    verify|--verify)
-        verify_install "${2:-}"
         exit $? ;;
     rollback|--rollback)
         rollback_update "${2:-}"

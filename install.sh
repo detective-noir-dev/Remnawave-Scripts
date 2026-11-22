@@ -113,44 +113,11 @@ if [ -f "$LANG_FILE" ] && ! grep -q '^lang=' "$CONFIG_FILE" 2>/dev/null; then
 fi
 
 # === СКАЧИВАНИЕ ОСНОВНЫХ ФАЙЛОВ ===
-
-# Все файлы сверяем по SHA256SUMS из репозитория: битая или подменённая загрузка не ставится
-sha256_of() {
-    if command -v sha256sum >/dev/null 2>&1; then
-        sha256sum "$1" | cut -d' ' -f1
-    elif command -v shasum >/dev/null 2>&1; then
-        shasum -a 256 "$1" | cut -d' ' -f1
-    else
-        return 1
-    fi
-}
-
-SUMS=$(curl -fsSL "$REPO_URL/SHA256SUMS")
-if [ -z "$SUMS" ]; then
-    echo -e "\e[31m❌ Failed to download SHA256SUMS\e[0m"
-    exit 1
-fi
-
-# download_verified NAME DEST — скачать файл и сверить SHA256 до установки
-download_verified() {
-    local name="$1" dest="$2" expected actual
-    expected=$(awk -v n="$name" '{ f=$2; sub(/^\*/, "", f) } f == n { print $1; exit }' <<<"$SUMS")
-    if [ -z "$expected" ]; then
-        echo -e "\e[31m❌ $name is not listed in SHA256SUMS\e[0m"; exit 1
-    fi
-    if ! curl -fsSL -o "$dest.part" "$REPO_URL/$name"; then
-        rm -f "$dest.part"
-        echo -e "\e[31m❌ Failed to download $name\e[0m"; exit 1
-    fi
-    if ! actual=$(sha256_of "$dest.part"); then
-        rm -f "$dest.part"
-        echo -e "\e[31m❌ sha256sum/shasum not found, cannot verify $name\e[0m"; exit 1
-    fi
-    if [ "$actual" != "$expected" ]; then
-        rm -f "$dest.part"
-        echo -e "\e[31m❌ Checksum mismatch for $name. If a release was just published, retry in a few minutes.\e[0m"; exit 1
-    fi
-    mv "$dest.part" "$dest"
+download_file() {
+    local name="$1" dest="$2"
+    curl -fsSL --retry 2 -o "$dest.part" "$REPO_URL/$name" \
+        && mv "$dest.part" "$dest" \
+        || { rm -f "$dest.part"; echo -e "\e[31m❌ Failed to download $name\e[0m"; exit 1; }
 }
 
 # копия установленной версии для отката (становится "previous" только после успешной установки)
@@ -160,35 +127,32 @@ if [ -f "$INSTALL_DIR/$SCRIPT_NAME" ] && [ -s "$DATA_DIR/lib/pkg.sh" ]; then
     cp "$INSTALL_DIR/$SCRIPT_NAME" "$DATA_DIR/previous.new/scripts.sh"
     cp -r "$DATA_DIR/lib" "$DATA_DIR/previous.new/lib"
     [ -d "$DATA_DIR/lang" ] && cp -r "$DATA_DIR/lang" "$DATA_DIR/previous.new/lang"
-    for f in version.txt SHA256SUMS; do
+    for f in version.txt; do
         [ -f "$DATA_DIR/$f" ] && cp "$DATA_DIR/$f" "$DATA_DIR/previous.new/$f"
     done
 fi
 
 mkdir -p "$DATA_DIR/lang"
-download_verified lang/ru.sh "$DATA_DIR/lang/ru.sh"
-download_verified lang/en.sh "$DATA_DIR/lang/en.sh"
-download_verified uninstall.sh "$DATA_DIR/uninstall.sh"
+download_file lang/ru.sh "$DATA_DIR/lang/ru.sh"
+download_file lang/en.sh "$DATA_DIR/lang/en.sh"
+download_file uninstall.sh "$DATA_DIR/uninstall.sh"
 chmod +x "$DATA_DIR/uninstall.sh"
-download_verified countries.csv "$DATA_DIR/countries.csv"
+download_file countries.csv "$DATA_DIR/countries.csv"
 
-# модули lib/*.sh: список берём из SHA256SUMS, ставим целиком через staging (старые модули не остаются)
+# Модули lib/*.sh скачиваем в staging, чтобы старые модули не оставались.
 rm -rf "$DATA_DIR/lib.new"; mkdir -p "$DATA_DIR/lib.new"
-LIB_NAMES=$(awk '{ f=$2; sub(/^\*/, "", f) } f ~ /^lib\/[A-Za-z0-9_]+\.sh$/ { print f }' <<<"$SUMS")
-if [ -z "$LIB_NAMES" ]; then
-    echo -e "\e[31m❌ No lib/*.sh modules listed in SHA256SUMS\e[0m"; exit 1
-fi
-while read -r lib_name; do
-    download_verified "$lib_name" "$DATA_DIR/lib.new/$(basename "$lib_name")"
-done <<<"$LIB_NAMES"
+LIB_NAMES=(cleaner cli common dante doctor firewall hy2 ids maintenance memory menus pkg scanner server system thirdparty warp)
+for lib_name in "${LIB_NAMES[@]}"; do
+    download_file "lib/$lib_name.sh" "$DATA_DIR/lib.new/$lib_name.sh"
+done
 rm -rf "${DATA_DIR:?}/lib"; mv "$DATA_DIR/lib.new" "$DATA_DIR/lib"
 
-# version.txt: ставим проверенную копию (версия из начала скрипта получена без проверки и нужна только для вывода)
+# version.txt
 rm -f "$DATA_DIR/version.txt.new"
-download_verified version.txt "$DATA_DIR/version.txt"
+download_file version.txt "$DATA_DIR/version.txt"
 
 # rw-scripts binary ставим последним
-download_verified scripts.sh "$INSTALL_DIR/$SCRIPT_NAME"
+download_file scripts.sh "$INSTALL_DIR/$SCRIPT_NAME"
 chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
 
 # автодополнение bash для подкоманд (bash-completion подхватывает этот каталог сам); для zsh: rw-scripts completion zsh
@@ -198,8 +162,6 @@ if mkdir -p "$COMP_DIR" 2>/dev/null; then
         && mv "$COMP_DIR/rw-scripts.new" "$COMP_DIR/rw-scripts" || rm -f "$COMP_DIR/rw-scripts.new"
 fi
 
-# SHA256SUMS нужен для "rw-scripts verify"; прежняя версия остаётся для "rw-scripts rollback"
-printf '%s\n' "$SUMS" > "$DATA_DIR/SHA256SUMS"
 if [ -d "$DATA_DIR/previous.new" ]; then
     rm -rf "${DATA_DIR:?}/previous"; mv "$DATA_DIR/previous.new" "$DATA_DIR/previous"
 fi

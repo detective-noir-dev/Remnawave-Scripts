@@ -21,38 +21,25 @@ check_update() {
     read -r ans
     [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 0; }
     
-    # всё качаем в staging и сверяем с SHA256SUMS; ставим только если проверены все файлы
-    local stage="$DATA_DIR/.update.$$" sums name rc=0 msg
+    # сначала скачиваем файлы в staging; текущая установка заменяется после успешной загрузки
+    local stage="$DATA_DIR/.update.$$" name rc=0
     local files=(scripts.sh lang/ru.sh lang/en.sh version.txt uninstall.sh countries.csv)
     mkdir -p "$stage/lang" "$stage/lib"
 
     echo -e "${BLUE}⏳ Downloading...${NC}"
     loading_bar & pid=$!
 
-    sums=$(curl -fsSL "$REPO_URL/SHA256SUMS" 2>/dev/null)
-    if [ -z "$sums" ]; then
-        rc=2
-    else
-        # модули lib/*.sh берём из списка в SHA256SUMS: новый модуль подхватится без правок кода
-        while read -r name; do
-            [ -n "$name" ] && files+=("$name")
-        done < <(_lib_names "$sums")
-        for name in "${files[@]}"; do
-            fetch_verified "$name" "$stage/$name" "$sums" || { rc=$?; break; }
-        done
-        # без модулей новая версия не запустится: не ставим
-        [ "$rc" -eq 0 ] && [ ! -s "$stage/lib/pkg.sh" ] && rc=2
-    fi
+    local modules=(lib/pkg.sh lib/common.sh lib/firewall.sh lib/cli.sh lib/cleaner.sh lib/dante.sh lib/doctor.sh lib/hy2.sh lib/ids.sh lib/maintenance.sh lib/memory.sh lib/menus.sh lib/scanner.sh lib/server.sh lib/system.sh lib/thirdparty.sh lib/warp.sh)
+    files+=("${modules[@]}")
+    for name in "${files[@]}"; do
+        mkdir -p "$(dirname "$stage/$name")"
+        curl -fsSL --connect-timeout 10 -m 120 "$REPO_URL/$name" -o "$stage/$name" || { rc=1; break; }
+    done
 
     kill $pid >/dev/null 2>&1; wait $pid 2>/dev/null; tput cnorm
 
     if [ "$rc" -ne 0 ]; then
-        case "$rc" in
-            1) msg=$(tr_text UPDATE_FAIL) ;;
-            3) msg=$(tr_text UPDATE_BAD_HASH) ;;
-            *) msg=$(tr_text UPDATE_NO_HASH) ;;
-        esac
-        echo -e "\r${RED}${msg}${NC}          "
+        echo -e "\r${RED}$(tr_text UPDATE_FAIL)${NC}          "
         rm -rf "$stage"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
@@ -67,7 +54,6 @@ check_update() {
     rm -rf "$LIB_DIR"; mv "$stage/lib" "$LIB_DIR"
     chmod +x "$stage/uninstall.sh"
     mv "$stage/uninstall.sh" "$stage/countries.csv" "$DATA_DIR/"
-    printf '%s\n' "$sums" > "$DATA_DIR/SHA256SUMS"   # по нему работает rw-scripts verify
     mv "$stage/version.txt" "$DATA_DIR/version.txt"
     chmod +x "$stage/scripts.sh"
     mv "$stage/scripts.sh" "$SCRIPT_PATH"
@@ -78,19 +64,17 @@ check_update() {
     exec "$SCRIPT_PATH"
 }
 
-# ====== РЕЗЕРВНАЯ КОПИЯ, ОТКАТ И ПРОВЕРКА ЦЕЛОСТНОСТИ ======
+# ====== РЕЗЕРВНАЯ КОПИЯ И ОТКАТ ======
 PREV_DIR="$DATA_DIR/previous"
 
-# _snapshot DEST — копия установленной версии: скрипт, модули, словари, version.txt, SHA256SUMS
+# _snapshot DEST — копия установленной версии: скрипт, модули, словари и version.txt
 _snapshot() {
     local dest="$1" f
     rm -rf "$dest"; mkdir -p "$dest" || return 1
     cp "$SCRIPT_PATH" "$dest/scripts.sh" || { rm -rf "$dest"; return 1; }
     [ -d "$LIB_DIR" ] && cp -r "$LIB_DIR" "$dest/lib"
     [ -d "$LANG_DIR" ] && cp -r "$LANG_DIR" "$dest/lang"
-    for f in version.txt SHA256SUMS; do
-        [ -f "$DATA_DIR/$f" ] && cp "$DATA_DIR/$f" "$dest/$f"
-    done
+    [ -f "$DATA_DIR/version.txt" ] && cp "$DATA_DIR/version.txt" "$dest/version.txt"
     return 0
 }
 
@@ -100,66 +84,6 @@ _backup_current() {
     _snapshot "$DATA_DIR/previous.new" || return 1
     rm -rf "${PREV_DIR:?}"
     mv "$DATA_DIR/previous.new" "$PREV_DIR"
-}
-
-# _verify_layout SUMS SCRIPT LIBDIR LANGDIR DATADIR STRICT
-# Сверяет файлы с SHA256SUMS, печатает только расхождения. Код возврата: число расхождений (99 — нет sha256sum).
-# STRICT=1: отсутствующий файл считается расхождением; 0: пропускается (так проверяется копия для отката).
-# Число проверенных файлов остаётся в VERIFY_CHECKED.
-_verify_layout() {
-    local sums="$1" script="$2" libdir="$3" langdir="$4" datadir="$5" strict="$6"
-    local bad=0 hash name path actual
-    VERIFY_CHECKED=0
-    while read -r hash name; do
-        [ -n "$hash" ] || continue
-        name="${name#\*}"
-        case "$name" in
-            scripts.sh) path="$script" ;;
-            lib/*)      path="$libdir/${name#lib/}" ;;
-            lang/*)     path="$langdir/${name#lang/}" ;;
-            *)          path="$datadir/$name" ;;
-        esac
-        if [ ! -f "$path" ]; then
-            if [ "$strict" = 1 ]; then
-                echo -e "  ${RED}missing${NC}  $name"
-                bad=$((bad + 1))
-            fi
-            continue
-        fi
-        actual=$(_sha256_of "$path") || return 99
-        VERIFY_CHECKED=$((VERIFY_CHECKED + 1))
-        if [ "$actual" != "$hash" ]; then
-            echo -e "  ${RED}CHANGED${NC}  $name"
-            bad=$((bad + 1))
-        fi
-    done <<<"$sums"
-    return "$bad"
-}
-
-# verify_install [--online] — сверка установленных файлов с SHA256SUMS.
-# По умолчанию берётся копия, сохранённая при установке/обновлении; --online сравнивает с репозиторием (нужна та же версия).
-verify_install() {
-    local sums src rc
-    if [ "${1:-}" = "--online" ]; then
-        src="online"
-        sums=$(curl -fsSL --connect-timeout 5 -m 15 "$REPO_URL/SHA256SUMS" 2>/dev/null)
-    else
-        src="local"
-        sums=$(cat "$DATA_DIR/SHA256SUMS" 2>/dev/null)
-    fi
-    if [ -z "$sums" ]; then
-        echo -e "${YELLOW}$(tr_text VERIFY_NO_SUMS)${NC}"
-        return 2
-    fi
-    echo "$(tr_text VERIFY_TITLE) v$VERSION ($src SHA256SUMS)"
-    _verify_layout "$sums" "$SCRIPT_PATH" "$LIB_DIR" "$LANG_DIR" "$DATA_DIR" 1
-    rc=$?
-    case "$rc" in
-        0)  echo -e "${GREEN}✅ $(tr_text VERIFY_OK) ($VERIFY_CHECKED)${NC}" ;;
-        99) echo -e "${RED}❌ $(tr_text UPDATE_NO_HASH)${NC}" ;;
-        *)  echo -e "${RED}❌ $(tr_text VERIFY_BAD)${NC}" ;;
-    esac
-    return "$rc"
 }
 
 # rollback_update [--yes] — вернуть версию, сохранённую перед последним обновлением.
@@ -177,14 +101,6 @@ rollback_update() {
     echo "$(tr_text CHECK_CURR) $VERSION"
     echo "$(tr_text ROLLBACK_TARGET) ${pv:-?}"
 
-    # копия не должна быть повреждена: сверяем с её собственным SHA256SUMS, если он сохранён
-    if [ -s "$PREV_DIR/SHA256SUMS" ]; then
-        if ! _verify_layout "$(cat "$PREV_DIR/SHA256SUMS")" "$PREV_DIR/scripts.sh" "$PREV_DIR/lib" "$PREV_DIR/lang" "$PREV_DIR" 0; then
-            echo -e "${RED}❌ $(tr_text ROLLBACK_BAD)${NC}"
-            return 1
-        fi
-    fi
-
     if [ "$yes" -ne 1 ]; then
         read -rp "$(tr_text ROLLBACK_ASK) " ans
         [[ "$ans" =~ ^[YyДд]$ ]] || { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 3; }
@@ -197,9 +113,7 @@ rollback_update() {
     if [ -d "$PREV_DIR/lang" ]; then
         rm -rf "${LANG_DIR:?}"; cp -r "$PREV_DIR/lang" "$LANG_DIR"
     fi
-    for f in version.txt SHA256SUMS; do
-        [ -f "$PREV_DIR/$f" ] && cp "$PREV_DIR/$f" "$DATA_DIR/$f"
-    done
+    [ -f "$PREV_DIR/version.txt" ] && cp "$PREV_DIR/version.txt" "$DATA_DIR/version.txt"
     cp "$PREV_DIR/scripts.sh" "$SCRIPT_PATH.new" && chmod +x "$SCRIPT_PATH.new" && mv "$SCRIPT_PATH.new" "$SCRIPT_PATH" \
         || { echo -e "${RED}❌ $(tr_text ROLLBACK_FAIL)${NC}"; return 1; }
 

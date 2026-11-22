@@ -26,17 +26,11 @@ tr_text() {
         SUB_APT_UPDATE)   echo "📦 Обновить системные пакеты" ;;
         SUB_DELETE)       echo "🗑️  Удалить rw-scripts" ;;
         SUB_ROLLBACK)     echo "↩️  Откатить последнее обновление" ;;
-        SUB_VERIFY)       echo "🔍 Проверить целостность файлов" ;;
         ROLLBACK_NONE)    echo "Предыдущей версии пока нет (она сохраняется при следующем обновлении)." ;;
         ROLLBACK_TARGET)  echo "Предыдущая версия:" ;;
         ROLLBACK_ASK)     echo "Вернуться на предыдущую версию? (y/n)" ;;
-        ROLLBACK_BAD)     echo "Сохранённая копия не совпала с контрольными суммами — откат отменён." ;;
         ROLLBACK_FAIL)    echo "Не удалось выполнить откат." ;;
         ROLLBACK_DONE)    echo "Выполнен откат до версии" ;;
-        VERIFY_TITLE)     echo "Проверка целостности:" ;;
-        VERIFY_NO_SUMS)   echo "Нет сохранённого SHA256SUMS (он записывается при установке и обновлении). Попробуйте: rw-scripts verify --online" ;;
-        VERIFY_OK)        echo "Все файлы совпадают с SHA256SUMS" ;;
-        VERIFY_BAD)       echo "Часть файлов отличается от SHA256SUMS (повреждены или изменены). Переустановите через install.sh." ;;
         
         # === НАВИГАЦИЯ ===
         MENU_BACK)        echo "⬅️  Назад" ;;
@@ -66,8 +60,6 @@ tr_text() {
         UPDATE_DONE)      echo "Скрипт обновлён до версии" ;;
         UPDATE_RESTART)   echo "Перезапуск..." ;;
         UPDATE_FAIL)      echo "Не удалось проверить обновления." ;;
-        UPDATE_BAD_HASH)  echo "Контрольная сумма не совпала — обновление отменено. Если релиз только что вышел, повторите через несколько минут." ;;
-        UPDATE_NO_HASH)   echo "Не удалось проверить SHA256 (нет SHA256SUMS или sha256sum) — обновление отменено." ;;
         NO_UPDATES)       echo "У вас уже последняя версия." ;;
         CONFIRM_DEL)      echo "Вы уверены, что хотите удалить rw-scripts? (y/n)" ;;
         CANCEL_DEL)       echo "Отменено" ;;

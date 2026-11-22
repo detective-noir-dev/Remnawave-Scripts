@@ -34,11 +34,6 @@ rw_doctor() {
     for c in curl awk sed grep; do
         if command -v "$c" >/dev/null 2>&1; then _doc_ok "$c"; else _doc_bad "$c is missing"; fi
     done
-    if command -v sha256sum >/dev/null 2>&1 || command -v shasum >/dev/null 2>&1; then
-        _doc_ok "sha256sum/shasum (updates can be verified)"
-    else
-        _doc_bad "no sha256sum/shasum: updates will be refused"
-    fi
     for c in jq tput; do
         if command -v "$c" >/dev/null 2>&1; then _doc_ok "$c"; else _doc_warn "$c is missing (installed or skipped on demand)"; fi
     done
@@ -48,7 +43,7 @@ rw_doctor() {
     if [ -s "$DATA_DIR/version.txt" ]; then _doc_ok "version file: $VERSION"; else _doc_warn "no $DATA_DIR/version.txt (running from a clone?)"; fi
     if [ "$(tr_text MENU_EXIT)" != "MENU_EXIT" ]; then _doc_ok "dictionary loaded (lang: $LANG_SET)"; else _doc_bad "dictionary not loaded"; fi
     local fn missing=0
-    for fn in show_main_menu submenu_cleaner submenu_warp submenu_hysteria2 submenu_network submenu_scanner pkg_install fetch_verified; do
+    for fn in show_main_menu submenu_cleaner submenu_warp submenu_hysteria2 submenu_network submenu_scanner pkg_install; do
         declare -F "$fn" >/dev/null || { _doc_bad "function $fn is not defined (module missing?)"; missing=1; }
     done
     [ "$missing" -eq 0 ] && _doc_ok "all modules loaded"

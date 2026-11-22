@@ -49,8 +49,7 @@ submenu_maintenance() {
         echo -e "  ${YELLOW}5)${NC} $(tr_text GROUP_SCANNER)"
         echo -e "      ${DIM}$(tr_text HINT_SCANNER)${NC}"
         echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_ROLLBACK)"
-        echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_VERIFY)"
-        echo -e "  ${RED}8)${NC} $(tr_text SUB_DELETE)"
+        echo -e "  ${RED}7)${NC} $(tr_text SUB_DELETE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         read -rp "> " choice
 
@@ -62,8 +61,7 @@ submenu_maintenance() {
             5) submenu_scanner ;;
             6) show_banner; rollback_update && exec "$SCRIPT_PATH"
                read -rp "$(tr_text PRESS_ENTER)" ;;
-            7) show_banner; verify_install; read -rp "$(tr_text PRESS_ENTER)" ;;
-            8) show_banner; delete_self ;;
+            7) show_banner; delete_self ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac

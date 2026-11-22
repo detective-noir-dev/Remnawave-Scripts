@@ -2,7 +2,7 @@
 
 🇬🇧 [English version](README-ENG.md)
 
-![версия](https://img.shields.io/badge/версия-1.11.1-blue)
+![версия](https://img.shields.io/badge/версия-1.11.2-blue)
 ![сделано-на-bash](https://img.shields.io/badge/сделано%20на-bash-green)
 ![лицензия](https://img.shields.io/badge/лицензия-MIT-green)
 
@@ -318,7 +318,6 @@ rw-scripts
 rw-scripts clean              # полная очистка системы, без вопросов
 rw-scripts doctor [--online]  # диагностика: зависимости, права, модули, словарь, доступность репозитория
 rw-scripts version            # версия
-rw-scripts verify [--online]  # сверка установленных файлов с SHA256SUMS
 rw-scripts rollback [--yes]   # вернуться на версию до последнего обновления
 rw-scripts status             # состояние сервисов: ssh, ufw, docker, hysteria2, warp, fail2ban
 rw-scripts ports              # открытые порты; ports open 443/tcp | ports close 443/tcp
@@ -344,14 +343,13 @@ rw-scripts completion bash    # автодополнение (bash или zsh); 
 
 ## 🛠️ Структура репозитория
 
-- **scripts.sh** — ядро: настройки, язык, проверка хэшей, загрузка модулей, запуск
+- **scripts.sh** — ядро: настройки, язык, загрузка модулей, запуск
 - **lib/** — модули (подключаются из scripts.sh), по одному файлу на тему:
   `pkg.sh` (пакетные менеджеры), `firewall.sh` (порты), `hy2.sh` (Hysteria2), `warp.sh` (WARP),
   `cleaner.sh`, `memory.sh`, `scanner.sh`, `maintenance.sh`, `server.sh`, `ids.sh`, `system.sh`,
   `thirdparty.sh`, `menus.sh` (главное меню и дашборд), `doctor.sh` (диагностика)
 - **lang/** — словари интерфейса (`ru.sh`, `en.sh`)
-- **SHA256SUMS** — хэши всех устанавливаемых файлов; по ним проверяются установка и обновление
-- **tests/**, **tools/**, **.githooks/** — тесты (`bash tests/run.sh`, bats в `tests/bats`), генерация хэшей, хуки git
+- **tests/**, **tools/**, **.githooks/** — тесты (`bash tests/run.sh`, bats в `tests/bats`) и хуки git
 - **install.sh** — установщик (копирует в ~/.local/bin/rw-scripts)
 - **uninstall.sh** — удаление
 - **countries.csv** — база данных стран (RU/EN + ISO)
@@ -417,7 +415,7 @@ GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scri
 
 ---
 
-**Версия:** 1.11.1
+**Версия:** 1.11.2
 **Дата релиза:** Ноябрь 2026
 **Лицензия:** MIT
 ```

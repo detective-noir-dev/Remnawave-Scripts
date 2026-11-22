@@ -68,7 +68,9 @@ _remote_fetch() {
         _log_action 1 "remote script download failed: $url"
         return 1
     fi
-    REMOTE_HASH=$(_sha256_of "$REMOTE_TMP") || { rm -f "$REMOTE_TMP"; echo -e "${RED}❌ $(tr_text UPDATE_NO_HASH)${NC}"; return 1; }
+    REMOTE_HASH=$(sha256sum "$REMOTE_TMP" 2>/dev/null | cut -d' ' -f1)
+    [ -n "$REMOTE_HASH" ] || REMOTE_HASH=$(shasum -a 256 "$REMOTE_TMP" 2>/dev/null | cut -d' ' -f1)
+    [ -n "$REMOTE_HASH" ] || { rm -f "$REMOTE_TMP"; echo -e "${RED}❌ $(tr_text RS_DL_FAIL)${NC}"; return 1; }
     size=$(wc -c < "$REMOTE_TMP" | tr -d ' ')
     echo -e "${CYAN}$(tr_text RS_FETCHED)${NC} $url"
     echo "  SHA256: $REMOTE_HASH"

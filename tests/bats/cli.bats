@@ -9,7 +9,7 @@ setup() {
     CONFIG_FILE="$CONFIG_DIR/config"; LANG_FILE="$CONFIG_DIR/lang.conf"
     VERSION="9.9.9"; LANG_SET="en"
     mkdir -p "$DATA_DIR" "$CONFIG_DIR"
-    use_core config_get _sha256_of
+    use_core config_get
     use_module common
     use_module firewall
     use_module cli
@@ -138,7 +138,6 @@ fake_ufw() {
     rw_completion bash | bash -n
     run rw_completion zsh
     [[ "$output" == "#compdef rw-scripts"* ]]
-    [[ "$output" == *"verify"* ]]
     run rw_completion fish
     [ "$status" -eq 2 ]
 }

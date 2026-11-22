@@ -8,7 +8,7 @@ setup() {
     DATA_DIR="$TEST_TMP/data"; CONFIG_DIR="$TEST_TMP/cfg"
     CONFIG_FILE="$CONFIG_DIR/config"; LANG_FILE="$CONFIG_DIR/lang.conf"
     mkdir -p "$DATA_DIR" "$CONFIG_DIR"
-    use_core config_get _sha256_of
+    use_core config_get
     use_module common
     tr_text() { echo "$1"; }
 }
@@ -100,7 +100,7 @@ remote_url() {
 
 @test "run_remote_script: верный RW_EXPECT_SHA256 принимается" {
     remote_url
-    local h; h=$(_sha256_of "$TEST_TMP/script.sh")
+    local h; h=$(sha256sum "$TEST_TMP/script.sh" | cut -d' ' -f1)
     RW_EXPECT_SHA256="$h" run_remote_script "$REMOTE_URL" <<<"y" >/dev/null
     [ -e "$TEST_TMP/ran.txt" ]
 }

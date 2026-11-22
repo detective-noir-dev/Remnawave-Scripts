@@ -22,25 +22,7 @@ fi
 missing=$(grep -ohE 'tr_text [A-Z][A-Z0-9_]+' scripts.sh lib/*.sh | awk '{print $2}' | sort -u | comm -23 - <(keys lang/en.sh))
 if [ -z "$missing" ]; then ok "все tr_text KEY есть в словаре"; else bad "нет в словаре: $(echo $missing)"; fi
 
-# 4. SHA256SUMS соответствует файлам
-if bash tools/gen-checksums.sh --check >/dev/null 2>&1; then ok "SHA256SUMS актуален"; else bad "SHA256SUMS устарел: запусти tools/gen-checksums.sh"; fi
-
-# 5. fetch_verified: подходящий хэш ставит файл, чужой хэш и неизвестное имя отклоняются
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-mkdir "$tmp/repo"; echo "hello" > "$tmp/repo/a.txt"
-sums="$(sha256sum "$tmp/repo/a.txt" | cut -d' ' -f1)  a.txt"
-# shellcheck disable=SC1090
-source <(sed -n '/^_sha256_of()/,/^# ====== СЛОВАРЬ/p' scripts.sh | sed '$d')
-REPO_URL="file://$(cd "$tmp/repo" && { pwd -W 2>/dev/null || pwd; })"
-fetch_verified a.txt "$tmp/out" "$sums"; rc=$?
-if [ $rc -eq 0 ] && [ "$(cat "$tmp/out")" = "hello" ]; then ok "fetch_verified: верный хэш"; else bad "fetch_verified: верный хэш (rc=$rc)"; fi
-rm -f "$tmp/out"
-fetch_verified a.txt "$tmp/out" "$(printf '%064d  a.txt' 0)"; rc=$?
-if [ $rc -eq 3 ] && [ ! -e "$tmp/out" ] && [ ! -e "$tmp/out.part" ]; then ok "fetch_verified: чужой хэш отклонён"; else bad "fetch_verified: чужой хэш (rc=$rc)"; fi
-fetch_verified b.txt "$tmp/out" "$sums"; rc=$?
-if [ $rc -eq 2 ] && [ ! -e "$tmp/out" ]; then ok "fetch_verified: неизвестное имя отклонено"; else bad "fetch_verified: неизвестное имя (rc=$rc)"; fi
-fetch_verified a.txt "$tmp/out" ""; rc=$?
-if [ $rc -eq 2 ]; then ok "fetch_verified: пустой SHA256SUMS отклонён"; else bad "fetch_verified: пустой SHA256SUMS (rc=$rc)"; fi
 
 # 6. каждая функция определена ровно один раз во всём коде (при нарезке на модули легко задвоить)
 # strip_heredocs ФАЙЛ — текст файла без тел here-документов (в них бывают чужие скрипты, например автодополнение)
@@ -71,38 +53,7 @@ mkdir -p "$tmp/home"
 if out=$(HOME="$tmp/home" XDG_DATA_HOME="" bash scripts.sh doctor 2>&1); then ok "rw-scripts doctor"; else bad "rw-scripts doctor"; echo "$out" | tail -15; fi
 if [ "$(HOME="$tmp/home" XDG_DATA_HOME="" bash scripts.sh version 2>/dev/null)" = "dev" ]; then ok "rw-scripts version"; else bad "rw-scripts version"; fi
 
-# 11. модули докачиваются с проверкой хэша, если установлен только scripts.sh (обновление со старой версии)
-mkdir -p "$tmp/mrepo/lib"
-echo 'mod_pkg_loaded() { :; }' > "$tmp/mrepo/lib/pkg.sh"
-echo 'mod_x_loaded() { :; }'   > "$tmp/mrepo/lib/x.sh"
-msums=$(cd "$tmp/mrepo" && sha256sum lib/pkg.sh lib/x.sh)
-(
-    # shellcheck disable=SC1090
-    source <(sed -n '/^_sha256_of()/,/^# ====== СЛОВАРЬ/p' scripts.sh | sed '$d')
-    # shellcheck disable=SC1090
-    source <(sed -n '/^_lib_names()/,/^load_modules || exit 1/p' scripts.sh | sed '$d')
-    DATA_DIR="$tmp/mdata"; LIB_DIR="$DATA_DIR/lib"
-    REPO_URL="file://$(cd "$tmp/mrepo" && { pwd -W 2>/dev/null || pwd; })"
-    # curl с file:// отдаёт SHA256SUMS из подготовленного каталога
-    echo "$msums" > "$tmp/mrepo/SHA256SUMS"
-    load_modules
-    declare -F mod_pkg_loaded >/dev/null && declare -F mod_x_loaded >/dev/null
-); rc=$?
-if [ $rc -eq 0 ]; then ok "load_modules: модули докачаны и подключены"; else bad "load_modules: самовосстановление (rc=$rc)"; fi
-# подменённый модуль не должен подключаться
-echo 'echo EVIL' > "$tmp/mrepo/lib/x.sh"
-(
-    # shellcheck disable=SC1090
-    source <(sed -n '/^_sha256_of()/,/^# ====== СЛОВАРЬ/p' scripts.sh | sed '$d')
-    # shellcheck disable=SC1090
-    source <(sed -n '/^_lib_names()/,/^load_modules || exit 1/p' scripts.sh | sed '$d')
-    DATA_DIR="$tmp/mdata2"; LIB_DIR="$DATA_DIR/lib"
-    REPO_URL="file://$(cd "$tmp/mrepo" && { pwd -W 2>/dev/null || pwd; })"
-    load_modules 2>/dev/null
-); rc=$?
-if [ $rc -ne 0 ] && [ ! -e "$tmp/mdata2/lib" ]; then ok "load_modules: чужой хэш отклонён, lib не создан"; else bad "load_modules: подмену не отклонил (rc=$rc)"; fi
-
-# 12. verify и rollback на копии «установленной» раскладки
+# 10. rollback на копии «установленной» раскладки
 (
     H="$tmp/inst"; D="$H/.local/share/remnawave"; B="$H/.local/bin/rw-scripts"
     export HOME="$H"; unset XDG_DATA_HOME
@@ -110,17 +61,10 @@ if [ $rc -ne 0 ] && [ ! -e "$tmp/mdata2/lib" ]; then ok "load_modules: чужо�
     layout() {
         cp scripts.sh "$B"; chmod +x "$B"
         rm -rf "${D:?}/lib" "${D:?}/lang"; cp -r lib lang "$D/"
-        cp version.txt countries.csv uninstall.sh SHA256SUMS "$D/"
+        cp version.txt countries.csv uninstall.sh "$D/"
     }
     chk() { [ "$2" = "$3" ] || { echo "  $1: получено [$2], ожидалось [$3]"; exit 1; }; }
     layout
-    "$B" verify >/dev/null; chk "verify чистая установка" "$?" 0
-    echo "# tamper" >> "$D/lib/pkg.sh"
-    "$B" verify 2>&1 | grep -q 'lib/pkg.sh'; chk "verify называет изменённый файл" "$?" 0
-    "$B" verify >/dev/null; chk "verify: файл изменён" "$?" 1
-    layout; rm "$D/SHA256SUMS"
-    "$B" verify >/dev/null; chk "verify без SHA256SUMS" "$?" 2
-    cp SHA256SUMS "$D/"
     "$B" rollback --yes >/dev/null; chk "rollback без копии" "$?" 1
     mkdir -p "$D/previous"
     cp "$B" "$D/previous/scripts.sh"; cp -r "$D/lib" "$D/previous/lib"; cp -r "$D/lang" "$D/previous/lang"
@@ -129,10 +73,8 @@ if [ $rc -ne 0 ] && [ ! -e "$tmp/mdata2/lib" ]; then ok "load_modules: чужо�
     chk "версия после отката" "$("$B" version)" "1.0.0"
     "$B" rollback --yes >/dev/null; chk "откат отката" "$?" 0
     chk "версия возвращена" "$("$B" version)" "$(cat version.txt)"
-    echo x >> "$D/previous/lib/pkg.sh"; cp SHA256SUMS "$D/previous/SHA256SUMS"
-    "$B" rollback --yes >/dev/null; chk "повреждённая копия отклонена" "$?" 1
 ); rc=$?
-if [ $rc -eq 0 ]; then ok "verify и rollback"; else bad "verify и rollback"; fi
+if [ $rc -eq 0 ]; then ok "rollback"; else bad "rollback"; fi
 
 # 13. весь видимый текст живёт в lang/: кириллица в коде допустима только в комментариях,
 #     в ответах [YyДд] и в названии языка "Русский" (grep -P нет в busybox, поэтому ищем байты UTF-8)
@@ -149,7 +91,7 @@ if out=$(TMPU="$tmp/u" bash -u -c '
     RED=; GREEN=; YELLOW=; BLUE=; CYAN=; MAGENTA=; NC=; BOLD=; DIM=; SUDO=
     DATA_DIR=$TMPU/data; CONFIG_DIR=$TMPU/cfg; CONFIG_FILE=$CONFIG_DIR/config; LANG_FILE=$CONFIG_DIR/lang.conf
     VERSION=t; LANG_SET=en; REPO_URL=file:///none
-    for fn in config_get _sha256_of; do source <(sed -n "/^${fn}() {/,/^}/p" scripts.sh); done
+    for fn in config_get; do source <(sed -n "/^${fn}() {/,/^}/p" scripts.sh); done
     tr_text() { echo "$1"; }
     for m in pkg common firewall cli; do source lib/$m.sh; done
     config_set lang en; config_get lang >/dev/null

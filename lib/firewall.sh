@@ -61,6 +61,7 @@ add_port_to_json() {
 
 remove_port_from_json() {
     local port=$1 protocol=$2
+    init_ports_file
     ensure_jq || return 1
     
     local temp_file=$(mktemp)
@@ -401,9 +402,6 @@ port_apply() {
         *)       return 3 ;;
     esac
     case "$action" in open|close) ;; *) return 3 ;; esac
-    init_ports_file
-    ensure_jq || return 1
-
     for p in $protos; do
         case "$fw:$action" in
             ufw:open)          $SUDO ufw allow "$port/$p" >/dev/null ;;
