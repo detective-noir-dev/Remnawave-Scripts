@@ -1,3 +1,10 @@
 #!/bin/bash
-# Project-specific pre-commit checks can be added here.
-exit 0
+# Пересобирает SHA256SUMS, если в коммит попали файлы, которые в нём перечислены.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+staged=$(git diff --cached --name-only)
+echo "$staged" | grep -qE '^(scripts\.sh|uninstall\.sh|countries\.csv|version\.txt|lang/.+\.sh|lib/.+\.sh)$' || exit 0
+
+bash tools/gen-checksums.sh >/dev/null || { echo "pre-commit: не удалось пересобрать SHA256SUMS" >&2; exit 1; }
+git add SHA256SUMS
+echo "pre-commit: SHA256SUMS обновлён"
