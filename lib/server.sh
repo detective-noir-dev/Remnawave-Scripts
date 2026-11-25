@@ -355,18 +355,13 @@ disable_ssh_password_auth() {
         return 1
     fi
 
-    if $SUDO sed -i -E \
-        -e 's/^[[:space:]]*#?[[:space:]]*PasswordAuthentication[[:space:]]+.*/PasswordAuthentication no/' \
-        -e 's/^[[:space:]]*#?[[:space:]]*KbdInteractiveAuthentication[[:space:]]+.*/KbdInteractiveAuthentication no/' \
-        -e 's/^[[:space:]]*#?[[:space:]]*ChallengeResponseAuthentication[[:space:]]+.*/ChallengeResponseAuthentication no/' \
-        "$sshd_config"; then
-        $SUDO grep -qE '^[[:space:]]*PasswordAuthentication[[:space:]]+' "$sshd_config" \
-            || echo 'PasswordAuthentication no' | $SUDO tee -a "$sshd_config" >/dev/null
-        $SUDO grep -qE '^[[:space:]]*KbdInteractiveAuthentication[[:space:]]+' "$sshd_config" \
-            || echo 'KbdInteractiveAuthentication no' | $SUDO tee -a "$sshd_config" >/dev/null
-        $SUDO grep -qE '^[[:space:]]*ChallengeResponseAuthentication[[:space:]]+' "$sshd_config" \
-            || echo 'ChallengeResponseAuthentication no' | $SUDO tee -a "$sshd_config" >/dev/null
-    else
+    # sshd uses the first value it reads. Put these directives before any Include,
+    # since cloud-init drop-ins may enable password authentication earlier than
+    # directives later in sshd_config.
+    if ! $SUDO sed -i '1i\
+PasswordAuthentication no\
+KbdInteractiveAuthentication no\
+ChallengeResponseAuthentication no' "$sshd_config"; then
         $SUDO cp -a "$sshd_backup" "$sshd_config"
         $SUDO rm -f "$sshd_backup"
         echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"

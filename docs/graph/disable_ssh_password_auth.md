@@ -16,9 +16,11 @@ tags: [rw-func]
 ## Что происходит
 1. выводит предупреждение и запрашивает подтверждение;
 2. создаёт резервную копию `/etc/ssh/sshd_config`;
-3. устанавливает `PasswordAuthentication no`, `KbdInteractiveAuthentication no` и `ChallengeResponseAuthentication no`;
+3. добавляет `PasswordAuthentication no`, `KbdInteractiveAuthentication no` и `ChallengeResponseAuthentication no` в начало `/etc/ssh/sshd_config`, до любых `Include`;
 4. проверяет синтаксис и эффективные параметры командой `sshd -t`/`sshd -T`;
 5. перезапускает SSH; при любой ошибке восстанавливает резервную копию и перезапускает прежнюю конфигурацию.
+
+Директивы помещаются до `Include`, потому что в OpenSSH первое считанное значение имеет приоритет над последующими. Это позволяет переопределить `PasswordAuthentication yes` из cloud-init drop-in, даже если он назван `00password.conf`.
 
 ## Внешние команды и файлы
 `/etc/ssh/sshd_config`, `sshd`, `systemctl`
