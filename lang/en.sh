@@ -94,14 +94,17 @@ tr_text() {
         SSH_KEY_TARGET)       echo "The key will be added for user: $2" ;;
         SSH_KEY_PROMPT)       echo "Paste the public ssh-ed25519 key:" ;;
         SSH_KEY_INVALID)      echo "Invalid ssh-ed25519 public key." ;;
-        SSH_KEY_EXISTS)       echo "This key is already in authorized_keys." ;;
+        SSH_KEY_EXISTS)       echo "There are already $2 ed25519 key(s) in authorized_keys. Replace them with this key?" ;;
+        SSH_KEY_REPLACE_CONFIRM) echo "Replacing removes the existing ed25519 keys. Continue? (y/n)" ;;
         SSH_KEY_ADDED)        echo "SSH ed25519 key added." ;;
+        SSH_KEY_REPLACED)     echo "SSH ed25519 keys replaced." ;;
         SSH_KEY_ADD_FAIL)     echo "Could not add the SSH key." ;;
         SSH_USER_HOME_FAIL)   echo "Could not determine the home directory for user $2." ;;
         SSH_PASSWORD_NO_KEY)  echo "User $2 has no key in authorized_keys. Add a key and verify key login first." ;;
         SSH_PASSWORD_WARN)    echo "⚠️  SSH password login will be disabled. Keep this session open until key login is verified." ;;
         SSH_PASSWORD_CONFIRM) echo "Disable SSH password login? (y/n)" ;;
         SSH_PASSWORD_DISABLED) echo "SSH password login disabled." ;;
+        SSH_PASSWORD_ALREADY_DISABLED) echo "SSH password login is already disabled." ;;
         SSH_PASSWORD_FAIL)    echo "Could not disable SSH password login; the previous configuration was restored." ;;
         SSH_CONFIG_READ_FAIL) echo "Could not read /etc/ssh/sshd_config." ;;
         SSH_CONFIG_EDITING)   echo "Opening /etc/ssh/sshd_config in an editor..." ;;

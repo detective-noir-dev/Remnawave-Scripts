@@ -94,14 +94,17 @@ tr_text() {
         SSH_KEY_TARGET)       echo "Ключ будет добавлен для пользователя: $2" ;;
         SSH_KEY_PROMPT)       echo "Вставьте публичный ключ ssh-ed25519:" ;;
         SSH_KEY_INVALID)      echo "Некорректный публичный ключ ssh-ed25519." ;;
-        SSH_KEY_EXISTS)       echo "Этот ключ уже есть в authorized_keys." ;;
+        SSH_KEY_EXISTS)       echo "В authorized_keys уже есть ключи ed25519 ($2 шт.). Заменить их текущим ключом?" ;;
+        SSH_KEY_REPLACE_CONFIRM) echo "При замене существующие ключи ed25519 будут удалены. Продолжить? (y/n)" ;;
         SSH_KEY_ADDED)        echo "Ключ SSH ed25519 добавлен." ;;
+        SSH_KEY_REPLACED)     echo "Ключи SSH ed25519 заменены." ;;
         SSH_KEY_ADD_FAIL)     echo "Не удалось добавить ключ SSH." ;;
         SSH_USER_HOME_FAIL)   echo "Не удалось определить домашний каталог пользователя $2." ;;
         SSH_PASSWORD_NO_KEY)  echo "У пользователя $2 нет ключа в authorized_keys. Сначала добавьте и проверьте вход по ключу." ;;
         SSH_PASSWORD_WARN)    echo "⚠️  Вход по паролю SSH будет отключён. Не закрывайте текущую сессию, пока не проверите вход по ключу." ;;
         SSH_PASSWORD_CONFIRM) echo "Отключить вход по паролю SSH? (y/n)" ;;
         SSH_PASSWORD_DISABLED) echo "Вход по паролю SSH отключён." ;;
+        SSH_PASSWORD_ALREADY_DISABLED) echo "Вход по паролю SSH уже отключён." ;;
         SSH_PASSWORD_FAIL)    echo "Не удалось отключить вход по паролю; прежняя конфигурация восстановлена." ;;
         SSH_CONFIG_READ_FAIL) echo "Не удалось прочитать /etc/ssh/sshd_config." ;;
         SSH_CONFIG_EDITING)   echo "Открываю /etc/ssh/sshd_config в редакторе..." ;;

@@ -211,7 +211,7 @@ show_ssh_config() {
 }
 
 add_ssh_ed25519_key() {
-    local target_user home_dir auth_keys public_key
+    local target_user home_dir auth_keys public_key key_count ans tmp_keys
     target_user=$(_ssh_target_user)
     home_dir=$(getent passwd "$target_user" 2>/dev/null | cut -d: -f6)
 
@@ -238,14 +238,41 @@ add_ssh_ed25519_key() {
     fi
 
     auth_keys="$home_dir/.ssh/authorized_keys"
-    if $SUDO test -f "$auth_keys" && $SUDO grep -Fqx -- "$public_key" "$auth_keys"; then
-        echo -e "${YELLOW}$(tr_text SSH_KEY_EXISTS)${NC}"
-        read -rp "$(tr_text PRESS_ENTER)"
-        return 0
+    key_count=0
+    if $SUDO test -f "$auth_keys"; then
+        key_count=$($SUDO awk '$1 == "ssh-ed25519" { n++ } END { print n+0 }' "$auth_keys")
+    fi
+    if [ "$key_count" -gt 0 ]; then
+        echo -e "${YELLOW}$(tr_text SSH_KEY_EXISTS "$key_count")${NC}"
+        echo -e "${YELLOW}$(tr_text SSH_KEY_REPLACE_CONFIRM)${NC}"
+        read -r ans
+        if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
+            echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 0
+        fi
     fi
 
-    if $SUDO install -d -m 700 -o "$target_user" -g "$(id -gn "$target_user")" "$home_dir/.ssh" \
-        && printf '%s\n' "$public_key" | $SUDO tee -a "$auth_keys" >/dev/null \
+    if ! $SUDO install -d -m 700 -o "$target_user" -g "$(id -gn "$target_user")" "$home_dir/.ssh"; then
+        echo -e "${RED}❌ $(tr_text SSH_KEY_ADD_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if [ "$key_count" -gt 0 ]; then
+        tmp_keys=$(mktemp)
+        if $SUDO awk '$1 != "ssh-ed25519"' "$auth_keys" > "$tmp_keys" \
+            && printf '%s\n' "$public_key" >> "$tmp_keys" \
+            && $SUDO install -m 600 -o "$target_user" -g "$(id -gn "$target_user")" "$tmp_keys" "$auth_keys"; then
+            rm -f "$tmp_keys"
+            echo -e "${GREEN}✅ $(tr_text SSH_KEY_REPLACED)${NC}"
+        else
+            rm -f "$tmp_keys"
+            echo -e "${RED}❌ $(tr_text SSH_KEY_ADD_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        fi
+    elif printf '%s\n' "$public_key" | $SUDO tee -a "$auth_keys" >/dev/null \
         && $SUDO chown "$target_user":"$(id -gn "$target_user")" "$auth_keys" \
         && $SUDO chmod 600 "$auth_keys"; then
         echo -e "${GREEN}✅ $(tr_text SSH_KEY_ADDED)${NC}"
@@ -259,8 +286,18 @@ add_ssh_ed25519_key() {
 }
 
 disable_ssh_password_auth() {
-    local target_user home_dir auth_keys sshd_config sshd_backup sshd_bin
+    local target_user home_dir auth_keys sshd_config sshd_backup sshd_bin effective_auth
     target_user=$(_ssh_target_user)
+    sshd_config="/etc/ssh/sshd_config"
+    sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
+    if effective_auth=$($SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null) \
+        && printf '%s\n' "$effective_auth" | grep -qx 'passwordauthentication no' \
+        && printf '%s\n' "$effective_auth" | grep -qx 'kbdinteractiveauthentication no'; then
+        echo -e "${GREEN}$(tr_text SSH_PASSWORD_ALREADY_DISABLED)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
+    fi
+
     home_dir=$(getent passwd "$target_user" 2>/dev/null | cut -d: -f6)
     auth_keys="$home_dir/.ssh/authorized_keys"
 
@@ -279,7 +316,6 @@ disable_ssh_password_auth() {
         return 0
     fi
 
-    sshd_config="/etc/ssh/sshd_config"
     sshd_backup="${sshd_config}.bak.$$"
     if ! $SUDO cp -a "$sshd_config" "$sshd_backup"; then
         echo -e "${RED}❌ $(tr_text SSH_BACKUP_FAIL)${NC}"
@@ -306,7 +342,6 @@ disable_ssh_password_auth() {
         return 1
     fi
 
-    sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
     if ! $SUDO "$sshd_bin" -t -f "$sshd_config" 2>/dev/null \
         || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'passwordauthentication no' \
         || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'kbdinteractiveauthentication no' \
