@@ -355,19 +355,43 @@ disable_ssh_password_auth() {
         return 1
     fi
 
-    # sshd uses the first value it reads. Put these directives before any Include,
-    # since cloud-init drop-ins may enable password authentication earlier than
-    # directives later in sshd_config.
-    if ! $SUDO sed -i '1i\
-PasswordAuthentication no\
-KbdInteractiveAuthentication no\
-ChallengeResponseAuthentication no' "$sshd_config"; then
+    # Update existing active or commented directives in sshd_config in place.
+    # Do not add or move directives: uncomment them and set their value to no.
+    local sshd_tmp="${TMPDIR:-/tmp}/sshd_config.$$"
+    if ! $SUDO awk '
+        function option(line, name, rest, indent) {
+            rest = line
+            indent = ""
+            match(rest, /^[[:space:]]*/)
+            indent = substr(rest, 1, RLENGTH)
+            rest = substr(rest, RLENGTH + 1)
+            sub(/^#[[:space:]]*/, "", rest)
+            for (i = 1; i <= 3; i++) {
+                if (rest ~ ("^" names[i] "([[:space:]]|$)")) {
+                    print indent names[i] " no"
+                    return 1
+                }
+            }
+            return 0
+        }
+        BEGIN {
+            names[1] = "PasswordAuthentication"
+            names[2] = "KbdInteractiveAuthentication"
+            names[3] = "ChallengeResponseAuthentication"
+        }
+        {
+            if (!option($0)) print $0
+        }
+    ' "$sshd_config" > "$sshd_tmp" \
+        && $SUDO tee "$sshd_config" < "$sshd_tmp" >/dev/null; then
+        rm -f "$sshd_tmp"
         $SUDO cp -a "$sshd_backup" "$sshd_config"
         $SUDO rm -f "$sshd_backup"
         echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
+    rm -f "$sshd_tmp"
 
     if ! $SUDO "$sshd_bin" -t -f "$sshd_config" 2>/dev/null \
         || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'passwordauthentication no' \
