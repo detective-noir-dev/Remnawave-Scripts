@@ -137,6 +137,23 @@ _ssh_restart_service() {
     $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null
 }
 
+show_ssh_config() {
+    local sshd_config="/etc/ssh/sshd_config"
+    if [ ! -r "$sshd_config" ]; then
+        echo -e "${RED}❌ $(tr_text SSH_CONFIG_READ_FAIL)${NC}"
+    else
+        echo -e "${CYAN}$(tr_text SSH_CONFIG_PATH)${NC}"
+        echo -e "${DIM}────────────────────────────────────────${NC}"
+        $SUDO cat "$sshd_config" || {
+            echo -e "${RED}❌ $(tr_text SSH_CONFIG_READ_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        }
+    fi
+    echo
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
 add_ssh_ed25519_key() {
     local target_user home_dir auth_keys public_key
     target_user=$(_ssh_target_user)

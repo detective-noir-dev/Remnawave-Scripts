@@ -17,10 +17,11 @@ submenu_server() {
         echo -e "  ${YELLOW}1)${NC} $(tr_text SUB_SSH_PORT)"
         echo -e "  ${YELLOW}2)${NC} $(tr_text SUB_SSH_KEY)"
         echo -e "  ${RED}3)${NC} $(tr_text SUB_SSH_DISABLE_PASSWORD)"
-        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_ZAPRET)"
-        echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_HY2_SUBMENU)"
-        echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_WARP)"
-        echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_DANTE)"
+        echo -e "  ${YELLOW}4)${NC} $(tr_text SUB_SSH_CONFIG)"
+        echo -e "  ${YELLOW}5)${NC} $(tr_text SUB_ZAPRET)"
+        echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_HY2_SUBMENU)"
+        echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_WARP)"
+        echo -e "  ${YELLOW}8)${NC} $(tr_text SUB_DANTE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         read -rp "> " choice
 
@@ -28,10 +29,11 @@ submenu_server() {
             1) show_banner; change_ssh_port ;;
             2) show_banner; add_ssh_ed25519_key ;;
             3) show_banner; disable_ssh_password_auth ;;
-            4) show_banner; install_zapret ;;
-            5) submenu_hysteria2 ;;
-            6) submenu_warp ;;
-            7) submenu_dante ;;
+            4) show_banner; show_ssh_config ;;
+            5) show_banner; install_zapret ;;
+            6) submenu_hysteria2 ;;
+            7) submenu_warp ;;
+            8) submenu_dante ;;
             0) break ;;
             *) echo -e "${RED}$(tr_text ERR_CHOICE)${NC}"; sleep 1 ;;
         esac

@@ -77,6 +77,7 @@ tr_text() {
         SUB_SSH_PORT)         echo "🔑 Change SSH port" ;;
         SUB_SSH_KEY)          echo "🔐 Add SSH ed25519 key" ;;
         SUB_SSH_DISABLE_PASSWORD) echo "🚫 Disable SSH password login" ;;
+        SUB_SSH_CONFIG)       echo "📄 View SSH config" ;;
         SUB_HY2_INSTALL)      echo "⚡ Install Hysteria2" ;;
         SUB_HY2_REMOVE)       echo "🗑️  Remove Hysteria2" ;;
         SUB_HY2_CONFIG)       echo "📝 Edit Hysteria2 config" ;;
@@ -102,6 +103,8 @@ tr_text() {
         SSH_PASSWORD_CONFIRM) echo "Disable SSH password login? (y/n)" ;;
         SSH_PASSWORD_DISABLED) echo "SSH password login disabled." ;;
         SSH_PASSWORD_FAIL)    echo "Could not disable SSH password login; the previous configuration was restored." ;;
+        SSH_CONFIG_PATH)      echo "SSH configuration: /etc/ssh/sshd_config" ;;
+        SSH_CONFIG_READ_FAIL) echo "Could not read /etc/ssh/sshd_config." ;;
         HY2_INSTALLING)       echo "Installing Hysteria2..." ;;
         HY2_INSTALLED)        echo "Hysteria2 installed successfully!" ;;
         HY2_REMOVING)         echo "Removing Hysteria2..." ;;
