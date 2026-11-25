@@ -310,13 +310,20 @@ add_ssh_ed25519_key() {
 }
 
 disable_ssh_password_auth() {
-    local target_user home_dir auth_keys sshd_config sshd_backup sshd_bin effective_auth key_count
+    local target_user home_dir auth_keys sshd_config sshd_bin effective_auth key_count
+    local config_file config_backup config_tmp legacy_header
+    local -a config_files=() config_backups=()
     target_user=$(_ssh_target_user)
     sshd_config="/etc/ssh/sshd_config"
     sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
+    legacy_header=no
+    if $SUDO awk 'NR == 1 { a = $0 } NR == 2 { b = $0 } NR == 3 { c = $0 } END { exit !(a == "PasswordAuthentication no" && b == "KbdInteractiveAuthentication no" && c == "ChallengeResponseAuthentication no") }' "$sshd_config" 2>/dev/null; then
+        legacy_header=yes
+    fi
     if effective_auth=$($SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null); then
         if printf '%s\n' "$effective_auth" | grep -qx 'passwordauthentication no' \
-            && printf '%s\n' "$effective_auth" | grep -qx 'kbdinteractiveauthentication no'; then
+            && printf '%s\n' "$effective_auth" | grep -qx 'kbdinteractiveauthentication no' \
+            && [ "$legacy_header" = no ]; then
             echo -e "${GREEN}$(tr_text SSH_PASSWORD_ALREADY_DISABLED)${NC}"
             read -rp "$(tr_text PRESS_ENTER)"
             return 0
@@ -348,64 +355,82 @@ disable_ssh_password_auth() {
         return 0
     fi
 
-    sshd_backup="${sshd_config}.bak.$$"
-    if ! $SUDO cp -a "$sshd_config" "$sshd_backup"; then
-        echo -e "${RED}❌ $(tr_text SSH_BACKUP_FAIL)${NC}"
-        read -rp "$(tr_text PRESS_ENTER)"
-        return 1
-    fi
+    config_files+=("$sshd_config")
+    for config_file in /etc/ssh/sshd_config.d/*.conf; do
+        [ -f "$config_file" ] && config_files+=("$config_file")
+    done
 
-    # Update existing active or commented directives in sshd_config in place.
-    # Do not add or move directives: uncomment them and set their value to no.
-    local sshd_tmp="${TMPDIR:-/tmp}/sshd_config.$$"
-    if ! $SUDO awk '
-        function option(line, name, rest, indent) {
-            rest = line
-            indent = ""
-            match(rest, /^[[:space:]]*/)
-            indent = substr(rest, 1, RLENGTH)
-            rest = substr(rest, RLENGTH + 1)
-            sub(/^#[[:space:]]*/, "", rest)
-            for (i = 1; i <= 3; i++) {
-                if (rest ~ ("^" names[i] "([[:space:]]|$)")) {
-                    print indent names[i] " no"
-                    return 1
+    for config_file in "${config_files[@]}"; do
+        config_backup="${config_file}.bak.$$"
+        if ! $SUDO cp -a "$config_file" "$config_backup"; then
+            for config_backup in "${config_backups[@]}"; do
+                $SUDO cp -a "$config_backup" "${config_backup%.bak.$$}"
+                $SUDO rm -f "$config_backup"
+            done
+            echo -e "${RED}❌ $(tr_text SSH_BACKUP_FAIL)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        fi
+        config_backups+=("$config_backup")
+
+        config_tmp="${TMPDIR:-/tmp}/sshd_config.$$.$RANDOM"
+        if ! $SUDO awk -v cleanup_legacy="$([ "$config_file" = "$sshd_config" ] && echo "$legacy_header")" '
+            function option(line, name, rest, indent) {
+                rest = line
+                match(rest, /^[[:space:]]*/)
+                indent = substr(rest, 1, RLENGTH)
+                rest = substr(rest, RLENGTH + 1)
+                sub(/^#[[:space:]]*/, "", rest)
+                for (i = 1; i <= 3; i++) {
+                    if (rest ~ ("^" names[i] "([[:space:]]|$)")) {
+                        print indent names[i] " no"
+                        return 1
+                    }
+                }
+                return 0
+            }
+            BEGIN {
+                names[1] = "PasswordAuthentication"
+                names[2] = "KbdInteractiveAuthentication"
+                names[3] = "ChallengeResponseAuthentication"
+            }
+            { lines[NR] = $0 }
+            END {
+                legacy = cleanup_legacy == "yes" && lines[1] == "PasswordAuthentication no" && lines[2] == "KbdInteractiveAuthentication no" && lines[3] == "ChallengeResponseAuthentication no"
+                for (n = 1; n <= NR; n++) {
+                    if (legacy && n <= 3) continue
+                    if (!option(lines[n])) print lines[n]
                 }
             }
-            return 0
-        }
-        BEGIN {
-            names[1] = "PasswordAuthentication"
-            names[2] = "KbdInteractiveAuthentication"
-            names[3] = "ChallengeResponseAuthentication"
-        }
-        {
-            if (!option($0)) print $0
-        }
-    ' "$sshd_config" > "$sshd_tmp" \
-        && $SUDO tee "$sshd_config" < "$sshd_tmp" >/dev/null; then
-        rm -f "$sshd_tmp"
-        $SUDO cp -a "$sshd_backup" "$sshd_config"
-        $SUDO rm -f "$sshd_backup"
-        echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
-        read -rp "$(tr_text PRESS_ENTER)"
-        return 1
-    fi
-    rm -f "$sshd_tmp"
+        ' "$config_file" > "$config_tmp" \
+            && $SUDO tee "$config_file" < "$config_tmp" >/dev/null; then
+            rm -f "$config_tmp"
+            for config_backup in "${config_backups[@]}"; do
+                $SUDO cp -a "$config_backup" "${config_backup%.bak.$$}"
+                $SUDO rm -f "$config_backup"
+            done
+            echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 1
+        fi
+        rm -f "$config_tmp"
+    done
 
     if ! $SUDO "$sshd_bin" -t -f "$sshd_config" 2>/dev/null \
         || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'passwordauthentication no' \
         || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'kbdinteractiveauthentication no' \
         || ! _ssh_restart_service; then
-        $SUDO cp -a "$sshd_backup" "$sshd_config"
+        for config_backup in "${config_backups[@]}"; do
+            $SUDO cp -a "$config_backup" "${config_backup%.bak.$$}"
+        done
         _ssh_restart_service
-        $SUDO rm -f "$sshd_backup"
+        for config_backup in "${config_backups[@]}"; do $SUDO rm -f "$config_backup"; done
         echo -e "${RED}❌ $(tr_text SSH_PASSWORD_FAIL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1
     fi
 
-    $SUDO rm -f "$sshd_backup"
+    for config_backup in "${config_backups[@]}"; do $SUDO rm -f "$config_backup"; done
     echo -e "${GREEN}✅ $(tr_text SSH_PASSWORD_DISABLED)${NC}"
     read -rp "$(tr_text PRESS_ENTER)"
 }
