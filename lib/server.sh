@@ -128,6 +128,129 @@ change_ssh_port() {
     read -rp "$(tr_text PRESS_ENTER)"
 }
 
+# ====== SSH КЛЮЧИ И АУТЕНТИФИКАЦИЯ ======
+_ssh_target_user() {
+    printf '%s\n' "${SUDO_USER:-${USER:-$(id -un)}}"
+}
+
+_ssh_restart_service() {
+    $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null
+}
+
+add_ssh_ed25519_key() {
+    local target_user home_dir auth_keys public_key
+    target_user=$(_ssh_target_user)
+    home_dir=$(getent passwd "$target_user" 2>/dev/null | cut -d: -f6)
+
+    if [ -z "$home_dir" ] || [ ! -d "$home_dir" ]; then
+        echo -e "${RED}❌ $(tr_text SSH_USER_HOME_FAIL "$target_user")${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    echo -e "${CYAN}$(tr_text SSH_KEY_TARGET "$target_user")${NC}"
+    echo -e "${BLUE}$(tr_text SSH_KEY_PROMPT)${NC}"
+    read -r public_key
+
+    if ! printf '%s\n' "$public_key" | awk 'NF >= 2 && $1 == "ssh-ed25519" && $2 ~ /^[A-Za-z0-9+\/=]+$/ { found = 1 } END { exit !found }'; then
+        echo -e "${RED}❌ $(tr_text SSH_KEY_INVALID)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if ! printf '%s\n' "$public_key" | ssh-keygen -lf - >/dev/null 2>&1; then
+        echo -e "${RED}❌ $(tr_text SSH_KEY_INVALID)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    auth_keys="$home_dir/.ssh/authorized_keys"
+    if $SUDO test -f "$auth_keys" && $SUDO grep -Fqx -- "$public_key" "$auth_keys"; then
+        echo -e "${YELLOW}$(tr_text SSH_KEY_EXISTS)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
+    fi
+
+    if $SUDO install -d -m 700 -o "$target_user" -g "$(id -gn "$target_user")" "$home_dir/.ssh" \
+        && printf '%s\n' "$public_key" | $SUDO tee -a "$auth_keys" >/dev/null \
+        && $SUDO chown "$target_user":"$(id -gn "$target_user")" "$auth_keys" \
+        && $SUDO chmod 600 "$auth_keys"; then
+        echo -e "${GREEN}✅ $(tr_text SSH_KEY_ADDED)${NC}"
+    else
+        echo -e "${RED}❌ $(tr_text SSH_KEY_ADD_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
+disable_ssh_password_auth() {
+    local target_user home_dir auth_keys sshd_config sshd_backup sshd_bin
+    target_user=$(_ssh_target_user)
+    home_dir=$(getent passwd "$target_user" 2>/dev/null | cut -d: -f6)
+    auth_keys="$home_dir/.ssh/authorized_keys"
+
+    if [ -z "$home_dir" ] || ! $SUDO test -s "$auth_keys"; then
+        echo -e "${RED}❌ $(tr_text SSH_PASSWORD_NO_KEY "$target_user")${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    echo -e "${RED}$(tr_text SSH_PASSWORD_WARN)${NC}"
+    echo -e "${YELLOW}$(tr_text SSH_PASSWORD_CONFIRM)${NC}"
+    read -r ans
+    if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
+        echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 0
+    fi
+
+    sshd_config="/etc/ssh/sshd_config"
+    sshd_backup="${sshd_config}.bak.$$"
+    if ! $SUDO cp -a "$sshd_config" "$sshd_backup"; then
+        echo -e "${RED}❌ $(tr_text SSH_BACKUP_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if $SUDO sed -i -E \
+        -e 's/^[[:space:]]*#?[[:space:]]*PasswordAuthentication[[:space:]]+.*/PasswordAuthentication no/' \
+        -e 's/^[[:space:]]*#?[[:space:]]*KbdInteractiveAuthentication[[:space:]]+.*/KbdInteractiveAuthentication no/' \
+        -e 's/^[[:space:]]*#?[[:space:]]*ChallengeResponseAuthentication[[:space:]]+.*/ChallengeResponseAuthentication no/' \
+        "$sshd_config"; then
+        $SUDO grep -qE '^[[:space:]]*PasswordAuthentication[[:space:]]+' "$sshd_config" \
+            || echo 'PasswordAuthentication no' | $SUDO tee -a "$sshd_config" >/dev/null
+        $SUDO grep -qE '^[[:space:]]*KbdInteractiveAuthentication[[:space:]]+' "$sshd_config" \
+            || echo 'KbdInteractiveAuthentication no' | $SUDO tee -a "$sshd_config" >/dev/null
+        $SUDO grep -qE '^[[:space:]]*ChallengeResponseAuthentication[[:space:]]+' "$sshd_config" \
+            || echo 'ChallengeResponseAuthentication no' | $SUDO tee -a "$sshd_config" >/dev/null
+    else
+        $SUDO cp -a "$sshd_backup" "$sshd_config"
+        $SUDO rm -f "$sshd_backup"
+        echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
+    if ! $SUDO "$sshd_bin" -t -f "$sshd_config" 2>/dev/null \
+        || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'passwordauthentication no' \
+        || ! $SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null | grep -qx 'kbdinteractiveauthentication no' \
+        || ! _ssh_restart_service; then
+        $SUDO cp -a "$sshd_backup" "$sshd_config"
+        _ssh_restart_service
+        $SUDO rm -f "$sshd_backup"
+        echo -e "${RED}❌ $(tr_text SSH_PASSWORD_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    $SUDO rm -f "$sshd_backup"
+    echo -e "${GREEN}✅ $(tr_text SSH_PASSWORD_DISABLED)${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
+}
+
 install_zapret() {
     echo -e "${BLUE}🛡️  $(tr_text ZAPRET_INSTALLING)${NC}"
     echo

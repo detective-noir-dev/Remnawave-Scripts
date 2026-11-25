@@ -75,6 +75,8 @@ tr_text() {
         # === SUBMENU: Server Setup ===
         GROUP_SERVER)         echo "🖥️  Server Setup" ;;
         SUB_SSH_PORT)         echo "🔑 Change SSH port" ;;
+        SUB_SSH_KEY)          echo "🔐 Add SSH ed25519 key" ;;
+        SUB_SSH_DISABLE_PASSWORD) echo "🚫 Disable SSH password login" ;;
         SUB_HY2_INSTALL)      echo "⚡ Install Hysteria2" ;;
         SUB_HY2_REMOVE)       echo "🗑️  Remove Hysteria2" ;;
         SUB_HY2_CONFIG)       echo "📝 Edit Hysteria2 config" ;;
@@ -88,6 +90,18 @@ tr_text() {
         SSH_FAIL)             echo "Error changing port!" ;;
         SSH_WARN)             echo "⚠️  WARNING: Do NOT close your current SSH session!" ;;
         SSH_WARN2)            echo "Open a new connection on the new port first and verify it works." ;;
+        SSH_KEY_TARGET)       echo "The key will be added for user: $2" ;;
+        SSH_KEY_PROMPT)       echo "Paste the public ssh-ed25519 key:" ;;
+        SSH_KEY_INVALID)      echo "Invalid ssh-ed25519 public key." ;;
+        SSH_KEY_EXISTS)       echo "This key is already in authorized_keys." ;;
+        SSH_KEY_ADDED)        echo "SSH ed25519 key added." ;;
+        SSH_KEY_ADD_FAIL)     echo "Could not add the SSH key." ;;
+        SSH_USER_HOME_FAIL)   echo "Could not determine the home directory for user $2." ;;
+        SSH_PASSWORD_NO_KEY)  echo "User $2 has no key in authorized_keys. Add a key and verify key login first." ;;
+        SSH_PASSWORD_WARN)    echo "⚠️  SSH password login will be disabled. Keep this session open until key login is verified." ;;
+        SSH_PASSWORD_CONFIRM) echo "Disable SSH password login? (y/n)" ;;
+        SSH_PASSWORD_DISABLED) echo "SSH password login disabled." ;;
+        SSH_PASSWORD_FAIL)    echo "Could not disable SSH password login; the previous configuration was restored." ;;
         HY2_INSTALLING)       echo "Installing Hysteria2..." ;;
         HY2_INSTALLED)        echo "Hysteria2 installed successfully!" ;;
         HY2_REMOVING)         echo "Removing Hysteria2..." ;;

@@ -75,6 +75,8 @@ tr_text() {
         # === ПОДМЕНЮ: Server Setup ===
         GROUP_SERVER)         echo "🖥️  Настройка сервера" ;;
         SUB_SSH_PORT)         echo "🔑 Сменить SSH порт" ;;
+        SUB_SSH_KEY)          echo "🔐 Добавить ключ SSH ed25519" ;;
+        SUB_SSH_DISABLE_PASSWORD) echo "🚫 Отключить вход по паролю SSH" ;;
         SUB_HY2_INSTALL)      echo "⚡ Установить Hysteria2" ;;
         SUB_HY2_REMOVE)       echo "🗑️  Удалить Hysteria2" ;;
         SUB_HY2_CONFIG)       echo "📝 Редактировать конфиг Hysteria2" ;;
@@ -88,6 +90,18 @@ tr_text() {
         SSH_FAIL)             echo "Ошибка при смене порта!" ;;
         SSH_WARN)             echo "⚠️  ВНИМАНИЕ: Не закрывайте текущую SSH сессию!" ;;
         SSH_WARN2)            echo "Сначала откройте новое подключение на новом порту и проверьте что всё работает." ;;
+        SSH_KEY_TARGET)       echo "Ключ будет добавлен для пользователя: $2" ;;
+        SSH_KEY_PROMPT)       echo "Вставьте публичный ключ ssh-ed25519:" ;;
+        SSH_KEY_INVALID)      echo "Некорректный публичный ключ ssh-ed25519." ;;
+        SSH_KEY_EXISTS)       echo "Этот ключ уже есть в authorized_keys." ;;
+        SSH_KEY_ADDED)        echo "Ключ SSH ed25519 добавлен." ;;
+        SSH_KEY_ADD_FAIL)     echo "Не удалось добавить ключ SSH." ;;
+        SSH_USER_HOME_FAIL)   echo "Не удалось определить домашний каталог пользователя $2." ;;
+        SSH_PASSWORD_NO_KEY)  echo "У пользователя $2 нет ключа в authorized_keys. Сначала добавьте и проверьте вход по ключу." ;;
+        SSH_PASSWORD_WARN)    echo "⚠️  Вход по паролю SSH будет отключён. Не закрывайте текущую сессию, пока не проверите вход по ключу." ;;
+        SSH_PASSWORD_CONFIRM) echo "Отключить вход по паролю SSH? (y/n)" ;;
+        SSH_PASSWORD_DISABLED) echo "Вход по паролю SSH отключён." ;;
+        SSH_PASSWORD_FAIL)    echo "Не удалось отключить вход по паролю; прежняя конфигурация восстановлена." ;;
         HY2_INSTALLING)       echo "Устанавливаю Hysteria2..." ;;
         HY2_INSTALLED)        echo "Hysteria2 успешно установлен!" ;;
         HY2_REMOVING)         echo "Удаляю Hysteria2..." ;;
