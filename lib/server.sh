@@ -133,6 +133,24 @@ _ssh_target_user() {
     printf '%s\n' "${SUDO_USER:-${USER:-$(id -un)}}"
 }
 
+_ssh_authorized_key_count() {
+    local auth_keys=$1
+
+    $SUDO awk '
+        /^[[:space:]]*($|#)/ { next }
+        {
+            for (i = 1; i < NF; i++) {
+                if ($i ~ /^(ssh-ed25519|ssh-rsa|ssh-dss|ecdsa-sha2-nistp(256|384|521)|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com)$/ \
+                    && $(i + 1) ~ /^[A-Za-z0-9+\/=]+$/) {
+                    count++
+                    break
+                }
+            }
+        }
+        END { print count + 0 }
+    ' "$auth_keys"
+}
+
 _ssh_restart_service() {
     $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null
 }
@@ -211,7 +229,7 @@ show_ssh_config() {
 }
 
 add_ssh_ed25519_key() {
-    local target_user home_dir auth_keys public_key key_count ans tmp_keys
+    local target_user home_dir auth_keys public_key key_count ans tmp_keys public_key_data
     target_user=$(_ssh_target_user)
     home_dir=$(getent passwd "$target_user" 2>/dev/null | cut -d: -f6)
 
@@ -241,6 +259,12 @@ add_ssh_ed25519_key() {
     key_count=0
     if $SUDO test -f "$auth_keys"; then
         key_count=$($SUDO awk '$1 == "ssh-ed25519" { n++ } END { print n+0 }' "$auth_keys")
+        public_key_data=$(printf '%s\n' "$public_key" | awk '{print $2}')
+        if $SUDO awk -v key_data="$public_key_data" '$1 == "ssh-ed25519" && $2 == key_data { found = 1 } END { exit !found }' "$auth_keys"; then
+            echo -e "${GREEN}$(tr_text SSH_KEY_ALREADY_PRESENT)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 0
+        fi
     fi
     if [ "$key_count" -gt 0 ]; then
         echo -e "${YELLOW}$(tr_text SSH_KEY_EXISTS "$key_count")${NC}"
@@ -286,22 +310,30 @@ add_ssh_ed25519_key() {
 }
 
 disable_ssh_password_auth() {
-    local target_user home_dir auth_keys sshd_config sshd_backup sshd_bin effective_auth
+    local target_user home_dir auth_keys sshd_config sshd_backup sshd_bin effective_auth key_count
     target_user=$(_ssh_target_user)
     sshd_config="/etc/ssh/sshd_config"
     sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
-    if effective_auth=$($SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null) \
-        && printf '%s\n' "$effective_auth" | grep -qx 'passwordauthentication no' \
-        && printf '%s\n' "$effective_auth" | grep -qx 'kbdinteractiveauthentication no'; then
-        echo -e "${GREEN}$(tr_text SSH_PASSWORD_ALREADY_DISABLED)${NC}"
-        read -rp "$(tr_text PRESS_ENTER)"
-        return 0
+    if effective_auth=$($SUDO "$sshd_bin" -T -f "$sshd_config" 2>/dev/null); then
+        if printf '%s\n' "$effective_auth" | grep -qx 'passwordauthentication no' \
+            && printf '%s\n' "$effective_auth" | grep -qx 'kbdinteractiveauthentication no'; then
+            echo -e "${GREEN}$(tr_text SSH_PASSWORD_ALREADY_DISABLED)${NC}"
+            read -rp "$(tr_text PRESS_ENTER)"
+            return 0
+        fi
+        if printf '%s\n' "$effective_auth" | grep -qx 'passwordauthentication no'; then
+            echo -e "${YELLOW}$(tr_text SSH_PASSWORD_INTERACTIVE_ENABLED)${NC}"
+        fi
     fi
 
     home_dir=$(getent passwd "$target_user" 2>/dev/null | cut -d: -f6)
     auth_keys="$home_dir/.ssh/authorized_keys"
 
-    if [ -z "$home_dir" ] || ! $SUDO test -s "$auth_keys"; then
+    key_count=0
+    if [ -n "$home_dir" ] && $SUDO test -f "$auth_keys"; then
+        key_count=$(_ssh_authorized_key_count "$auth_keys")
+    fi
+    if [ "$key_count" -eq 0 ]; then
         echo -e "${RED}❌ $(tr_text SSH_PASSWORD_NO_KEY "$target_user")${NC}"
         read -rp "$(tr_text PRESS_ENTER)"
         return 1

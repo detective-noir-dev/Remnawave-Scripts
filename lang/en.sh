@@ -98,6 +98,7 @@ tr_text() {
         SSH_KEY_REPLACE_CONFIRM) echo "Replacing removes the existing ed25519 keys. Continue? (y/n)" ;;
         SSH_KEY_ADDED)        echo "SSH ed25519 key added." ;;
         SSH_KEY_REPLACED)     echo "SSH ed25519 keys replaced." ;;
+        SSH_KEY_ALREADY_PRESENT) echo "This SSH ed25519 key is already in authorized_keys." ;;
         SSH_KEY_ADD_FAIL)     echo "Could not add the SSH key." ;;
         SSH_USER_HOME_FAIL)   echo "Could not determine the home directory for user $2." ;;
         SSH_PASSWORD_NO_KEY)  echo "User $2 has no key in authorized_keys. Add a key and verify key login first." ;;
@@ -105,6 +106,7 @@ tr_text() {
         SSH_PASSWORD_CONFIRM) echo "Disable SSH password login? (y/n)" ;;
         SSH_PASSWORD_DISABLED) echo "SSH password login disabled." ;;
         SSH_PASSWORD_ALREADY_DISABLED) echo "SSH password login is already disabled." ;;
+        SSH_PASSWORD_INTERACTIVE_ENABLED) echo "Password login is already disabled, but keyboard-interactive is still enabled. It will be disabled for complete protection." ;;
         SSH_PASSWORD_FAIL)    echo "Could not disable SSH password login; the previous configuration was restored." ;;
         SSH_CONFIG_READ_FAIL) echo "Could not read /etc/ssh/sshd_config." ;;
         SSH_CONFIG_EDITING)   echo "Opening /etc/ssh/sshd_config in an editor..." ;;
