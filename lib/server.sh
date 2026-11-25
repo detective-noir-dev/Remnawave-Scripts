@@ -138,19 +138,75 @@ _ssh_restart_service() {
 }
 
 show_ssh_config() {
-    local sshd_config="/etc/ssh/sshd_config"
-    if [ ! -r "$sshd_config" ]; then
+    local sshd_config="/etc/ssh/sshd_config" sshd_backup="/etc/ssh/sshd_config.bak.$$" editor sshd_bin
+
+    if ! $SUDO test -f "$sshd_config"; then
         echo -e "${RED}❌ $(tr_text SSH_CONFIG_READ_FAIL)${NC}"
-    else
-        echo -e "${CYAN}$(tr_text SSH_CONFIG_PATH)${NC}"
-        echo -e "${DIM}────────────────────────────────────────${NC}"
-        $SUDO cat "$sshd_config" || {
-            echo -e "${RED}❌ $(tr_text SSH_CONFIG_READ_FAIL)${NC}"
-            read -rp "$(tr_text PRESS_ENTER)"
-            return 1
-        }
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
     fi
-    echo
+
+    editor="${SUDO_EDITOR:-${VISUAL:-${EDITOR:-}}}"
+    if [ -n "$editor" ]; then
+        if ! command -v "${editor%% *}" >/dev/null 2>&1; then
+            editor=""
+        fi
+    fi
+    if [ -z "$editor" ]; then
+        for candidate in nano vim vi; do
+            if command -v "$candidate" >/dev/null 2>&1; then
+                editor=$candidate
+                break
+            fi
+        done
+    fi
+    if [ -z "$editor" ]; then
+        echo -e "${RED}❌ $(tr_text SSH_EDITOR_NOT_FOUND)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if ! $SUDO cp -a "$sshd_config" "$sshd_backup"; then
+        echo -e "${RED}❌ $(tr_text SSH_BACKUP_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    echo -e "${CYAN}$(tr_text SSH_CONFIG_EDITING)${NC}"
+    if [[ "$editor" == *" "* ]]; then
+        # shellcheck disable=SC2086
+        $SUDO $editor "$sshd_config"
+    else
+        $SUDO "$editor" "$sshd_config"
+    fi
+    if [ "$?" -ne 0 ]; then
+        $SUDO cp -a "$sshd_backup" "$sshd_config"
+        $SUDO rm -f "$sshd_backup"
+        echo -e "${RED}❌ $(tr_text SSH_CONFIG_EDIT_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    sshd_bin=$(command -v sshd 2>/dev/null || echo /usr/sbin/sshd)
+    if ! $SUDO "$sshd_bin" -t -f "$sshd_config" 2>/dev/null; then
+        $SUDO cp -a "$sshd_backup" "$sshd_config"
+        $SUDO rm -f "$sshd_backup"
+        echo -e "${RED}❌ $(tr_text SSH_CONFIG_INVALID)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    if ! _ssh_restart_service; then
+        $SUDO cp -a "$sshd_backup" "$sshd_config"
+        _ssh_restart_service
+        $SUDO rm -f "$sshd_backup"
+        echo -e "${RED}❌ $(tr_text SSH_CONFIG_RESTART_FAIL)${NC}"
+        read -rp "$(tr_text PRESS_ENTER)"
+        return 1
+    fi
+
+    $SUDO rm -f "$sshd_backup"
+    echo -e "${GREEN}✅ $(tr_text SSH_CONFIG_SAVED)${NC}"
     read -rp "$(tr_text PRESS_ENTER)"
 }
 

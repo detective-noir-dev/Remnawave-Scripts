@@ -77,7 +77,7 @@ tr_text() {
         SUB_SSH_PORT)         echo "🔑 Сменить SSH порт" ;;
         SUB_SSH_KEY)          echo "🔐 Добавить ключ SSH ed25519" ;;
         SUB_SSH_DISABLE_PASSWORD) echo "🚫 Отключить вход по паролю SSH" ;;
-        SUB_SSH_CONFIG)       echo "📄 Просмотреть конфиг SSH" ;;
+        SUB_SSH_CONFIG)       echo "📝 Редактировать конфиг SSH" ;;
         SUB_HY2_INSTALL)      echo "⚡ Установить Hysteria2" ;;
         SUB_HY2_REMOVE)       echo "🗑️  Удалить Hysteria2" ;;
         SUB_HY2_CONFIG)       echo "📝 Редактировать конфиг Hysteria2" ;;
@@ -103,8 +103,12 @@ tr_text() {
         SSH_PASSWORD_CONFIRM) echo "Отключить вход по паролю SSH? (y/n)" ;;
         SSH_PASSWORD_DISABLED) echo "Вход по паролю SSH отключён." ;;
         SSH_PASSWORD_FAIL)    echo "Не удалось отключить вход по паролю; прежняя конфигурация восстановлена." ;;
-        SSH_CONFIG_PATH)      echo "Конфигурация SSH: /etc/ssh/sshd_config" ;;
         SSH_CONFIG_READ_FAIL) echo "Не удалось прочитать /etc/ssh/sshd_config." ;;
+        SSH_CONFIG_EDITING)   echo "Открываю /etc/ssh/sshd_config в редакторе..." ;;
+        SSH_EDITOR_NOT_FOUND) echo "Не найден редактор nano, vim или vi." ;;
+        SSH_CONFIG_EDIT_FAIL) echo "Редактор завершился с ошибкой. Исходная конфигурация восстановлена." ;;
+        SSH_CONFIG_RESTART_FAIL) echo "SSH не перезапустился. Исходная конфигурация восстановлена." ;;
+        SSH_CONFIG_SAVED)     echo "Конфигурация SSH сохранена и применена." ;;
         HY2_INSTALLING)       echo "Устанавливаю Hysteria2..." ;;
         HY2_INSTALLED)        echo "Hysteria2 успешно установлен!" ;;
         HY2_REMOVING)         echo "Удаляю Hysteria2..." ;;
