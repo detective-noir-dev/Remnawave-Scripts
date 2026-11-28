@@ -25,7 +25,7 @@
 ## Процедура релиза
 1. Изменить файлы
 2. Обновить `version.txt` (bump)
-3. Добавить запись в `CHANGELOG.md` и обновить версию в `README.md` и `README-ENG.md` (бейдж вверху и строка «Версия» / «Version» внизу)
+3. Добавить запись в `CHANGELOG.md` и обновить версию в `README.md` и `README-ENG.md` (бейдж вверху, строка «Версия» / «Version» внизу и блок «Что нового» / «What's new»)
 4. `SHA256SUMS` пересчитывается автоматически (`tools/gen-checksums.sh`) для совместимости со старыми версиями
 5. `git add` → `git commit` → `git tag -a vX.Y.Z` → `git push origin main` → `git push origin vX.Y.Z`
 6. `gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."`

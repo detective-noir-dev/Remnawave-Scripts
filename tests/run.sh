@@ -22,6 +22,23 @@ fi
 missing=$(grep -ohE 'tr_text [A-Z][A-Z0-9_]+' scripts.sh lib/*.sh | awk '{print $2}' | sort -u | comm -23 - <(keys lang/en.sh))
 if [ -z "$missing" ]; then ok "все tr_text KEY есть в словаре"; else bad "нет в словаре: $(echo $missing)"; fi
 
+# 4. версия в обоих README (бейдж вверху и строка внизу) совпадает с version.txt
+ver=$(tr -d '\r\n' < version.txt)
+# readme_versions ФАЙЛ СЛОВО_В_БЕЙДЖЕ ПОДПИСЬ — версии из бейджа и из нижней строки, через пробел
+readme_versions() {
+    { grep -oE "badge/$2-[0-9]+\.[0-9]+\.[0-9]+" "$1" | sed 's/.*-//'
+      grep -oE "^\*\*$3:\*\* [0-9]+\.[0-9]+\.[0-9]+" "$1" | sed 's/.* //'; } | tr '\n' ' '
+}
+for spec in "README.md версия Версия" "README-ENG.md version Version"; do
+    read -r file badge label <<<"$spec"
+    found=$(readme_versions "$file" "$badge" "$label")
+    if [ "$found" = "$ver $ver " ]; then
+        ok "$file: версия $ver"
+    else
+        bad "$file: ожидалась версия $ver в бейдже и в строке «$label», найдено: ${found:-ничего}"
+    fi
+done
+
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 
 # 6. каждая функция определена ровно один раз во всём коде (при нарезке на модули легко задвоить)

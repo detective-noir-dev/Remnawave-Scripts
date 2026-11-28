@@ -6,416 +6,226 @@
 ![made-with-bash](https://img.shields.io/badge/made%20with-bash-green)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-Remnawave-Scripts is a cross-platform Bash script with an interactive menu, dual language support (RU/EN), random ID generation, country search with emoji flags, and port management.
-
-It also includes a self-update system from GitHub and allows you to uninstall the script (rw-scripts) directly from the menu.
+Remnawave-Scripts is a Bash script with an interactive menu for setting up and maintaining a Linux server, including a Remnawave node: SSH, ports and firewall, Hysteria2, Cloudflare WARP, a SOCKS5 proxy, cleanup, swap, and domain search for Reality. The interface is available in Russian and English.
 
 ---
 
-## 📌 Features
+## 🆕 What's new
 
-- **Random shorts_id generation** — create unique identifiers
-- **Country search** — search in Russian and English, supports partial matches
-- **Show emoji flag** and English country name
-- **💾 Memory Monitor** ⭐ v1.1.0
-  - Display free and used RAM
-  - Cross-platform support (Linux, macOS)
-- **📈 Interactive Process Monitor (htop)** ⭐ v1.1.0
-  - Automatic htop installation if needed
-  - Real-time monitoring of processes, CPU, and memory
-- **🔒 Port Management** ⭐ v1.2.0
-  - 🔓 Open ports via firewall (UFW/FirewallD/iptables)
-  - 🔒 Close ports and remove from database
-  - ✏️ Edit port descriptions
-  - 📋 Beautiful list of all open ports
-  - 🛡️ View firewall status
-  - 💾 Save port data between sessions
-- **📦 System Package Update** ⭐ v1.2.3
-  - Execute `apt update && apt upgrade -y` from the menu
-  - Confirmation before running
-  - Support for apt and apt-get
-- **🖥️ Server Configuration** ⭐ v1.3.0
-  - 🔑 Change SSH port
-  - ⚡ Install, remove, and manage Hysteria2
-- **🛡️ Zapret Installation** ⭐ v1.4.0
-  - One-command installation directly from the menu
-- **☁️ Cloudflare WARP** ⭐ NEW in v1.5.0
-  - 📥 Install WARP as a SOCKS5 proxy with a custom port (default 40000)
-  - 📋 Status: connection, proxy port, external IP and country
-  - 🛑 Disable and 🟢 enable without uninstalling
-  - 🗑️ Full removal (package, repository, key) with confirmation
-- **🧦 SOCKS5 Proxy (Dante)** ⭐ NEW in v1.11.0
-  - ⚙️ Installation and auto-configuration with mandatory IP whitelist
-  - 🛡️ Automated firewall rules (UFW / FirewallD / iptables)
-  - 🔄 Safe IP updates and stale interface address detection
-  - 📋 Service management, logs, and status checks
-- **🔧 Third-party Scripts** ⭐ v1.4.1+
-  - 🌐 Quick installation of Remnawave by EGames
-  - 🤖 Installation of Reshala (Remnawave Bedolaga)
-  - 🧪 Multitest installation ⭐ v1.4.2
-  - Automatic environment variable handling (bashrc)
-- **📊 System Dashboard** ⭐ NEW in v1.4.5
-  - Displays automatically on launch instead of the plain banner
-  - OS, kernel, uptime, active session count
-  - Virtualization type (KVM / LXC / Physical server)
-  - External IP address + ping to 8.8.8.8
-  - CPU, RAM, disk load with progress bars (▓░)
-  - Disk type detection (SSD / NVMe / HDD)
-  - Network data cached per session
-- **🧹 System Cleaner** ⭐ NEW in v1.4.6
-  - Full cleanup in one action or per category
-  - APT cache, journald, Docker prune, /tmp, Snap
-  - Shows how much space was freed after each operation
-  - Interactive disk analyzer: browse, clear, and delete files from the menu
-- **🧠 Memory & Swap Manager** ⭐ NEW in v1.4.6
-  - Hybrid mode: ZRAM (priority 100) + Disk Swap as fallback (priority −2)
-  - Dynamic recommendations based on server RAM size
-  - Detailed RAM and Swap status in real time
-  - Docker memory limit guide for 1 / 2 / 4+ GB servers
-- **🔍 Reality TLS Scanner** ⭐ NEW in v1.4.6
-  - Find ideal SNI domains for VLESS+Reality masking
-  - Single scan (OSINT): full TLS profile per IP or domain
-  - Mass scan from a target list with progress bar
-  - Smart ranking by certificate issuer weight
-  - Auto-install: downloads Go, compiles RealiTLScanner, fetches GeoIP database
-- **System Information** — display system data via neofetch
-- **Language Switching**: Russian / English
-- **Interactive CLI Menu**
-- **GitHub Update System**
-- **Uninstall Option**
+**1.12.9 — major bug-fix release**
+- Disabling SSH password login works again.
+- Adding an SSH key no longer corrupts an `authorized_keys` file that has no trailing newline.
+- Changing the SSH port supports `ssh.socket` and checks that the new port is listening.
+- The port list no longer shows ufw deny and outbound rules as open ports.
+- Fixes in Dante, Hysteria2 for Remnanode, WARP, the scanner and package upgrades.
+
+**1.12.0–1.12.8 — SSH management from the menu**
+- Add an `ed25519` public key, with validation and a confirmation before replacing keys.
+- Disable password login: only when a key is present, with config checks and rollback on failure.
+- Edit `sshd_config` with a syntax check and restore from backup.
+
+**1.11.0 — Dante SOCKS5 proxy** restricted to allowed IP addresses.
+
+Full history: [CHANGELOG.md](CHANGELOG.md) (in Russian) and [GitHub releases](https://github.com/detective-noir-dev/Remnawave-Scripts/releases).
 
 ---
 
 ## 🚀 Installation
 
-Install with one command:
-
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/detective-noir-dev/Remnawave-Scripts/main/install.sh)
 ```
 
-Run globally:
+Run:
 
 ```bash
 rw-scripts
 ```
 
----
+The installer asks for a language on the first run. If `~/.local/bin` was not in your `PATH`, open a new terminal after installation.
 
-## ⚙️ Uninstallation
-
-If you no longer need **Remnawave Scripts**, you can remove it:
-
-```bash
-rw-scripts
-# Select option 4 → 3 (Uninstall rw-scripts)
-```
-
-Or directly:
-
-```bash
-~/.local/share/remnawave/uninstall.sh
-```
+**Updating:** menu item `4 → 1`. The previous version is saved before an update; go back to it with `4 → 6` or `rw-scripts rollback`.
 
 ---
 
-## 📖 Usage
-
-### 📁 Menu Groups
+## 📁 Menu
 
 | # | Group | Content |
-|---|--------|------------|
-| 1 | 🆔 Short ID & Country Flags | Generate shorts_id, Get country emoji flag |
-| 2 | 📊 Resource Monitor | Free memory, htop, System info (neofetch) |
-| 3 | 🔐 Network & Ports | Port management submenu |
-| 4 | ⚙️ Maintenance | Check updates, Update system packages, Uninstall |
-| 5 | 🖥️ Server Configuration | SSH port, Zapret, Hysteria2, Cloudflare WARP, Dante SOCKS5 |
+|---|-------|---------|
+| 1 | 🆔 Short ID & Country Flags | Generate shorts_id, get a country's emoji flag and English name |
+| 2 | 📊 Resource Monitor | Memory, htop, system info (neofetch) |
+| 3 | 🔐 Network & Ports | Open and close ports, descriptions, firewall status |
+| 4 | ⚙️ Maintenance | Update and rollback, system packages, cleanup, memory, scanner, uninstall |
+| 5 | 🖥️ Server Setup | SSH, zapret, Hysteria2, Cloudflare WARP, Dante |
 | 6 | 🔧 Third-party Scripts | Remnawave (EGames), Reshala, Multitest |
-| 7 | 🧹 System Cleaner | APT, journald, Docker, /tmp, Snap, disk analyzer |
-| 8 | 🧠 Memory & Swap | ZRAM, Disk Swap, hybrid mode, Docker guide |
-| 9 | 🔍 Reality TLS Scanner | SNI search for Reality, OSINT, mass scan |
+| 0 | 🚪 Exit | |
+
+### 📊 Dashboard
+
+A short summary is shown above the main menu. Example (made-up values):
+
+```
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🚀 REMNAWAVE-SCRIPTS  vX.Y.Z · English
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SYS  Ubuntu 24.04 LTS · KVM · kernel 6.8.0
+  NET  203.0.113.10 · ping 12.5 ms ⚡ · up 3d 14h 5m
+  SVC  ✔ ssh  ✔ ufw  ✔ docker  ✖ hy2
+  ──────────────────────────────────────────────
+  CPU  █░░░░░░░░░░░  12%  4 vCPU
+  RAM  ████░░░░░░░░  35%  1.4G / 3.8G
+  NVMe ██████░░░░░░  55%  14G / 25G
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+The `SVC` line lists only the installed services among: ssh, ufw, docker, Hysteria2, WARP, fail2ban, Dante.
 
 ---
 
-### Usage Examples
+## 📌 Features
 
-#### 💾 Memory Monitoring
-Displays information about:
-- Total memory
-- Used memory
-- Free memory
-- Cached memory
+### 🆔 Short ID & Country Flags
+- Generate any number of `shorts_id` values (16 hex characters).
+- Find a country by part of its Russian or English name.
 
-#### 📈 Process Monitor
-- Interactive htop interface
-- Sort by CPU/Memory
-- Process management
-- Color-coded data display
+### 🔐 Network & Ports
+- Supports **UFW**, **FirewallD** and **iptables**.
+- Open and close TCP, UDP, or both.
+- The port list is synced with the firewall; descriptions are stored in `~/.local/share/remnawave/ports.json`.
 
-#### 🔒 Port Management (Group 3)
+### 🖥️ Server Setup
 
-**Port Management Submenu:**
+| Item | What it does |
+|------|--------------|
+| 🔑 Change SSH port | Port 1024–65535: edits the config, opens the port in the firewall, restarts SSH; restores the previous config on failure |
+| 🔐 Add ed25519 key | Validates the key and adds it to `authorized_keys`; replaces other ed25519 keys only after you confirm |
+| 🚫 Disable password login | Requires an SSH key to be present; checks the config and rolls back on failure |
+| 📝 Edit SSH config | Opens `sshd_config` in an editor and checks it before restarting SSH |
+| 🛡️ zapret | Runs a third-party installer |
+| ⚡ Hysteria2 | Install, remove, config, service, logs, version, update; Remnanode setup |
+| ☁️ Cloudflare WARP | Install, status, connect, disconnect, uninstall |
+| 🧦 Dante | SOCKS5 proxy: install, allowed IP list, status, restart, logs, remove |
 
-```
-╔════════════════════════════════════════════╗
-║      🔒 Port Management / Ports           ║
-╚════════════════════════════════════════════╝
+> ⚠️ When changing SSH settings, keep your current session open and test the login in a second one.
 
-1) 🔓 Open Port
-2) 🔒 Close Port
-3) ✏️  Edit Description
-4) 📋 List Ports
-5) 🛡️  Firewall Status
-0) ⬅️  Back
-```
+**Hysteria2 for Remnanode** prepares an Xray inbound: it mounts a Let's Encrypt certificate in `docker-compose.yml`, creates a restart hook for certificate renewal and opens the UDP port. It needs root, `/opt/remnanode/docker-compose.yml` and an already issued certificate.
 
-**Supported firewalls:**
-- ✅ **UFW** (Ubuntu/Debian)
-- ✅ **FirewallD** (RHEL/CentOS/Fedora)
-- ✅ **iptables** (universal for Linux)
+**Cloudflare WARP** is installed as a SOCKS5 proxy on `127.0.0.1:<port>` (default 40000). Ubuntu or Debian and root are required. To use it: `export ALL_PROXY=socks5://127.0.0.1:<port>`.
 
----
+**Dante** accepts only the IP addresses you list (default port 1080). The proxy has no password, and SOCKS5 does not encrypt traffic by itself. If the server's IP changes, restart the service: the status screen tells you when this is needed.
 
-#### 🖥️ Server Configuration (Group 5) ⭐ v1.3.0
+### 🧹 System Cleaner (`4 → 3`)
+- Everything at once or by category: APT, journald, Docker, temporary files, old Snap revisions.
+- Shows how much space was freed.
+- Disk analyzer: browse large files; you can truncate them in `/var/log` and delete them in the APT cache and `/tmp`.
 
-**Server Configuration Submenu:**
+> ⚠️ Full cleanup truncates log files in `/var/log` and Docker container logs, and deletes everything in `/tmp`, `/var/tmp` and `~/.cache`. Docker cleanup removes unused images, containers, networks and **volumes**, so it asks for a separate confirmation.
 
-```
-╔════════════════════════════════════════════╗
-║         🖥️  Server Configuration          ║
-╚════════════════════════════════════════════╝
+### 🧠 Memory & Swap (`4 → 4`)
+- Hybrid mode (ZRAM plus a disk swap file), ZRAM only, or swap only.
+- Recommendations based on RAM size, detailed status, example Docker memory limits.
+- The "ZRAM only", "swap only" and "disable" options remove the existing `/swapfile`.
 
-1) 🔑 Change SSH Port
-2) 🛡️  Install Zapret
-3) ⚡ Hysteria2
-4) ☁️  Cloudflare WARP
-5) 🧦 SOCKS5 Proxy (Dante)
-0) ⬅️  Back
-```
+### 🔍 Reality TLS Scanner (`4 → 5`)
+- Find SNI domains for VLESS+Reality: a single target or a list of targets.
+- Results are ranked by certificate issuer; reports are saved as CSV.
+- Installs Go, builds [RealiTLScanner](https://github.com/XTLS/RealiTLScanner) and downloads the GeoIP database.
 
-#### 🛡️ Zapret Installation (Group 5 → Item 2)
+### 🔧 Third-party Scripts
+- **Remnawave (EGames)** — a reverse-proxy solution by eGamesAPI.
+- **Reshala** — a script by DonMatteoVPN.
+- **Multitest** — a tool by saveksme, installed to `/usr/local/bin/multitest`.
 
-Runs zapret installation with one command directly from the menu without manual input.
-
-#### ⚡ Hysteria2 (Group 5 → Item 3)
-
-**Hysteria2 Submenu:**
-
-```
-╔════════════════════════════════════════════╗
-║              ⚡ Hysteria2                 ║
-╚════════════════════════════════════════════╝
-
-── For Mihomo core ──
-1) ⚡ Install Hysteria2
-2) 🗑️  Remove Hysteria2
-3) 📝 Edit Config
-4) ⚙️  Service Management
-5) 📋 Logs
-6) 🔍 Check Version
-7) ⬆️  Update Hysteria2
-
-── For Remnawave node ──
-8) 🔧 Configure Hysteria2 for node (Remnanode)
-0) ⬅️  Back
-```
-
-#### ☁️ Cloudflare WARP (Group 5 → Item 4) ⭐ NEW in v1.5.0
-
-Installs Cloudflare WARP in proxy mode (SOCKS5 on `127.0.0.1:<port>`, default 40000). Ubuntu and Debian are supported, root is required.
-
-**Cloudflare WARP Submenu:**
-
-```
-1) Install WARP
-2) WARP status
-3) Disable WARP
-4) Enable WARP
-5) Uninstall WARP
-0) ⬅️  Back
-```
-
-After installation the port, external IP and country are shown. To use the proxy: `export ALL_PROXY=socks5://127.0.0.1:<port>`.
-
----
-
-#### 📊 System Dashboard ⭐ NEW in v1.4.5
-
-Launches automatically when opening the main menu instead of the plain banner.
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      🚀  REMNAWAVE-SCRIPTS                 v1.4.5
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  ─── [ SYSTEM ] ───────────────────────────────────────────
-  OS / Kernel    : Ubuntu 22.04.3 LTS (5.15.0)
-  Uptime         : 3 days, 14 hours (Sessions: 2)
-  Virt           : KVM (Bare metal)
-  IP Address     : 1.2.3.4 (ping 8.8.8.8: 12.5 ms ⚡)
-
-  ─── [ HARDWARE ] ─────────────────────────────────────────
-  CPU            : AMD EPYC 7302P [4 vCPU]
-  CPU Load       : [▓▓▓░░░░░░░░░░░░░░░░░] 15%
-  Memory (RAM)   : [▓▓▓▓▓▓▓░░░░░░░░░░░░░] 35% (1.4G / 3.8G)
-  Disk (SSD)     : [▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░] 55% (14G / 25G)
-
-  ─── [ STATUS ] ───────────────────────────────────────────
-  rw-scripts     : v1.4.5
-  Language       : English
-```
-
----
-
-#### 🔧 Third-party Scripts (Group 6) ⭐ v1.4.1+
-
-**Third-party Scripts Submenu:**
-
-```
-╔════════════════════════════════════════════╗
-║         🔧 Third-party Scripts            ║
-╚════════════════════════════════════════════╝
-
-1) 🌐 Remnawave (EGames)
-2) 🤖 Reshala
-3) 🧪 Multitest
-0) ⬅️  Back
-```
-
-**What's included:**
-- **🌐 Remnawave (EGames):** Automatic installation of the reverse-proxy solution by EGamesAPI. The script downloads the installer, runs it, and correctly updates environment variables.
-- **🤖 Reshala:** Installation of the popular Reshala script by DonMatteoVPN. Includes secure download to a temporary file and auto-launch after installation.
-- **🧪 Multitest:** One-command installation of the Multitest tool by saveksme — the script is placed directly into `/usr/local/bin/multitest` and is immediately ready to use.
-
-> **⚠️ Important:** After installing third-party scripts, you may need to restart your terminal or run `source ~/.bashrc` to activate new commands. The script will automatically suggest this.
-
----
-
-#### 📦 System Package Update (Group 4 → Item 2)
-
-**Maintenance Submenu:**
-
-```
-╔════════════════════════════════════════════╗
-║         ⚙️  Maintenance                   ║
-╚════════════════════════════════════════════╝
-
-1) 🔄 Check Updates
-2) 📦 Update System Packages
-3) 🗑️  Uninstall rw-scripts
-0) ⬅️  Back
-```
-
-**Note:** The package update function is only available for Debian/Ubuntu-based systems.
+After installing them you may need a new terminal or `source ~/.bashrc`.
 
 ---
 
 ## ⌨️ Commands without the menu
 
-For cron, CI and bug reports:
+For cron, monitoring, CI and bug reports:
 
 ```bash
-rw-scripts clean              # full system cleanup, no prompts
-rw-scripts doctor [--online]  # diagnostics: dependencies, privileges, modules, dictionary, repo reachability
-rw-scripts version            # print version
-rw-scripts rollback [--yes]   # go back to the version before the last update
-rw-scripts status             # service state: ssh, ufw, docker, hysteria2, warp, fail2ban
-rw-scripts ports              # open ports; ports open 443/tcp | ports close 443/tcp
+rw-scripts help               # list of commands
+rw-scripts status             # state of installed services
+rw-scripts ports              # open ports
+rw-scripts ports open 443/tcp # open a port; without /tcp or /udp, both protocols
+rw-scripts ports close 443/tcp
 rw-scripts warp status        # or connect / disconnect
 rw-scripts hy2 restart        # or status / start / stop / enable / logs / version
+rw-scripts clean              # full cleanup; in a terminal it asks only about Docker, from cron Docker is skipped
+rw-scripts doctor [--online]  # check dependencies, privileges, modules and repository access
+rw-scripts rollback [--yes]   # go back to the version before the last update
 rw-scripts config set lang en # settings: lang (ru|en), color (auto|always|never)
 rw-scripts log 20             # last lines of the action log
-rw-scripts completion bash    # shell completion (bash or zsh); the installer sets up bash itself
+rw-scripts completion bash    # shell completion (bash or zsh); the installer sets up bash
+rw-scripts version            # print version
 ```
 
-Third-party scripts (Hysteria2, eGames, Reshala, Zapret, multitest) are first downloaded to a temporary file: the script shows its size and SHA256 and asks for confirmation (`v` to view the content). A copy is kept in `~/.local/share/remnawave/third-party/`.
-
----
-
-## 🌍 Language Support
-
-- Russian (Russian)
-- English (English)
-
-Language is selected during the first installation and saved in `~/.config/remnawave/lang.conf`
-
----
-
-## 🛠️ Repository Structure
-
-- **lib/** — modules sourced by scripts.sh, one file per topic:
-  `pkg.sh` (package managers), `firewall.sh` (ports), `hy2.sh` (Hysteria2), `warp.sh` (WARP),
-  `cleaner.sh`, `memory.sh`, `scanner.sh`, `maintenance.sh`, `server.sh`, `ids.sh`, `system.sh`,
-  `thirdparty.sh`, `menus.sh` (main menu and dashboard), `doctor.sh` (diagnostics)
-- **lang/** — UI dictionaries (`ru.sh`, `en.sh`)
-- **scripts.sh** — core: settings, language, module loading, entry point
-- **tests/**, **tools/**, **.githooks/** — tests (`bash tests/run.sh`, bats in `tests/bats`) and git hooks
-- **install.sh** — installer (copies to ~/.local/bin/rw-scripts)
-- **uninstall.sh** — uninstaller
-- **countries.csv** — country database (RU/EN + ISO)
-- **version.txt** — current version
-- **README.md** — project description (RU, main document)
-- **README-ENG.md** — translation of README.md (EN)
-
----
-
-## 📦 System Requirements
-
-- **OS**: Linux, macOS, BSD, Windows WSL
-- **Dependencies** (installed automatically if needed):
-  - `bash` — main interpreter
-  - `curl` — for downloading updates
-  - `xxd` — for ID generation (auto-install)
-  - `neofetch` — for system info (optional)
-  - `htop` — for process monitor (optional)
-  - `jq` — for JSON handling in port management (auto-install)
-  - `ufw` / `firewalld` / `iptables` — firewall for port management
-  - `apt` / `apt-get` — for system package updates (Debian/Ubuntu)
-
----
-
-## 📝 License
-
-MIT License
-
----
-
-## 👨‍💻 Author
-
-Created by **detective-noir-dev**
-
-GitHub: [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scripts)
-
----
-
-## ⭐ Support the Project
-
-If you like the project, give it a star on GitHub! 🌟
+Colors are turned off by the `NO_COLOR` variable, and automatically when output is not a terminal.
 
 ---
 
 ## 🔐 Security
 
-**Port Management:**
-- ⚠️ Requires sudo privileges for firewall operations
-- 🛡️ All changes are applied directly to the system firewall
-- 💾 Port data is stored locally in your home directory
-- 🔒 Recommended to open only necessary ports
+- **Privileges:** changing the system requires root or `sudo`.
+- **Third-party scripts** (zapret, Hysteria2, eGames, Reshala, Multitest) are first downloaded to a temporary file. The script shows the size and SHA256 and asks for confirmation (`v` to view the content). A copy is kept in `~/.local/share/remnawave/third-party/`. This is someone else's code: review it before running.
+- **Ports:** open only what you need — changes apply to the system firewall immediately.
+- **Package upgrade** (`4 → 2`) asks no questions during installation: config files you have modified are kept.
 
-**System Package Updates:**
-- ⚠️ Requires sudo privileges for package installation
-- 📦 Performs a full system update
-- ⏱️ Process may take significant time
-- 🔄 Recommended to perform regularly for system security
+---
 
-**Third-party Scripts:**
-- ⚠️ Scripts are downloaded from external repositories (EGamesAPI, DonMatteoVPN)
-- 🛡️ It is recommended to review the source code of third-party scripts before running
-- 🔒 Use at your own risk
+## 📦 System Requirements
+
+- **OS:** Linux. The main target is Ubuntu and Debian with systemd. Memory management, package upgrade and WARP expect an `apt`-based system; other features may be incomplete on other systems.
+- **Required:** `bash`, `curl`.
+- **Installed when needed:** `jq` (ports), `xxd` (ID generation), `htop` and `neofetch` (monitor).
+- **For port management:** `ufw`, `firewalld` or `iptables`.
+
+CI tests the script on Ubuntu 22.04 and 24.04, Debian 12 and Alpine 3.20 (the Alpine job does not block the build).
+
+---
+
+## ⚙️ Uninstallation
+
+From the menu: item `4 → 7`. Or directly:
+
+```bash
+~/.local/share/remnawave/uninstall.sh
+```
+
+This removes the script, its data and settings. Anything you installed or changed on the server through it (Hysteria2, WARP, SSH and firewall settings) stays.
+
+---
+
+## 🌍 Language
+
+Russian and English. Chosen during the first installation and stored in `~/.config/remnawave/config`. To change it: `rw-scripts config set lang en` (or `ru`).
+
+---
+
+## 🛠️ Repository Structure
+
+- **scripts.sh** — core: settings, language, module loading, entry point
+- **lib/** — modules by topic: `menus.sh` (menus and dashboard), `server.sh` (SSH, zapret), `firewall.sh`, `hy2.sh`, `warp.sh`, `dante.sh`, `cleaner.sh`, `memory.sh`, `scanner.sh`, `maintenance.sh`, `thirdparty.sh`, `system.sh`, `ids.sh`, `cli.sh` (commands without the menu), `doctor.sh`, `common.sh`, `pkg.sh`
+- **lang/** — UI dictionaries (`ru.sh`, `en.sh`)
+- **docs/graph/** — function map for Obsidian (in Russian)
+- **tests/**, **tools/**, **.githooks/** — tests (`bash tests/run.sh`, bats in `tests/bats`), helper scripts and git hooks
+- **install.sh**, **uninstall.sh** — installer and uninstaller
+- **countries.csv** — country database (RU/EN and ISO code)
+- **version.txt**, **CHANGELOG.md** — version and change history
+- **SHA256SUMS** — checksums for updating from older versions
+- **README.md** — main document, **README-ENG.md** — its translation
+
+---
+
+## 👨‍💻 Author
+
+Created by **detective-noir-dev** — [Remnawave-Scripts](https://github.com/detective-noir-dev/Remnawave-Scripts)
+
+If you find the project useful, give it a star on GitHub! 🌟
 
 ---
 
 **Version:** 1.12.9
 **Release Date:** November 2026
 **License:** MIT
-```
