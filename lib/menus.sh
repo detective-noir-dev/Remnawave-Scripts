@@ -23,7 +23,7 @@ submenu_server() {
         echo -e "  ${YELLOW}7)${NC} $(tr_text SUB_WARP)"
         echo -e "  ${YELLOW}8)${NC} $(tr_text SUB_DANTE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
 
         case $choice in
             1) show_banner; change_ssh_port ;;
@@ -57,7 +57,7 @@ submenu_maintenance() {
         echo -e "  ${YELLOW}6)${NC} $(tr_text SUB_ROLLBACK)"
         echo -e "  ${RED}7)${NC} $(tr_text SUB_DELETE)"
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
 
         case $choice in
             1) show_banner; check_update ;;
@@ -223,7 +223,7 @@ show_main_menu() {
         echo -e "  ${DIM}[0] $(tr_text MENU_EXIT)${NC}"
         echo -e "  ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-        read -rp "  > " choice
+        read -rp "  > " choice || exit 0
 
         case $choice in
             1) submenu_id_flags ;;

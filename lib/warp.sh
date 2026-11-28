@@ -23,13 +23,15 @@ _warp_prepare_repo() {
     apt-get update -y \
         && apt-get install -y curl gnupg2 apt-transport-https lsb-release ca-certificates \
         && curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg \
-        && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
             > /etc/apt/sources.list.d/cloudflare-client.list \
         && apt-get update -y
 }
 
 _warp_configure() {
-    warp-cli --accept-tos registration new \
+    # повторная установка: «registration new» при существующей регистрации завершается ошибкой
+    { warp-cli --accept-tos registration show >/dev/null 2>&1 \
+        || warp-cli --accept-tos registration new; } \
         && warp-cli --accept-tos proxy port "$1" \
         && warp-cli --accept-tos mode proxy
 }
@@ -190,7 +192,7 @@ warp_connect() {
 uninstall_warp() {
     _warp_installed || return 1
     read -rp "$(tr_text WARP_UNINSTALL_CONFIRM) " ans
-    if [[ ! "$ans" =~ ^[Yy]$ ]]; then
+    if [[ ! "$ans" =~ ^[YyДд]$ ]]; then
         echo -e "${YELLOW}$(tr_text WARP_CANCELLED)${NC}"
         sleep 1
         return 0
@@ -224,7 +226,7 @@ submenu_warp() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
 
         case $choice in
             1) show_banner; install_warp ;;

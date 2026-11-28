@@ -26,10 +26,12 @@ tags: [rw-menu]
 | `_dante_conf_iface` | интерфейс из `DANTE_CONF` | `#rw-helper` |
 | `_dante_ips` | список IP из `client pass` блоков | `#rw-helper` |
 | `_dante_ask_ips` | интерактивный ввод IP → массив `DANTE_IPS` | `#rw-helper` |
-| `_dante_fw add\|del IP PORT` | правило фаервола (ufw/firewalld/iptables), возвращает ошибку команды | `#rw-helper` |
+| `_dante_fw add\|del IP PORT` | правило фаервола (ufw/firewalld/iptables), возвращает ошибку команды; в iptables повторы и отсутствующие правила не ошибка, сохраняет через `netfilter-persistent` | `#rw-helper` |
 | `_dante_write_conf PORT IFACE IP…` | генерирует конфиг, проверяет `danted -Vf`, сохраняет `.bak` | `#rw-helper` |
 | `_dante_bind_state` | сравнивает listen-адрес с текущим IP интерфейса | `#rw-helper` |
 | `_dante_print_summary` | итоговый блок: порт, IP, команда проверки | `#rw-helper` |
+
+При установке и смене IP старые правила снимаются только после того, как новый конфиг прошёл проверку.
 
 ## Использует (общие хелперы)
 `show_banner`, `print_submenu_header`, `run_step`, `pkg_install_any`, `pkg_remove_any`,

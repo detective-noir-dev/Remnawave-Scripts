@@ -2,12 +2,12 @@
 aliases: ["Hysteria2 для Remnanode (Xray inbound)"]
 tags: [rw-func]
 тип: действие
-строка: 376
+строка: 378
 файл: lib/hy2.sh
 ---
 # Hysteria2 для Remnanode (Xray inbound)
 
-`setup_hysteria2_remnanode` · `lib/hy2.sh` L376
+`setup_hysteria2_remnanode` · `lib/hy2.sh` L378
 
 Подготавливает ноду Remnawave к Xray-инбаунду Hysteria2 с TLS-сертификатом Let's Encrypt. Нужен root и существующий `/opt/remnanode/docker-compose.yml`.
 
@@ -15,7 +15,7 @@ tags: [rw-func]
 1. проверка root и compose; если уже настроено — спрашивает про перенастройку
 2. ввод домена, проверка наличия `/etc/letsencrypt/live/<домен>/{fullchain,privkey}.pem`
 3. ввод UDP-порта (по умолчанию 443)
-4. добавляет в `volumes` compose недостающие монтирования: `/dev/shm`, `cert.pem`, `cert.key` (резервная копия `.bak`; если правка не удалась — стоп и список монтирований для ручного добавления)
+4. при смене домена переписывает пути существующих монтирований сертификата (копия `.bak.domain`); добавляет в `volumes` compose недостающие монтирования: `/dev/shm`, `cert.pem`, `cert.key` (резервная копия `.bak`; если у `remnanode` нет блока `volumes` или правка не удалась — стоп и список монтирований для ручного добавления)
 5. создаёт deploy-хук `restart-remnanode.sh` для перезапуска ноды при продлении сертификата
 6. `_hy2r_open_udp` — открыть UDP-порт
 7. по желанию `docker compose down && up -d`

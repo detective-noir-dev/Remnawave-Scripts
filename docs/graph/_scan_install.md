@@ -15,7 +15,7 @@ tags: [rw-helper]
 1. создаёт `/opt/RealityTLScanner/reports` (без прав — через `sudo` и `chown` на текущего пользователя)
 2. ставит `git`, `curl`, `wget` (`_pkg_install`)
 3. определяет последнюю версию Go (`go.dev/VERSION`, запасная go1.22.6) и архитектуру (amd64/arm64)
-4. качает и распаковывает Go в `/usr/local/go`
+4. качает Go, проверяет архив и только потом заменяет `/usr/local/go`
 5. `git clone xtls/RealiTLScanner`, `go build` → `/opt/RealityTLScanner/RealiTLScanner`
 6. качает `Country.mmdb` (Loyalsoldier/geoip)
 

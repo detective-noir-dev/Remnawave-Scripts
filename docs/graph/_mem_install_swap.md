@@ -9,7 +9,7 @@ tags: [rw-helper]
 
 `_mem_install_swap` · `lib/memory.sh` L132
 
-`_mem_install_swap <ГБ>` — останавливает ZRAM и удаляет `zram-tools`, пересоздаёт `/swapfile` нужного размера (`fallocate`, запасной вариант `dd`), `mkswap`, `swapon`, запись в fstab.
+`_mem_install_swap <ГБ>` (меню принимает только числа от 1) — останавливает ZRAM и удаляет `zram-tools`, пересоздаёт `/swapfile` нужного размера (`fallocate`, запасной вариант `dd`), `mkswap`, `swapon`, запись в fstab.
 
 ## Внешние команды и файлы
 `/swapfile`

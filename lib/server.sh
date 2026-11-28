@@ -96,7 +96,7 @@ change_ssh_port() {
             echo -e "$(tr_text L_SERVER_003 "$new_port")"
             ;;
         iptables)
-            $SUDO iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null || firewall_ok=0
+            $SUDO iptables -I INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null || firewall_ok=0
             echo -e "$(tr_text L_SERVER_004 "$new_port")"
             ;;
     esac
@@ -110,7 +110,7 @@ change_ssh_port() {
 
     # Перезапускаем SSH
     echo -e "${BLUE}$(tr_text SSH_RESTART)${NC}"
-    if $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null; then
+    if _ssh_restart_service && _ssh_port_listening "$new_port"; then
         $SUDO rm -f "$sshd_backup"
         echo
         echo -e "${GREEN}✅ $(tr_text SSH_CHANGED) ${CYAN}${new_port}${NC}"
@@ -119,7 +119,7 @@ change_ssh_port() {
         echo -e "  ${YELLOW}ssh -p ${new_port} $(whoami)@<your_server_ip>${NC}"
     else
         $SUDO cp -a "$sshd_backup" "$sshd_config" 2>/dev/null
-        $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null
+        _ssh_restart_service
         $SUDO rm -f "$sshd_backup"
         echo -e "${RED}❌ $(tr_text SSH_FAIL)${NC}"
     fi
@@ -152,7 +152,22 @@ _ssh_authorized_key_count() {
 }
 
 _ssh_restart_service() {
+    # socket activation (Ubuntu 22.10+): порт слушает ssh.socket, перезапуска одной службы мало
+    if $SUDO systemctl is-active --quiet ssh.socket 2>/dev/null; then
+        $SUDO systemctl daemon-reload && $SUDO systemctl restart ssh.socket || return 1
+    fi
     $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null
+}
+
+# _ssh_port_listening ПОРТ — ждёт до 5 секунд, пока порт начнут слушать; без ss проверить нечем (код 0)
+_ssh_port_listening() {
+    local i
+    command -v ss >/dev/null 2>&1 || return 0
+    for i in 1 2 3 4 5; do
+        ss -tln "sport = :$1" 2>/dev/null | grep -q LISTEN && return 0
+        sleep 1
+    done
+    return 1
 }
 
 show_ssh_config() {
@@ -296,7 +311,10 @@ add_ssh_ed25519_key() {
             read -rp "$(tr_text PRESS_ENTER)"
             return 1
         fi
-    elif printf '%s\n' "$public_key" | $SUDO tee -a "$auth_keys" >/dev/null \
+    # без перевода строки в конце файла новый ключ склеился бы с последним и испортил оба
+    elif { ! $SUDO test -s "$auth_keys" || [ -z "$($SUDO tail -c 1 "$auth_keys")" ] \
+            || echo | $SUDO tee -a "$auth_keys" >/dev/null; } \
+        && printf '%s\n' "$public_key" | $SUDO tee -a "$auth_keys" >/dev/null \
         && $SUDO chown "$target_user":"$(id -gn "$target_user")" "$auth_keys" \
         && $SUDO chmod 600 "$auth_keys"; then
         echo -e "${GREEN}✅ $(tr_text SSH_KEY_ADDED)${NC}"
@@ -373,8 +391,8 @@ disable_ssh_password_auth() {
         fi
         config_backups+=("$config_backup")
 
-        config_tmp="${TMPDIR:-/tmp}/sshd_config.$$.$RANDOM"
-        if ! $SUDO awk -v cleanup_legacy="$([ "$config_file" = "$sshd_config" ] && echo "$legacy_header")" '
+        # «! { ...; }»: без скобок отрицание относится только к awk, и tee после успешного awk не выполняется
+        if ! { config_tmp=$(mktemp) && $SUDO awk -v cleanup_legacy="$([ "$config_file" = "$sshd_config" ] && echo "$legacy_header")" '
             function option(line, name, rest, indent) {
                 rest = line
                 match(rest, /^[[:space:]]*/)
@@ -403,7 +421,7 @@ disable_ssh_password_auth() {
                 }
             }
         ' "$config_file" > "$config_tmp" \
-            && $SUDO tee "$config_file" < "$config_tmp" >/dev/null; then
+            && $SUDO tee "$config_file" < "$config_tmp" >/dev/null; }; then
             rm -f "$config_tmp"
             for config_backup in "${config_backups[@]}"; do
                 $SUDO cp -a "$config_backup" "${config_backup%.bak.$$}"

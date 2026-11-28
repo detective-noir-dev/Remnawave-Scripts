@@ -179,16 +179,15 @@ manage_hysteria2_service() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
 
         case $choice in
             1)
                 show_banner
                 echo -e "$(tr_text L_HY2_016)"
                 echo
-                $SUDO systemctl enable --now hysteria-server.service
-                echo
-                echo -e "$(tr_text L_HY2_017)"
+                $SUDO systemctl enable --now hysteria-server.service \
+                    && { echo; echo -e "$(tr_text L_HY2_017)"; }
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
@@ -196,9 +195,8 @@ manage_hysteria2_service() {
                 show_banner
                 echo -e "$(tr_text L_HY2_018)"
                 echo
-                $SUDO systemctl restart hysteria-server.service
-                echo
-                echo -e "$(tr_text L_HY2_019)"
+                $SUDO systemctl restart hysteria-server.service \
+                    && { echo; echo -e "$(tr_text L_HY2_019)"; }
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
@@ -214,9 +212,8 @@ manage_hysteria2_service() {
                 show_banner
                 echo -e "$(tr_text L_HY2_021)"
                 echo
-                $SUDO systemctl stop hysteria-server.service
-                echo
-                echo -e "$(tr_text L_HY2_022)"
+                $SUDO systemctl stop hysteria-server.service \
+                    && { echo; echo -e "$(tr_text L_HY2_022)"; }
                 echo
                 read -rp "$(tr_text PRESS_ENTER)"
                 ;;
@@ -370,7 +367,7 @@ _hy2r_open_udp() {
     case $fw in
         ufw)       ufw allow "$port"/udp >/dev/null 2>&1 ;;
         firewalld) firewall-cmd --permanent --add-port="$port"/udp >/dev/null 2>&1 && firewall-cmd --reload >/dev/null 2>&1 ;;
-        iptables)  iptables -C INPUT -p udp --dport "$port" -j ACCEPT 2>/dev/null || iptables -A INPUT -p udp --dport "$port" -j ACCEPT
+        iptables)  iptables -C INPUT -p udp --dport "$port" -j ACCEPT 2>/dev/null || iptables -I INPUT -p udp --dport "$port" -j ACCEPT
                    command -v netfilter-persistent >/dev/null 2>&1 && netfilter-persistent save >/dev/null 2>&1 ;;
         *)         return 1 ;;
     esac
@@ -441,6 +438,16 @@ setup_hysteria2_remnanode() {
         echo -e "${RED}$(tr_text WARP_PORT_INVALID)${NC}"
     done
 
+    # --- смена домена: переписываем уже существующие монтирования сертификата ---
+    local pair src dst
+    for pair in fullchain.pem:cert.pem privkey.pem:cert.key; do
+        src=${pair%:*}; dst=${pair#*:}
+        if grep -E "/etc/letsencrypt/live/[^/]+/$src:$ssl_dir/$dst" "$compose" | grep -qvF "$live/$src:"; then
+            cp "$compose" "$compose.bak.domain"
+            sed -i -E "s|/etc/letsencrypt/live/[^/]+/$src:($ssl_dir/$dst)|$live/$src:\1|" "$compose"
+        fi
+    done
+
     # --- docker-compose.yml: добавляем недостающие монтирования ---
     local want=()
     grep -q '/dev/shm:/dev/shm' "$compose" || want+=("/dev/shm:/dev/shm:rw")
@@ -466,7 +473,8 @@ setup_hysteria2_remnanode() {
                 n = split(items, a, "\n")
                 for (i = 1; i <= n; i++) print ind "- " a[i]
                 done = 1
-            }' "$compose" > "$tmp" && [ -s "$tmp" ] && cat "$tmp" > "$compose"
+            }
+            END { exit !done }' "$compose" > "$tmp" && [ -s "$tmp" ] && cat "$tmp" > "$compose"
         local awk_rc=$?
         rm -f "$tmp"
         if [ $awk_rc -ne 0 ]; then
@@ -532,7 +540,7 @@ submenu_hysteria2() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
 
         case $choice in
             1) show_banner; install_hysteria2 ;;

@@ -19,7 +19,7 @@ check_update() {
     
     echo -e "${YELLOW}$(tr_text UPDATE_AVAIL)${NC}"
     read -r ans
-    [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; return 0; }
+    [[ ! "$ans" =~ ^[YyДд]$ ]] && { echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"; read -rp "$(tr_text PRESS_ENTER)"; return 0; }
     
     # сначала скачиваем файлы в staging; текущая установка заменяется после успешной загрузки
     local stage="$DATA_DIR/.update.$$" name rc=0
@@ -130,9 +130,11 @@ delete_self() {
         "$DATA_DIR/uninstall.sh"
         # uninstall.sh сам спрашивает подтверждение: выходим, только если скрипт реально удалён
         [ -e "$SCRIPT_PATH" ] || exit 0
+        read -rp "$(tr_text PRESS_ENTER)"
         return 0
     fi
     echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
+    read -rp "$(tr_text PRESS_ENTER)"
 }
 
 # ====== ОБНОВЛЕНИЕ СИСТЕМНЫХ ПАКЕТОВ ======
@@ -188,15 +190,11 @@ apt_update_upgrade() {
     loading_bar & 
     spinner_pid=$!
     
-    # Выполняем apt upgrade в фоне
-    if command -v apt >/dev/null 2>&1; then
-        $SUDO apt upgrade -y &>/dev/null
-        local upgrade_status=$?
-    else
-        $SUDO apt-get upgrade -y &>/dev/null
-        local upgrade_status=$?
-    fi
-    
+    # вывод скрыт, поэтому вопросы debconf и dpkg о конфигах отключены: иначе обновление ждёт невидимого ответа
+    $SUDO env DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --with-new-pkgs \
+        -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold </dev/null &>/dev/null
+    local upgrade_status=$?
+
     # Останавливаем крутилку
     kill $spinner_pid >/dev/null 2>&1
     wait $spinner_pid 2>/dev/null

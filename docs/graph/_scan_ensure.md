@@ -2,12 +2,12 @@
 aliases: ["Проверка наличия сканера"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 59
+строка: 63
 файл: lib/scanner.sh
 ---
 # Проверка наличия сканера
 
-`_scan_ensure` · `lib/scanner.sh` L59
+`_scan_ensure` · `lib/scanner.sh` L63
 
 Если бинарь сканера не найден — предлагает установить (y/n) через `_scan_install`. Добавляет Go в `PATH`. Возвращает 0/1. Вызывается в начале `_scan_single` и `_scan_mass`.
 

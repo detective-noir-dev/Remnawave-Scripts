@@ -103,7 +103,7 @@ submenu_monitor() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         
         case $choice in
             1) show_banner; show_memory; echo; read -rp "$(tr_text PRESS_ENTER)" ;;

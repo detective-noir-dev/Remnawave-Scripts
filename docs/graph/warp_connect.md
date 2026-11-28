@@ -2,12 +2,12 @@
 aliases: ["Включить WARP"]
 tags: [rw-func]
 тип: действие
-строка: 176
+строка: 178
 файл: lib/warp.sh
 ---
 # Включить WARP
 
-`warp_connect` · `lib/warp.sh` L176
+`warp_connect` · `lib/warp.sh` L178
 
 `warp-cli connect`, если он ещё не подключён.
 

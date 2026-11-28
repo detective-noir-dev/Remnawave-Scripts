@@ -2,12 +2,12 @@
 aliases: ["Синхронизация ports.json с файрволом"]
 tags: [rw-func]
 тип: действие
-строка: 128
+строка: 121
 файл: lib/firewall.sh
 ---
 # Синхронизация ports.json с файрволом
 
-`sync_ports_with_firewall` · `lib/firewall.sh` L128
+`sync_ports_with_firewall` · `lib/firewall.sh` L121
 
 Порты, открытые в файрволе, но отсутствующие в `ports.json`, добавляются с описанием «[System] Opened before script» и `source: system`. Так в списке видно и порты, открытые не через скрипт.
 

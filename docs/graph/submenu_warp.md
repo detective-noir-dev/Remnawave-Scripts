@@ -2,12 +2,12 @@
 aliases: ["Cloudflare WARP (подменю)"]
 tags: [rw-menu]
 тип: меню
-строка: 212
+строка: 216
 файл: lib/warp.sh
 ---
 # Cloudflare WARP (подменю)
 
-`submenu_warp` · `lib/warp.sh` L212
+`submenu_warp` · `lib/warp.sh` L216
 
 Подменю: 1 установить, 2 статус, 3 отключить, 4 включить, 5 удалить. 0 — назад.
 

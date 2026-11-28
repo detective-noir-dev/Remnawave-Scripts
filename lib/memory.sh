@@ -178,18 +178,18 @@ submenu_memory() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         case $choice in
             1) show_banner; _mem_install_hybrid; read -rp "$(tr_text PRESS_ENTER)" ;;
             2) show_banner
                echo -e "${YELLOW}$(tr_text MEM_ZRAM_PERCENT)${NC}"
                read -rp "> " pct; pct=${pct:-60}
-               [[ "$pct" =~ ^[0-9]+$ ]] || { echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; sleep 1; continue; }
+               [[ "$pct" =~ ^[1-9][0-9]*$ ]] || { echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; sleep 1; continue; }
                _mem_install_zram "$pct"; read -rp "$(tr_text PRESS_ENTER)" ;;
             3) show_banner
                echo -e "${YELLOW}$(tr_text MEM_SWAP_SIZE)${NC}"
                read -rp "> " sz; sz=${sz:-2}
-               [[ "$sz" =~ ^[0-9]+$ ]] || { echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; sleep 1; continue; }
+               [[ "$sz" =~ ^[1-9][0-9]*$ ]] || { echo -e "${RED}$(tr_text ERR_NUMBER)${NC}"; sleep 1; continue; }
                _mem_install_swap "$sz"; read -rp "$(tr_text PRESS_ENTER)" ;;
             4) show_banner; _mem_remove_all; read -rp "$(tr_text PRESS_ENTER)" ;;
             5) _mem_show_status ;;

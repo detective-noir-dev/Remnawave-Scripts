@@ -9,7 +9,7 @@ tags: [rw-helper]
 
 `_warp_configure` · `lib/warp.sh` L31
 
-`warp-cli registration new`, `proxy port $1`, `mode proxy`.
+`warp-cli registration new` (только если регистрации ещё нет), `proxy port $1`, `mode proxy`.
 
 ## Внешние команды и файлы
 `warp-cli`

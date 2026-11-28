@@ -87,12 +87,18 @@ _dante_fw() {
             return $?
             ;;
         iptables)
-            if [ "$act" = add ]; then
-                $SUDO iptables -A INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null
-            else
-                $SUDO iptables -D INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null
+            # без netfilter-persistent правила пропадают после перезагрузки: удаление отсутствующего не ошибка
+            local present=0
+            $SUDO iptables -C INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null && present=1
+            if [ "$act" = add ] && [ "$present" -eq 0 ]; then
+                $SUDO iptables -I INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null || return 1
+            elif [ "$act" = del ] && [ "$present" -eq 1 ]; then
+                $SUDO iptables -D INPUT -p tcp -s "$ip" --dport "$port" -j ACCEPT 2>/dev/null || return 1
             fi
-            return $?
+            if command -v netfilter-persistent >/dev/null 2>&1; then
+                $SUDO netfilter-persistent save >/dev/null 2>&1 || return 1
+            fi
+            return 0
             ;;
         *) return 0 ;;
     esac
@@ -173,19 +179,22 @@ _dante_install() {
         echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"; return 0; }
 
+    # старые порт и IP читаем до перезаписи конфига
+    local old_port old_ip old_ips
+    old_port=$(_dante_port); old_ips=$(_dante_ips)
+
+    # если новый конфиг не прошёл проверку, правила работающего прокси не трогаем
+    _dante_write_conf "$port" "$iface" "${DANTE_IPS[@]}" || {
+        read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+
     # снимаем старые правила фаервола при повторной настройке
-    local old_port old_ip
-    old_port=$(_dante_port)
     if [ -n "$old_port" ]; then
-        for old_ip in $(_dante_ips); do
+        for old_ip in $old_ips; do
             _dante_fw del "$old_ip" "$old_port" || {
                 echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
                 read -rp "$(tr_text PRESS_ENTER)"; return 1; }
         done
     fi
-
-    _dante_write_conf "$port" "$iface" "${DANTE_IPS[@]}" || {
-        read -rp "$(tr_text PRESS_ENTER)"; return 1; }
 
     local ip
     for ip in "${DANTE_IPS[@]}"; do
@@ -219,13 +228,15 @@ _dante_change_ips() {
         echo -e "${YELLOW}$(tr_text CANCEL_DEL)${NC}"
         read -rp "$(tr_text PRESS_ENTER)"; return 0; }
 
-    for old in $(_dante_ips); do
+    local old_ips
+    old_ips=$(_dante_ips)
+    _dante_write_conf "$port" "$iface" "${DANTE_IPS[@]}" || {
+        read -rp "$(tr_text PRESS_ENTER)"; return 1; }
+    for old in $old_ips; do
         _dante_fw del "$old" "$port" || {
             echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
             read -rp "$(tr_text PRESS_ENTER)"; return 1; }
     done
-    _dante_write_conf "$port" "$iface" "${DANTE_IPS[@]}" || {
-        read -rp "$(tr_text PRESS_ENTER)"; return 1; }
     for old in "${DANTE_IPS[@]}"; do
         _dante_fw add "$old" "$port" || {
             echo -e "${RED}❌ $(tr_text L_DANTE_FW_FAIL)${NC}"
@@ -342,7 +353,7 @@ submenu_dante() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         case $choice in
             1) _dante_install ;;
             2) _dante_change_ips ;;

@@ -177,7 +177,7 @@ _disk_analyzer() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         case $choice in
             1) _disk_inspector "/var/log"        "truncate" ;;
             2) _disk_inspector "/var/lib/docker" "block"    ;;
@@ -207,7 +207,7 @@ submenu_cleaner() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         case $choice in
             1) _clean_run "$(tr_text L_CLEANER_027)"  _do_clean_all    ;;
             2) _clean_run "APT"            _do_clean_apt    ;;

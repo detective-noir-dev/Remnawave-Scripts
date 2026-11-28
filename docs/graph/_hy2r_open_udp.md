@@ -2,12 +2,12 @@
 aliases: ["Открыть UDP-порт для Hysteria2"]
 tags: [rw-helper]
 тип: внутренняя функция
-строка: 362
+строка: 364
 файл: lib/hy2.sh
 ---
 # Открыть UDP-порт для Hysteria2
 
-`_hy2r_open_udp` · `lib/hy2.sh` L362
+`_hy2r_open_udp` · `lib/hy2.sh` L364
 
 Открывает UDP-порт в ufw/firewalld/iptables и записывает его в `ports.json` с описанием «Hysteria2 (Remnanode)». Возвращает 1, если файрвол не найден.
 

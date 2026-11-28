@@ -2,12 +2,12 @@
 aliases: ["Reality TLS Scanner (подменю)"]
 tags: [rw-menu]
 тип: меню
-строка: 286
+строка: 290
 файл: lib/scanner.sh
 ---
 # Reality TLS Scanner (подменю)
 
-`submenu_scanner` · `lib/scanner.sh` L286
+`submenu_scanner` · `lib/scanner.sh` L290
 
 Подменю подбора SNI-доменов для маскировки Reality/VLESS. Показывает, установлен ли сканер. Пункты: 1 один адрес, 2 массовое сканирование, 3 список целей, 4 отчёты, 5 установка. 0 — назад.
 

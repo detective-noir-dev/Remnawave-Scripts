@@ -14,5 +14,7 @@ tags: [rw-func]
 ## Внешние команды и файлы
 `getent`, `ssh-keygen`, `install`, `/home/<пользователь>/.ssh/authorized_keys`
 
+Если `authorized_keys` не заканчивается переводом строки, он добавляется перед новым ключом.
+
 ## Откуда вызывается
 - [[submenu_server]]

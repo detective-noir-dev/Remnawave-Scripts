@@ -112,7 +112,7 @@ submenu_thirdparty() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
 
         case $choice in
             1) show_banner; install_egames_remnawave ;;

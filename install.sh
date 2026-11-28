@@ -167,26 +167,13 @@ fi
 # === PATH CONFIG ===
 PATH_ADDED=0
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-    # Определяем какой shell используется
-    if [ -n "$BASH_VERSION" ]; then
-        SHELL_RC="$HOME/.bashrc"
-    elif [ -n "$ZSH_VERSION" ]; then
-        SHELL_RC="$HOME/.zshrc"
-    else
-        # Пробуем определить по переменной SHELL
-        case "$SHELL" in
-            */zsh)
-                SHELL_RC="$HOME/.zshrc"
-                ;;
-            */bash)
-                SHELL_RC="$HOME/.bashrc"
-                ;;
-            *)
-                SHELL_RC="$HOME/.profile"
-                ;;
-        esac
-    fi
-    
+    # файл настроек выбираем по оболочке пользователя: сам установщик всегда работает в bash
+    case "$SHELL" in
+        */zsh)  SHELL_RC="$HOME/.zshrc" ;;
+        */bash) SHELL_RC="$HOME/.bashrc" ;;
+        *)      SHELL_RC="$HOME/.profile" ;;
+    esac
+
     # Добавляем PATH в конфиг если его там нет
     if ! grep -Fxq "export PATH=\$PATH:$INSTALL_DIR" "$SHELL_RC" 2>/dev/null; then
         echo "export PATH=\$PATH:$INSTALL_DIR" >> "$SHELL_RC"

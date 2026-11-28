@@ -2,12 +2,12 @@
 aliases: ["Удалить WARP"]
 tags: [rw-func]
 тип: действие
-строка: 190
+строка: 192
 файл: lib/warp.sh
 ---
 # Удалить WARP
 
-`uninstall_warp` · `lib/warp.sh` L190
+`uninstall_warp` · `lib/warp.sh` L192
 
 После подтверждения: отключается, удаляет регистрацию и через `$SUDO` запускает `apt-get purge cloudflare-warp`, `autoremove`, удаляет файл репозитория и ключ. Успех показывается только при успешном завершении всех шагов.
 

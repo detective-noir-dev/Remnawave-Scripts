@@ -55,7 +55,7 @@ add_port_to_json() {
     
     local temp_file=$(mktemp)
     jq --arg p "$port" --arg pr "$protocol" --arg d "$description" --argjson t "$timestamp" \
-        '. += [{port: $p, protocol: $pr, description: $d, timestamp: $t}]' "$PORTS_FILE" > "$temp_file" \
+        'map(select(.port != $p or .protocol != $pr)) + [{port: $p, protocol: $pr, description: $d, timestamp: $t}]' "$PORTS_FILE" > "$temp_file" \
         && mv "$temp_file" "$PORTS_FILE" || { rm -f "$temp_file"; return 1; }
 }
 
@@ -86,19 +86,10 @@ get_firewall_ports() {
     
     case $firewall in
         ufw)
-            # Парсим вывод ufw status
-            ports_list=$($SUDO ufw status 2>/dev/null | grep -E "^[0-9]+/(tcp|udp)" | while read line; do
-                port=$(echo "$line" | grep -oE "^[0-9]+" | head -1)
-                proto=$(echo "$line" | grep -oE "(tcp|udp)" | head -1)
-                echo "$port|$proto"
-            done)
-            
-            # Также парсим порты в формате "443/tcp ALLOW"
-            ports_list+=$'\n'$($SUDO ufw status 2>/dev/null | grep -E "ALLOW" | grep -oE "[0-9]+/(tcp|udp)" | while read line; do
-                port=$(echo "$line" | cut -d'/' -f1)
-                proto=$(echo "$line" | cut -d'/' -f2)
-                echo "$port|$proto"
-            done)
+            # только разрешающие входящие правила: DENY, REJECT и ALLOW OUT открытыми портами не являются
+            ports_list=$($SUDO ufw status 2>/dev/null \
+                | awk '/ (ALLOW|LIMIT)( |$)/ && !/(ALLOW|LIMIT) (OUT|FWD)/ && match($0, /[0-9]+\/(tcp|udp)/) {
+                    s = substr($0, RSTART, RLENGTH); sub("/", "|", s); print s }')
             ;;
         firewalld)
             # Получаем порты из firewalld
@@ -113,9 +104,10 @@ get_firewall_ports() {
         iptables)
             # Парсим iptables для открытых портов
             ports_list=$($SUDO iptables -L INPUT -n 2>/dev/null | grep -E "ACCEPT.*dpt:" | while read line; do
-                proto=$(echo "$line" | awk '{print tolower($2)}')
+                # протокол берём из «tcp dpt:»: новые iptables печатают во второй колонке номер (6, 17)
+                proto=$(echo "$line" | grep -oE '(tcp|udp) dpt:' | cut -d' ' -f1)
                 port=$(echo "$line" | grep -oE "dpt:[0-9]+" | cut -d':' -f2)
-                if [ -n "$port" ]; then
+                if [ -n "$port" ] && [ -n "$proto" ]; then
                     echo "$port|$proto"
                 fi
             done)
@@ -370,7 +362,7 @@ port_management() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         
         case $choice in
             1) show_banner; open_port ;;
@@ -408,7 +400,8 @@ port_apply() {
             ufw:close)         $SUDO ufw delete allow "$port/$p" >/dev/null ;;
             firewalld:open)    $SUDO firewall-cmd --permanent --add-port="$port/$p" >/dev/null ;;
             firewalld:close)   $SUDO firewall-cmd --permanent --remove-port="$port/$p" >/dev/null ;;
-            iptables:open)     $SUDO iptables -A INPUT -p "$p" --dport "$port" -j ACCEPT ;;
+            iptables:open)     $SUDO iptables -C INPUT -p "$p" --dport "$port" -j ACCEPT 2>/dev/null \
+                                   || $SUDO iptables -I INPUT -p "$p" --dport "$port" -j ACCEPT ;;
             iptables:close)    $SUDO iptables -D INPUT -p "$p" --dport "$port" -j ACCEPT ;;
         esac || return 1
     done

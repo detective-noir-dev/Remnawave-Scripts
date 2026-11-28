@@ -24,10 +24,13 @@ _scan_install() {
         go_ver=$(curl -4 -fsSL --connect-timeout 20 'https://go.dev/VERSION?m=text' 2>/dev/null | head -1)
         [[ "$go_ver" == go1.* ]] || go_ver="go1.22.6"
         echo -e "$(tr_text L_SCANNER_003 "${go_ver}" "${go_arch}")"
-        curl -4 -sL --connect-timeout 120 \
+        curl -4 -fsSL --connect-timeout 120 \
             -o /tmp/go.tar.gz \
             "https://go.dev/dl/${go_ver}.linux-${go_arch}.tar.gz" || {
             echo -e "$(tr_text L_SCANNER_004)"; return 1; }
+        # сначала проверяем архив: битая загрузка не должна стереть рабочий Go
+        tar -tzf /tmp/go.tar.gz >/dev/null 2>&1 || {
+            rm -f /tmp/go.tar.gz; echo -e "$(tr_text L_SCANNER_004)"; return 1; }
         $SUDO rm -rf /usr/local/go
         $SUDO tar -C /usr/local -xzf /tmp/go.tar.gz
         rm /tmp/go.tar.gz
@@ -49,10 +52,11 @@ _scan_install() {
 
     if [ ! -f "$SCANNER_GEO" ]; then
         echo -e "$(tr_text L_SCANNER_009)"
-        curl -sL --connect-timeout 30 \
-            -o "$SCANNER_GEO" \
+        curl -fsSL --connect-timeout 30 \
+            -o "$SCANNER_GEO.part" \
             "https://github.com/Loyalsoldier/geoip/releases/latest/download/Country.mmdb" \
-            || echo -e "$(tr_text L_SCANNER_010)"
+            && mv "$SCANNER_GEO.part" "$SCANNER_GEO" \
+            || { rm -f "$SCANNER_GEO.part"; echo -e "$(tr_text L_SCANNER_010)"; }
     fi
 }
 
@@ -170,7 +174,7 @@ _scan_mass() {
     fi
     show_banner
     print_submenu_header "$(tr_text SCAN_MASS)"
-    local total; total=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null || echo 0)
+    local total; total=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null) || total=0
     echo -e "$(tr_text L_SCANNER_027 "$total")"
     echo
     read -rp "$(tr_text SCAN_PORT) " ports; ports=${ports:-443}
@@ -223,7 +227,7 @@ _scan_manage_list() {
         show_banner
         print_submenu_header "$(tr_text L_SCANNER_029)"
         touch "$SCANNER_LIST"
-        local cnt; cnt=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null || echo 0)
+        local cnt; cnt=$(grep -c '.' "$SCANNER_LIST" 2>/dev/null) || cnt=0
         echo -e "$(tr_text L_SCANNER_030 "$SCANNER_LIST" "${cnt}")"
         echo
         if [ "$cnt" -gt 0 ]; then
@@ -238,7 +242,7 @@ _scan_manage_list() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         case $choice in
             1) read -rp "$(tr_text L_SCANNER_035)" t
                [ -n "$t" ] && echo "$t" >> "$SCANNER_LIST" \
@@ -303,7 +307,7 @@ submenu_scanner() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         case $choice in
             1) _scan_single ;;
             2) _scan_mass ;;

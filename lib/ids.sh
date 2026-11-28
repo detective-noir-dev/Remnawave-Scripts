@@ -67,7 +67,7 @@ country_lookup() {
     fi
     matches=$(awk -F',' -v key="$key" '
     { ru=tolower($1); en=tolower($2); iso=$3;
-      if (ru ~ key || en ~ key) { print iso "," $2; }
+      if (index(ru, key) || index(en, key)) { print iso "," $2; }
     }' "$COUNTRIES_FILE")
     if [ -z "$matches" ]; then
         echo -e "${RED}$(tr_text NOTHING_FOUND) '${input}'.${NC}"
@@ -100,7 +100,7 @@ submenu_id_flags() {
         echo
         echo -e "  ${DIM}${YELLOW}0)${NC} $(tr_text MENU_BACK)"
         echo
-        read -rp "> " choice
+        read -rp "> " choice || exit 0
         
         case $choice in
             1) show_banner; generate_ids ;;
